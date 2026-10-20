@@ -55,7 +55,9 @@ class DashboardSerializer(serializers.Serializer):
     plays_7d = serializers.IntegerField()
     plays_30d = serializers.IntegerField()
     avg_startup_ms = serializers.FloatField(allow_null=True)
-    rebuffer_ratio = serializers.FloatField(allow_null=True, help_text="Share of plays with at least one rebuffer.")
+    rebuffer_ratio = serializers.FloatField(
+        allow_null=True, help_text="Share of plays with at least one rebuffer."
+    )
     rebuffers_per_hour = serializers.FloatField(allow_null=True)
     watch_hours = serializers.FloatField()
     viewers_total = serializers.IntegerField()
@@ -82,7 +84,11 @@ class DashboardView(APIView):
     permission_classes = [StaffPermission]
     read_roles = (R.CONTENT_MANAGER, R.ANALYST)
 
-    @extend_schema(parameters=[OpenApiParameter("range", str, enum=list(RANGES))], responses=DashboardSerializer, operation_id="admin_dashboard")
+    @extend_schema(
+        parameters=[OpenApiParameter("range", str, enum=list(RANGES))],
+        responses=DashboardSerializer,
+        operation_id="admin_dashboard",
+    )
     def get(self, request):
         key = request.query_params.get("range", "7d")
         days = RANGES.get(key, 7)
@@ -96,58 +102,109 @@ class DashboardView(APIView):
 
         window = ViewEvent.objects.filter(created_at__gte=since)
         play_count = window.filter(kind=ViewEvent.Kind.START).count()
-        sessions_with_rebuffer = window.filter(kind=ViewEvent.Kind.REBUFFER).values("session_id").distinct().count()
+        sessions_with_rebuffer = (
+            window.filter(kind=ViewEvent.Kind.REBUFFER).values("session_id").distinct().count()
+        )
         rebuffer_count = window.filter(kind=ViewEvent.Kind.REBUFFER).count()
-        watch_seconds = WatchProgress.objects.filter(updated_at__gte=since).aggregate(s=Sum("watch_seconds"))["s"] or 0
+        watch_seconds = (
+            WatchProgress.objects.filter(updated_at__gte=since).aggregate(s=Sum("watch_seconds"))[
+                "s"
+            ]
+            or 0
+        )
 
         per_day = {
             row["d"]: row
-            for row in window.annotate(d=TruncDate("created_at")).values("d").annotate(
+            for row in window.annotate(d=TruncDate("created_at"))
+            .values("d")
+            .annotate(
                 plays=Count("id", filter=Q(kind=ViewEvent.Kind.START)),
                 viewers=Count("user_id", distinct=True),
                 startup=Avg("value", filter=Q(kind=ViewEvent.Kind.START)),
                 rebuffers=Count("id", filter=Q(kind=ViewEvent.Kind.REBUFFER)),
             )
         }
-        signups = dict(User.objects.filter(created_at__gte=since).annotate(d=TruncDate("created_at")).values("d").annotate(n=Count("id")).values_list("d", "n"))
+        signups = dict(
+            User.objects.filter(created_at__gte=since)
+            .annotate(d=TruncDate("created_at"))
+            .values("d")
+            .annotate(n=Count("id"))
+            .values_list("d", "n")
+        )
         series = []
         for i in range(days - 1, -1, -1):
             day = (now - dt.timedelta(days=i)).date()
             row = per_day.get(day, {})
             plays = row.get("plays", 0)
-            series.append({
-                "date": day, "plays": plays, "viewers": row.get("viewers", 0),
-                "startup_ms": round(row["startup"], 1) if row.get("startup") else None,
-                "rebuffers_per_play": round(row.get("rebuffers", 0) / plays, 3) if plays else None,
-                "signups": signups.get(day, 0),
-            })
+            series.append(
+                {
+                    "date": day,
+                    "plays": plays,
+                    "viewers": row.get("viewers", 0),
+                    "startup_ms": round(row["startup"], 1) if row.get("startup") else None,
+                    "rebuffers_per_play": (
+                        round(row.get("rebuffers", 0) / plays, 3) if plays else None
+                    ),
+                    "signups": signups.get(day, 0),
+                }
+            )
 
         top = list(
-            starts.filter(created_at__gte=since, title_id__isnull=False).values("title_id")
-            .annotate(plays=Count("id"), viewers=Count("user_id", distinct=True)).order_by("-plays")[:10]
+            starts.filter(created_at__gte=since, title_id__isnull=False)
+            .values("title_id")
+            .annotate(plays=Count("id"), viewers=Count("user_id", distinct=True))
+            .order_by("-plays")[:10]
         )
-        names = dict(Title.objects.filter(pk__in=[t["title_id"] for t in top]).values_list("pk", "title"))
+        names = dict(
+            Title.objects.filter(pk__in=[t["title_id"] for t in top]).values_list("pk", "title")
+        )
         quality = dict(
-            window.filter(kind=ViewEvent.Kind.QUALITY).values_list("data__height").annotate(n=Count("id")).order_by()
+            window.filter(kind=ViewEvent.Kind.QUALITY)
+            .values_list("data__height")
+            .annotate(n=Count("id"))
+            .order_by()
         )
-        return Response({
-            "range": key,
-            "active_viewers": active_viewers(),
-            "plays_today": plays_since(start_of_today),
-            "plays_7d": plays_since(now - dt.timedelta(days=7)),
-            "plays_30d": plays_since(now - dt.timedelta(days=30)),
-            "avg_startup_ms": window.filter(kind=ViewEvent.Kind.START).aggregate(a=Avg("value"))["a"],
-            "rebuffer_ratio": round(sessions_with_rebuffer / play_count, 4) if play_count else None,
-            "rebuffers_per_hour": round(rebuffer_count / (watch_seconds / 3600), 3) if watch_seconds > 60 else None,
-            "watch_hours": round(watch_seconds / 3600, 1),
-            "viewers_total": User.objects.filter(is_staff=False).count(),
-            "titles_published": Title.objects.published().count(),
-            "transcoding": {k: v for k, v in VideoAsset.objects.values_list("status").annotate(n=Count("id")).order_by()},
-            "storage_bytes": _storage_bytes(),
-            "quality_mix": {f"{int(k)}p" if k else "unknown": v for k, v in quality.items()},
-            "series": series,
-            "top_titles": [{"id": t["title_id"], "title": names.get(t["title_id"], "—"), "plays": t["plays"], "viewers": t["viewers"]} for t in top],
-        })
+        return Response(
+            {
+                "range": key,
+                "active_viewers": active_viewers(),
+                "plays_today": plays_since(start_of_today),
+                "plays_7d": plays_since(now - dt.timedelta(days=7)),
+                "plays_30d": plays_since(now - dt.timedelta(days=30)),
+                "avg_startup_ms": window.filter(kind=ViewEvent.Kind.START).aggregate(
+                    a=Avg("value")
+                )["a"],
+                "rebuffer_ratio": (
+                    round(sessions_with_rebuffer / play_count, 4) if play_count else None
+                ),
+                "rebuffers_per_hour": (
+                    round(rebuffer_count / (watch_seconds / 3600), 3)
+                    if watch_seconds > 60
+                    else None
+                ),
+                "watch_hours": round(watch_seconds / 3600, 1),
+                "viewers_total": User.objects.filter(is_staff=False).count(),
+                "titles_published": Title.objects.published().count(),
+                "transcoding": {
+                    k: v
+                    for k, v in VideoAsset.objects.values_list("status")
+                    .annotate(n=Count("id"))
+                    .order_by()
+                },
+                "storage_bytes": _storage_bytes(),
+                "quality_mix": {f"{int(k)}p" if k else "unknown": v for k, v in quality.items()},
+                "series": series,
+                "top_titles": [
+                    {
+                        "id": t["title_id"],
+                        "title": names.get(t["title_id"], "—"),
+                        "plays": t["plays"],
+                        "viewers": t["viewers"],
+                    }
+                    for t in top
+                ],
+            }
+        )
 
 
 # -- viewers ------------------------------------------------------------------------
@@ -157,7 +214,19 @@ class AdminUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "username", "full_name", "is_active", "is_staff", "role", "created_at", "last_seen", "translation_mode", "watch_count", "rating_count"]
+        fields = [
+            "id",
+            "username",
+            "full_name",
+            "is_active",
+            "is_staff",
+            "role",
+            "created_at",
+            "last_seen",
+            "translation_mode",
+            "watch_count",
+            "rating_count",
+        ]
         read_only_fields = fields
 
 
@@ -198,7 +267,8 @@ class UserViewSet(AuditedMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
 
     def get_queryset(self):
         qs = User.objects.annotate(
-            watch_count=Count("progress", distinct=True), rating_count=Count("ratings", distinct=True)
+            watch_count=Count("progress", distinct=True),
+            rating_count=Count("ratings", distinct=True),
         ).order_by("-created_at")
         if q := self.request.query_params.get("search", "").strip():
             qs = qs.filter(Q(username__icontains=q) | Q(full_name__icontains=q))
@@ -215,17 +285,35 @@ class UserViewSet(AuditedMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
         user = self.get_object()
         history = [
             {
-                "title_id": p.title_id, "title": p.title.title,
-                "episode": f"S{p.episode.season.number}:E{p.episode.number} {p.episode.name}" if p.episode_id else None,
-                "progress": round(p.fraction, 3), "completed": p.completed, "updated_at": p.updated_at,
+                "title_id": p.title_id,
+                "title": p.title.title,
+                "episode": (
+                    f"S{p.episode.season.number}:E{p.episode.number} {p.episode.name}"
+                    if p.episode_id
+                    else None
+                ),
+                "progress": round(p.fraction, 3),
+                "completed": p.completed,
+                "updated_at": p.updated_at,
             }
-            for p in WatchProgress.objects.filter(user=user).select_related("title", "episode__season").order_by("-updated_at")[:50]
+            for p in WatchProgress.objects.filter(user=user)
+            .select_related("title", "episode__season")
+            .order_by("-updated_at")[:50]
         ]
         ratings = [
-            {"title_id": r.title_id, "title": r.title.title, "value": r.value, "updated_at": r.updated_at}
-            for r in Rating.objects.filter(user=user).select_related("title").order_by("-updated_at")[:50]
+            {
+                "title_id": r.title_id,
+                "title": r.title.title,
+                "value": r.value,
+                "updated_at": r.updated_at,
+            }
+            for r in Rating.objects.filter(user=user)
+            .select_related("title")
+            .order_by("-updated_at")[:50]
         ]
-        return Response({"user": AdminUserSerializer(user).data, "history": history, "ratings": ratings})
+        return Response(
+            {"user": AdminUserSerializer(user).data, "history": history, "ratings": ratings}
+        )
 
     def _guard(self, user):
         if user.pk == self.request.user.pk:
@@ -298,9 +386,14 @@ class StaffViewSet(AuditedMixin, viewsets.GenericViewSet):
     pagination_class = None
 
     def get_queryset(self):
-        return User.objects.filter(is_staff=True).annotate(
-            watch_count=Count("progress", distinct=True), rating_count=Count("ratings", distinct=True)
-        ).order_by("username")
+        return (
+            User.objects.filter(is_staff=True)
+            .annotate(
+                watch_count=Count("progress", distinct=True),
+                rating_count=Count("ratings", distinct=True),
+            )
+            .order_by("username")
+        )
 
     @extend_schema(responses=AdminUserSerializer(many=True))
     def list(self, request):
@@ -317,13 +410,23 @@ class StaffViewSet(AuditedMixin, viewsets.GenericViewSet):
             if not v.get("password"):
                 from apps.core.exceptions import APIError
 
-                raise APIError("Set a password for the new staff account.", "validation_error", 400, {"password": "Required for new accounts."})
-            user = User.objects.create_user(v["username"], v["password"], full_name=v.get("full_name") or v["username"])
+                raise APIError(
+                    "Set a password for the new staff account.",
+                    "validation_error",
+                    400,
+                    {"password": "Required for new accounts."},
+                )
+            user = User.objects.create_user(
+                v["username"], v["password"], full_name=v.get("full_name") or v["username"]
+            )
         user.is_staff = True
         user.role = v["role"]
         user.save(update_fields=["is_staff", "role"])
         self._audit("grant", user, {"role": user.role})
-        return Response(AdminUserSerializer(self.get_queryset().get(pk=user.pk)).data, status=status.HTTP_201_CREATED)
+        return Response(
+            AdminUserSerializer(self.get_queryset().get(pk=user.pk)).data,
+            status=status.HTTP_201_CREATED,
+        )
 
     @extend_schema(request=RoleSerializer, responses=AdminUserSerializer)
     def partial_update(self, request, pk=None):
@@ -374,6 +477,13 @@ class AuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             qs = qs.filter(Q(target_repr__icontains=q) | Q(action__icontains=q))
         return qs
 
-    @extend_schema(parameters=[OpenApiParameter("actor", str), OpenApiParameter("action", str), OpenApiParameter("target_type", str), OpenApiParameter("search", str)])
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("actor", str),
+            OpenApiParameter("action", str),
+            OpenApiParameter("target_type", str),
+            OpenApiParameter("search", str),
+        ]
+    )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)

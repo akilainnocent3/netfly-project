@@ -139,8 +139,12 @@ RELATED = [
     ("Paper Kings", "Quiet Harbour", 2),
     ("Kingdom of Ash", "Iron Savanna", 4),
     ("Night Shift", "Static Bloom", 3),
-    ("Kingdom of Ash", "The Last Lantern", 3), ("Neon Tide", "Kingdom of Ash", 4), ("Neon Tide", "Paper Kings", 3),
-    ("Neon Tide", "Quiet Harbour", 2), ("Iron Savanna", "Night Shift", 4), ("Iron Savanna", "The Last Lantern", 2),
+    ("Kingdom of Ash", "The Last Lantern", 3),
+    ("Neon Tide", "Kingdom of Ash", 4),
+    ("Neon Tide", "Paper Kings", 3),
+    ("Neon Tide", "Quiet Harbour", 2),
+    ("Iron Savanna", "Night Shift", 4),
+    ("Iron Savanna", "The Last Lantern", 2),
 ]
 
 
