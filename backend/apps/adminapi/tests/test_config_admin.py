@@ -16,9 +16,13 @@ def test_config_listing_never_contains_secrets(staff_api):
 
 
 def test_update_config_validates_and_takes_effect(staff_api, api):
-    bad = staff_api.patch("/api/v1/admin/config/branding.accent_color", {"value": "pink"}, format="json")
+    bad = staff_api.patch(
+        "/api/v1/admin/config/branding.accent_color", {"value": "pink"}, format="json"
+    )
     assert bad.status_code == 400 and bad.json()["fields"]["value"]
-    ok = staff_api.patch("/api/v1/admin/config/branding.accent_color", {"value": "#3355FF"}, format="json")
+    ok = staff_api.patch(
+        "/api/v1/admin/config/branding.accent_color", {"value": "#3355FF"}, format="json"
+    )
     assert ok.status_code == 200
     assert api.get("/api/public/config").json()["values"]["branding.accent_color"] == "#3355FF"
     history = staff_api.get("/api/v1/admin/config/branding.accent_color/history").json()
@@ -26,22 +30,35 @@ def test_update_config_validates_and_takes_effect(staff_api, api):
 
 
 def test_ladder_json_validation(staff_api):
-    bad = staff_api.patch("/api/v1/admin/config/transcoding.ladder", {"value": [{"name": "720p", "height": 720}]}, format="json")
+    bad = staff_api.patch(
+        "/api/v1/admin/config/transcoding.ladder",
+        {"value": [{"name": "720p", "height": 720}]},
+        format="json",
+    )
     assert bad.status_code == 400
     ladder = [{"name": "720p", "height": 720, "video_kbps": 3000, "codec": "h264"}]
-    assert staff_api.patch("/api/v1/admin/config/transcoding.ladder", {"value": ladder}, format="json").status_code == 200
+    assert (
+        staff_api.patch(
+            "/api/v1/admin/config/transcoding.ladder", {"value": ladder}, format="json"
+        ).status_code
+        == 200
+    )
     assert config.get_json("transcoding.ladder") == ladder
 
 
 def test_content_manager_cannot_change_settings(content_manager_api):
-    response = content_manager_api.patch("/api/v1/admin/config/branding.site_name", {"value": "Hacked"}, format="json")
+    response = content_manager_api.patch(
+        "/api/v1/admin/config/branding.site_name", {"value": "Hacked"}, format="json"
+    )
     assert response.status_code == 403
 
 
 def test_storage_test_connection(staff_api, s3):
     response = staff_api.post("/api/v1/admin/storage/test", {}, format="json").json()
     assert response["ok"] is True and "write ok" in response["steps"]
-    wrong = staff_api.post("/api/v1/admin/storage/test", {"bucket": "does-not-exist"}, format="json").json()
+    wrong = staff_api.post(
+        "/api/v1/admin/storage/test", {"bucket": "does-not-exist"}, format="json"
+    ).json()
     assert wrong["ok"] is False
 
 

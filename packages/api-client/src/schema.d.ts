@@ -970,6 +970,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/browse/billboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["browse_billboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/browse/home": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description One page of the infinite home feed (rows of cards). */
+        get: operations["browse_home"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/poster-wall": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["poster_wall"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/genres": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["genres"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/genres/{slug}/titles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["genre_titles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/legal/{slug}": {
         parameters: {
             query?: never;
@@ -986,19 +1067,175 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/my-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["my_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/my-list/{title_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["my_list_add"];
+        post?: never;
+        delete: operations["my_list_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/playback/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["playback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/playback/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Playback analytics in batches. Buffered in Redis, bulk-inserted by a periodic task. */
+        post: operations["playback_events"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/playback/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Saves position for one or more items (the player calls this every N seconds and on pause/exit). */
+        post: operations["playback_progress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ratings/{title_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description One tap: 👎 -1 · 👍 1 · 👍👍 2. Recommendations react on the next request. */
+        put: operations["rate_title"];
+        post?: never;
+        /** @description One tap: 👎 -1 · 👍 1 · 👍👍 2. Recommendations react on the next request. */
+        delete: operations["unrate_title"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/search/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["search_suggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/titles/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Title detail for the modal / deep link. Viewer state included when signed in. */
+        get: operations["title_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/titles/{slug}/seasons/{number}/episodes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["title_episodes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /**
-         * @description * `publish` - publish
-         *     * `archive` - archive
-         *     * `draft` - draft
-         *     * `feature` - feature
-         *     * `unfeature` - unfeature
-         * @enum {string}
-         */
-        ActionEnum: "publish" | "archive" | "draft" | "feature" | "unfeature";
         AdminImage: {
             /** Format: uuid */
             readonly id: string;
@@ -1112,17 +1349,42 @@ export interface components {
             ends_at?: string | null;
             is_active?: boolean;
         };
+        BillboardItem: {
+            id: number;
+            headline: string;
+            tagline: string;
+            use_trailer: boolean;
+            title: components["schemas"]["TitleCard"];
+        };
         /** @enum {unknown} */
         BlankEnum: "";
+        /**
+         * @description * `publish` - publish
+         *     * `archive` - archive
+         *     * `draft` - draft
+         *     * `feature` - feature
+         *     * `unfeature` - unfeature
+         * @enum {string}
+         */
+        BulkActionActionEnum: "publish" | "archive" | "draft" | "feature" | "unfeature";
         BulkActionRequest: {
             ids: number[];
-            action: components["schemas"]["ActionEnum"];
+            action: components["schemas"]["BulkActionActionEnum"];
         };
         BulkResult: {
             updated: number[];
             skipped: {
                 [key: string]: string[];
             };
+        };
+        /** @description Row-specific extras (Continue Watching progress, Top 10 rank…). */
+        CardContext: {
+            /** Format: double */
+            progress?: number;
+            label?: string;
+            episode_id?: number;
+            rank?: number;
+            other_mode?: boolean;
         };
         CdnTestRequestRequest: {
             domain?: string;
@@ -1191,6 +1453,18 @@ export interface components {
             description?: string;
             readonly entries: components["schemas"]["ConfigEntry"][];
         };
+        Episode: {
+            readonly id: number;
+            number: number;
+            name: string;
+            synopsis?: string;
+            runtime_minutes?: number | null;
+            readonly thumbnail: components["schemas"]["ImageRef"] | null;
+            /** Format: double */
+            readonly progress: number;
+            readonly watched: boolean;
+            readonly available: boolean;
+        };
         EpisodeAdmin: {
             readonly id: number;
             readonly season: number;
@@ -1229,6 +1503,50 @@ export interface components {
             /** Format: double */
             credits_start?: number | null;
         };
+        EpisodePage: {
+            results: components["schemas"]["Episode"][];
+            next: number | null;
+            season: components["schemas"]["SeasonSummary"];
+        };
+        EventBatchRequest: {
+            events: components["schemas"]["EventRequest"][];
+        };
+        /**
+         * @description * `start` - Start
+         *     * `play` - Play
+         *     * `pause` - Pause
+         *     * `seek` - Seek
+         *     * `quality` - Quality
+         *     * `rebuffer` - Rebuffer
+         *     * `complete` - Complete
+         *     * `error` - Error
+         *     * `heartbeat` - Heartbeat
+         * @enum {string}
+         */
+        EventKindEnum: "start" | "play" | "pause" | "seek" | "quality" | "rebuffer" | "complete" | "error" | "heartbeat";
+        EventRequest: {
+            session_id: string;
+            kind: components["schemas"]["EventKindEnum"];
+            title_id?: number | null;
+            episode_id?: number | null;
+            /**
+             * Format: double
+             * @default 0
+             */
+            position: number;
+            /** Format: double */
+            value?: number | null;
+            data?: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            ts?: string;
+        };
+        Genre: {
+            readonly id: number;
+            name: string;
+            slug: string;
+        };
         GenreAdmin: {
             readonly id: number;
             name: string;
@@ -1260,8 +1578,21 @@ export interface components {
             name: string;
             slug: string;
         };
+        GenreTile: {
+            readonly id: number;
+            name: string;
+            slug: string;
+            description?: string;
+            readonly artwork: components["schemas"]["ImageRef"] | null;
+            readonly title_count: number;
+            readonly sample: components["schemas"]["ImageRef"] | null;
+        };
         Health: {
             ok: boolean;
+        };
+        HomePage: {
+            rows: components["schemas"]["Row"][];
+            next: string | null;
         };
         HomeRowAdmin: {
             readonly id: number;
@@ -1306,6 +1637,14 @@ export interface components {
          * @enum {string}
          */
         ImageKindEnum: "poster" | "backdrop" | "logo" | "thumbnail" | "artwork";
+        /** @description What viewers get: a loader key plus a blur placeholder. */
+        ImageRef: {
+            readonly key: string;
+            readonly blur: string;
+            readonly color: string;
+            width?: number;
+            height?: number;
+        };
         /**
          * @description * `processing` - Processing
          *     * `ready` - Ready
@@ -1337,6 +1676,13 @@ export interface components {
             password: string;
             /** @default client */
             app: components["schemas"]["AppEnum"];
+        };
+        NextEpisode: {
+            id: number;
+            label: string;
+            name: string;
+            synopsis: string;
+            thumbnail: components["schemas"]["ImageRef"] | null;
         };
         PaginatedTitleAdminListList: {
             /** @example 123 */
@@ -1496,16 +1842,101 @@ export interface components {
             autoplay_previews?: boolean;
             subtitles_language?: string;
         };
+        /** @description What the smart Play button does. */
+        PlayTarget: {
+            action: components["schemas"]["PlayTargetActionEnum"];
+            label: string;
+            episode_id: number | null;
+            season_number: number | null;
+            /** Format: double */
+            position: number;
+            /** Format: double */
+            progress: number;
+        };
+        /**
+         * @description * `play` - play
+         *     * `resume` - resume
+         * @enum {string}
+         */
+        PlayTargetActionEnum: "play" | "resume";
+        Playback: {
+            session_id: string;
+            /** Format: uuid */
+            asset_id: string;
+            master_url: string;
+            thumbnails_url: string;
+            /** Format: double */
+            duration: number;
+            /** Format: double */
+            start_at: number;
+            max_height: number | null;
+            title: components["schemas"]["PlaybackTitle"];
+            episode: components["schemas"]["PlaybackEpisode"] | null;
+            next: components["schemas"]["NextEpisode"] | null;
+            renditions: components["schemas"]["RenditionInfo"][];
+            subtitles: components["schemas"]["SubtitleInfo"][];
+            is_preview: boolean;
+        };
+        PlaybackEpisode: {
+            id: number;
+            number: number;
+            name: string;
+            season_number: number;
+            synopsis: string;
+            /** Format: double */
+            intro_start: number | null;
+            /** Format: double */
+            intro_end: number | null;
+            /** Format: double */
+            credits_start: number | null;
+        };
+        PlaybackTitle: {
+            id: number;
+            slug: string;
+            title: string;
+            type: string;
+            maturity_rating: string;
+            logo: components["schemas"]["ImageRef"] | null;
+            backdrop: components["schemas"]["ImageRef"] | null;
+        };
         Preview: {
             master_url: string;
             thumbnails_url: string;
             /** Format: double */
             duration: number;
         };
+        ProgressBatchRequest: {
+            updates: components["schemas"]["ProgressUpdateRequest"][];
+        };
+        ProgressResult: {
+            saved: number;
+            completed: number[];
+        };
+        ProgressUpdateRequest: {
+            title_id: number;
+            episode_id?: number | null;
+            /** Format: double */
+            position: number;
+            /** Format: double */
+            duration: number;
+            /**
+             * Format: double
+             * @description Seconds watched since the last update.
+             * @default 0
+             */
+            watched: number;
+        };
         PublicConfig: {
             values: {
                 [key: string]: unknown;
             };
+        };
+        RatingInputRequest: {
+            value: components["schemas"]["ValueEnum"];
+        };
+        RatingResult: {
+            title_id: number;
+            value: number | null;
         };
         RelatedAdmin: {
             readonly id: number;
@@ -1546,6 +1977,11 @@ export interface components {
             codecs: string;
             codec?: string;
         };
+        RenditionInfo: {
+            height: number;
+            width: number;
+            bandwidth: number;
+        };
         RenditionRequest: {
             name: string;
             height: number;
@@ -1565,6 +2001,13 @@ export interface components {
          * @enum {string}
          */
         RoleEnum: "superadmin" | "content_manager" | "analyst";
+        Row: {
+            key: string;
+            kind: string;
+            title: string;
+            items: components["schemas"]["TitleCard"][];
+            seed?: string | null;
+        };
         SeasonAdmin: {
             readonly id: number;
             readonly title: number;
@@ -1584,6 +2027,13 @@ export interface components {
             synopsis?: string;
             /** Format: uuid */
             poster_id?: string | null;
+        };
+        SeasonSummary: {
+            readonly id: number;
+            number: number;
+            name?: string;
+            readonly display_name: string;
+            readonly episode_count: number;
         };
         Session: {
             access: string;
@@ -1627,6 +2077,11 @@ export interface components {
             is_forced?: boolean;
             /** Format: date-time */
             readonly created_at: string;
+        };
+        SubtitleInfo: {
+            language: string;
+            label: string;
+            is_default: boolean;
         };
         SubtitleRequest: {
             language: string;
@@ -1756,6 +2211,64 @@ export interface components {
             /** Format: date-time */
             license_end?: string | null;
         };
+        TitleCard: {
+            readonly id: number;
+            slug: string;
+            title: string;
+            type: components["schemas"]["TitleTypeEnum"];
+            year?: number | null;
+            maturity_rating?: string;
+            runtime_minutes?: number | null;
+            readonly season_count: number | null;
+            short_synopsis?: string;
+            translation_status: components["schemas"]["TranslationStatusEnum"];
+            translator_name?: string;
+            readonly poster: components["schemas"]["ImageRef"] | null;
+            readonly backdrop: components["schemas"]["ImageRef"] | null;
+            readonly logo: components["schemas"]["ImageRef"] | null;
+            readonly genres: string[];
+            readonly has_preview: boolean;
+            readonly match: number | null;
+            readonly context: components["schemas"]["CardContext"] | null;
+            readonly in_my_list: boolean | null;
+            readonly rating: number | null;
+        };
+        TitleDetail: {
+            readonly id: number;
+            slug: string;
+            title: string;
+            type: components["schemas"]["TitleTypeEnum"];
+            year?: number | null;
+            maturity_rating?: string;
+            runtime_minutes?: number | null;
+            readonly season_count: number | null;
+            short_synopsis?: string;
+            translation_status: components["schemas"]["TranslationStatusEnum"];
+            translator_name?: string;
+            readonly poster: components["schemas"]["ImageRef"] | null;
+            readonly backdrop: components["schemas"]["ImageRef"] | null;
+            readonly logo: components["schemas"]["ImageRef"] | null;
+            readonly genres: string[];
+            readonly has_preview: boolean;
+            readonly match: number | null;
+            readonly context: components["schemas"]["CardContext"] | null;
+            readonly in_my_list: boolean | null;
+            readonly rating: number | null;
+            original_title?: string;
+            synopsis?: string;
+            language?: string;
+            cast?: string[];
+            directors?: string[];
+            readonly genres_full: components["schemas"]["Genre"][];
+            readonly seasons: components["schemas"]["SeasonSummary"][];
+            /** Format: date-time */
+            published_at?: string | null;
+        };
+        TitlePage: {
+            title: components["schemas"]["TitleDetail"];
+            viewer: components["schemas"]["ViewerState"] | null;
+            more_like_this: components["schemas"]["TitleCard"][];
+        };
         /**
          * @description * `draft` - Draft
          *     * `processing` - Processing
@@ -1841,6 +2354,13 @@ export interface components {
             message: string;
         };
         /**
+         * @description * `-1` - -1
+         *     * `1` - 1
+         *     * `2` - 2
+         * @enum {integer}
+         */
+        ValueEnum: -1 | 1 | 2;
+        /**
          * @description * `string` - String
          *     * `text` - Text
          *     * `int` - Int
@@ -1905,6 +2425,12 @@ export interface components {
          * @enum {string}
          */
         VideoStatusEnum: "uploading" | "uploaded" | "queued" | "transcoding" | "ready" | "failed";
+        ViewerState: {
+            in_my_list: boolean;
+            rating: number | null;
+            play: components["schemas"]["PlayTarget"] | null;
+            last_season: number | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -3938,6 +4464,116 @@ export interface operations {
             };
         };
     };
+    browse_billboard: {
+        parameters: {
+            query?: {
+                translation?: "all" | "not_translated" | "translated";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillboardItem"][];
+                };
+            };
+        };
+    };
+    browse_home: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                translation?: "all" | "not_translated" | "translated";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomePage"];
+                };
+            };
+        };
+    };
+    poster_wall: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        results?: Record<string, never>[];
+                    };
+                };
+            };
+        };
+    };
+    genres: {
+        parameters: {
+            query?: {
+                translation?: "all" | "not_translated" | "translated";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreTile"][];
+                };
+            };
+        };
+    };
+    genre_titles: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                sort?: "az" | "newest" | "suggested" | "year";
+                translation?: "all" | "not_translated" | "translated";
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomePage"];
+                };
+            };
+        };
+    };
     legal_page: {
         parameters: {
             query?: never;
@@ -3955,6 +4591,276 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LegalPage"];
+                };
+            };
+        };
+    };
+    my_list: {
+        parameters: {
+            query?: {
+                translation?: "all" | "not_translated" | "translated";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TitleCard"][];
+                };
+            };
+        };
+    };
+    my_list_add: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                title_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    my_list_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                title_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    playback: {
+        parameters: {
+            query?: {
+                episode?: number;
+                preview?: boolean;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Playback"];
+                };
+            };
+        };
+    };
+    playback_events: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventBatchRequest"];
+                "multipart/form-data": components["schemas"]["EventBatchRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    playback_progress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgressBatchRequest"];
+                "multipart/form-data": components["schemas"]["ProgressBatchRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressResult"];
+                };
+            };
+        };
+    };
+    rate_title: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                title_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RatingInputRequest"];
+                "multipart/form-data": components["schemas"]["RatingInputRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RatingResult"];
+                };
+            };
+        };
+    };
+    unrate_title: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                title_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    search: {
+        parameters: {
+            query: {
+                q: string;
+                translation?: "all" | "not_translated" | "translated";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TitleCard"][];
+                };
+            };
+        };
+    };
+    search_suggestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        top?: string[];
+                        recent?: string[];
+                    };
+                };
+            };
+        };
+    };
+    title_detail: {
+        parameters: {
+            query?: {
+                translation?: "all" | "not_translated" | "translated";
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TitlePage"];
+                };
+            };
+        };
+    };
+    title_episodes: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                number: number;
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EpisodePage"];
                 };
             };
         };

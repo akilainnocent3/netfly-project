@@ -10,3 +10,7 @@ backend/.wheels/*.whl
 playwright-report/
 test-results/
 *.tsbuildinfo
+
+# Local secrets — never commit
+netfly_testing_credentials.txt
+*credentials*.txt

@@ -70,7 +70,9 @@ class VideoAsset(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.FEATURE)
-    status = models.CharField(max_length=12, choices=Status.choices, default=Status.UPLOADING, db_index=True)
+    status = models.CharField(
+        max_length=12, choices=Status.choices, default=Status.UPLOADING, db_index=True
+    )
     progress = models.FloatField(default=0)
     stage = models.CharField(max_length=60, blank=True)
     original_filename = models.CharField(max_length=255, blank=True)
@@ -88,7 +90,9 @@ class VideoAsset(models.Model):
     renditions = models.JSONField(default=list, blank=True)
     # [{name, language, bandwidth, codecs, playlist, channels}]
     audio_tracks = models.JSONField(default=list, blank=True)
-    sprite = models.JSONField(default=dict, blank=True)  # {interval, columns, width, height, sheets: [keys], count}
+    sprite = models.JSONField(
+        default=dict, blank=True
+    )  # {interval, columns, width, height, sheets: [keys], count}
     poster_frame_key = models.CharField(max_length=255, blank=True)
     attempts = models.PositiveIntegerField(default=0)
     error = models.TextField(blank=True)
@@ -127,7 +131,9 @@ class SubtitleTrack(models.Model):
     class Meta:
         ordering = ["language"]
         constraints = [
-            models.UniqueConstraint(fields=["asset", "language", "is_forced"], name="subtitle_unique_lang")
+            models.UniqueConstraint(
+                fields=["asset", "language", "is_forced"], name="subtitle_unique_lang"
+            )
         ]
 
     def __str__(self) -> str:

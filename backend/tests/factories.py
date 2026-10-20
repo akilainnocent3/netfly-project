@@ -39,12 +39,37 @@ class VideoFactory(factory.django.DjangoModelFactory):
     source_height = 1080
     hls_prefix = factory.Sequence(lambda n: f"netfly/hls/{n}")
     renditions = [
-        {"name": "1080p", "height": 1080, "width": 1920, "bandwidth": 5500000, "avg_bandwidth": 5000000,
-         "codecs": "avc1.640028", "playlist": "v0/index.m3u8", "frame_rate": 24},
-        {"name": "480p", "height": 480, "width": 854, "bandwidth": 1500000, "avg_bandwidth": 1400000,
-         "codecs": "avc1.64001f", "playlist": "v1/index.m3u8", "frame_rate": 24},
+        {
+            "name": "1080p",
+            "height": 1080,
+            "width": 1920,
+            "bandwidth": 5500000,
+            "avg_bandwidth": 5000000,
+            "codecs": "avc1.640028",
+            "playlist": "v0/index.m3u8",
+            "frame_rate": 24,
+        },
+        {
+            "name": "480p",
+            "height": 480,
+            "width": 854,
+            "bandwidth": 1500000,
+            "avg_bandwidth": 1400000,
+            "codecs": "avc1.64001f",
+            "playlist": "v1/index.m3u8",
+            "frame_rate": 24,
+        },
     ]
-    audio_tracks = [{"name": "Default", "language": "en", "bandwidth": 160000, "codecs": "mp4a.40.2", "playlist": "a0/index.m3u8", "channels": "2"}]
+    audio_tracks = [
+        {
+            "name": "Default",
+            "language": "en",
+            "bandwidth": 160000,
+            "codecs": "mp4a.40.2",
+            "playlist": "a0/index.m3u8",
+            "channels": "2",
+        }
+    ]
 
 
 class GenreFactory(factory.django.DjangoModelFactory):

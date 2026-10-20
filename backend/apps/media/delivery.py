@@ -79,7 +79,15 @@ def master_playlist(asset: VideoAsset, token: str, *, max_height: int | None = N
 
 
 def _label(language: str, name: str | None) -> str:
-    names = {"en": "English", "eng": "English", "sw": "Swahili", "swa": "Swahili", "fr": "French", "fre": "French", "und": "Original"}
+    names = {
+        "en": "English",
+        "eng": "English",
+        "sw": "Swahili",
+        "swa": "Swahili",
+        "fr": "French",
+        "fre": "French",
+        "und": "Original",
+    }
     return names.get(language, name or language)
 
 
@@ -111,18 +119,21 @@ def media_playlist(asset: VideoAsset, rel_path: str) -> str:
 
 def subtitle_playlist(asset: VideoAsset, sub) -> str:
     duration = max(1, int(asset.duration + 0.999))
-    return "\n".join(
-        [
-            "#EXTM3U",
-            "#EXT-X-VERSION:3",
-            f"#EXT-X-TARGETDURATION:{duration}",
-            "#EXT-X-MEDIA-SEQUENCE:0",
-            "#EXT-X-PLAYLIST-TYPE:VOD",
-            f"#EXTINF:{asset.duration:.3f},",
-            _signed(sub.key),
-            "#EXT-X-ENDLIST",
-        ]
-    ) + "\n"
+    return (
+        "\n".join(
+            [
+                "#EXTM3U",
+                "#EXT-X-VERSION:3",
+                f"#EXT-X-TARGETDURATION:{duration}",
+                "#EXT-X-MEDIA-SEQUENCE:0",
+                "#EXT-X-PLAYLIST-TYPE:VOD",
+                f"#EXTINF:{asset.duration:.3f},",
+                _signed(sub.key),
+                "#EXT-X-ENDLIST",
+            ]
+        )
+        + "\n"
+    )
 
 
 def _ts(seconds: float) -> str:
@@ -138,7 +149,10 @@ def thumbnails_vtt(asset: VideoAsset) -> str:
     interval, cols, rows = sprite["interval"], sprite["columns"], sprite["rows"]
     w, h = sprite["width"], sprite["height"]
     per_sheet = cols * rows
-    urls = [_signed(f"{asset.hls_prefix}/{sprite.get('prefix', 'thumbs')}/{name}") for name in sprite["sheets"]]
+    urls = [
+        _signed(f"{asset.hls_prefix}/{sprite.get('prefix', 'thumbs')}/{name}")
+        for name in sprite["sheets"]
+    ]
     lines = ["WEBVTT", ""]
     count = sprite.get("count") or per_sheet * len(urls)
     for i in range(count):

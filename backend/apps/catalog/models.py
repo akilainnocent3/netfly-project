@@ -21,7 +21,9 @@ class Genre(models.Model):
     order = models.PositiveIntegerField(default=0, db_index=True)
     show_on_home = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    artwork = models.ForeignKey(ImageAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    artwork = models.ForeignKey(
+        ImageAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -73,11 +75,21 @@ class Title(models.Model):
     directors = ArrayField(models.CharField(max_length=120), default=list, blank=True)
     genres = models.ManyToManyField(Genre, related_name="titles", blank=True)
 
-    poster = models.ForeignKey(ImageAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
-    backdrop = models.ForeignKey(ImageAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
-    logo = models.ForeignKey(ImageAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
-    trailer = models.ForeignKey(VideoAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
-    video = models.ForeignKey(VideoAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    poster = models.ForeignKey(
+        ImageAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    backdrop = models.ForeignKey(
+        ImageAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    logo = models.ForeignKey(
+        ImageAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    trailer = models.ForeignKey(
+        VideoAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    video = models.ForeignKey(
+        VideoAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
 
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.DRAFT)
     publish_at = models.DateTimeField(null=True, blank=True)
@@ -109,7 +121,9 @@ class Title(models.Model):
             models.Index(fields=["status", "-trending"]),
             models.Index(fields=["license_end"]),
             GinIndex(fields=["title"], name="title_trgm", opclasses=["gin_trgm_ops"]),
-            GinIndex(fields=["original_title"], name="title_original_trgm", opclasses=["gin_trgm_ops"]),
+            GinIndex(
+                fields=["original_title"], name="title_original_trgm", opclasses=["gin_trgm_ops"]
+            ),
         ]
 
     def __str__(self) -> str:
@@ -123,14 +137,18 @@ class Title(models.Model):
 class RelatedTitle(models.Model):
     title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="related_links")
     related = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="related_from")
-    weight = models.PositiveSmallIntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    weight = models.PositiveSmallIntegerField(
+        default=3, validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-weight", "id"]
         constraints = [
             models.UniqueConstraint(fields=["title", "related"], name="related_unique_pair"),
-            models.CheckConstraint(condition=~Q(title=models.F("related")), name="related_not_self"),
+            models.CheckConstraint(
+                condition=~Q(title=models.F("related")), name="related_not_self"
+            ),
         ]
 
     def __str__(self) -> str:
@@ -142,14 +160,18 @@ class Season(models.Model):
     number = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=120, blank=True)
     synopsis = models.TextField(blank=True)
-    poster = models.ForeignKey(ImageAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    poster = models.ForeignKey(
+        ImageAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["number"]
         constraints = [
             models.UniqueConstraint(
-                fields=["title", "number"], name="season_unique_number", deferrable=models.Deferrable.DEFERRED
+                fields=["title", "number"],
+                name="season_unique_number",
+                deferrable=models.Deferrable.DEFERRED,
             )
         ]
 
@@ -167,8 +189,12 @@ class Episode(models.Model):
     name = models.CharField(max_length=200)
     synopsis = models.TextField(blank=True)
     runtime_minutes = models.PositiveSmallIntegerField(null=True, blank=True)
-    thumbnail = models.ForeignKey(ImageAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
-    video = models.ForeignKey(VideoAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    thumbnail = models.ForeignKey(
+        ImageAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    video = models.ForeignKey(
+        VideoAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
     intro_start = models.FloatField(null=True, blank=True)
     intro_end = models.FloatField(null=True, blank=True)
     credits_start = models.FloatField(null=True, blank=True)
@@ -178,7 +204,9 @@ class Episode(models.Model):
         ordering = ["number"]
         constraints = [
             models.UniqueConstraint(
-                fields=["season", "number"], name="episode_unique_number", deferrable=models.Deferrable.DEFERRED
+                fields=["season", "number"],
+                name="episode_unique_number",
+                deferrable=models.Deferrable.DEFERRED,
             )
         ]
 
@@ -220,7 +248,9 @@ class CollectionItem(models.Model):
 
     class Meta:
         ordering = ["order", "id"]
-        constraints = [models.UniqueConstraint(fields=["collection", "title"], name="collection_unique_title")]
+        constraints = [
+            models.UniqueConstraint(fields=["collection", "title"], name="collection_unique_title")
+        ]
 
     def __str__(self) -> str:
         return f"{self.collection_id}:{self.title_id}"

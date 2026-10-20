@@ -19,7 +19,7 @@ export function Logo({ className, href = "/browse" }: { className?: string; href
           <span className="relative inline-block size-[0.8em] rotate-45 rounded-[0.18em] bg-accent shadow-[0_0_24px_rgb(var(--accent-rgb)/0.6)]">
             <span className="absolute inset-[0.2em] rounded-[0.08em] bg-bg/90" />
           </span>
-          <span>{name}</span>
+          <span className="hidden sm:inline">{name}</span>
         </span>
       )}
     </Link>

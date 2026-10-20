@@ -1,0 +1,18 @@
+import { chromium } from "@playwright/test";
+const [,, path, out, w = "1440", h = "900", actions = ""] = process.argv;
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: +w, height: +h }, deviceScaleFactor: 1, hasTouch: +w < 700, isMobile: +w < 700 });
+const page = await ctx.newPage();
+const errors = [];
+page.on("console", (m) => m.type() === "error" && errors.push(m.text().slice(0, 240)));
+page.on("pageerror", (e) => errors.push(String(e).slice(0, 240)));
+await page.goto("http://localhost:3000/login");
+await page.fill("input[name=username]", process.env.NF_USER || "demo_viewer");
+await page.locator("input[name=password]").pressSequentially(process.env.NF_PASS || "stream-all-night", { delay: 8 });
+await page.waitForURL("**/browse**", { timeout: 15000 });
+await page.goto("http://localhost:3000" + path, { waitUntil: "networkidle" });
+if (actions) for (const step of actions.split(";;")) await eval(`(async()=>{${step}})()`);
+await page.waitForTimeout(1500);
+await page.screenshot({ path: out });
+console.log("URL", page.url(), "ERRORS", JSON.stringify(errors));
+await browser.close();

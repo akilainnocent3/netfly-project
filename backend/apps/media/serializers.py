@@ -38,8 +38,21 @@ class AdminImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImageAsset
         fields = [
-            "id", "kind", "status", "key", "width", "height", "blur_data_url", "dominant_color",
-            "original_width", "original_height", "crop", "widths", "formats", "error", "original_url",
+            "id",
+            "kind",
+            "status",
+            "key",
+            "width",
+            "height",
+            "blur_data_url",
+            "dominant_color",
+            "original_width",
+            "original_height",
+            "crop",
+            "widths",
+            "formats",
+            "error",
+            "original_url",
             "created_at",
         ]
         read_only_fields = [f for f in fields if f != "crop"]
@@ -52,7 +65,14 @@ class AdminImageSerializer(serializers.ModelSerializer):
             x, y, w, h = (float(value[k]) for k in ("x", "y", "w", "h"))
         except (KeyError, TypeError, ValueError) as exc:
             raise serializers.ValidationError("Crop needs x, y, w and h.") from exc
-        if not (0 <= x < 1 and 0 <= y < 1 and 0 < w <= 1 and 0 < h <= 1 and x + w <= 1.0001 and y + h <= 1.0001):
+        if not (
+            0 <= x < 1
+            and 0 <= y < 1
+            and 0 < w <= 1
+            and 0 < h <= 1
+            and x + w <= 1.0001
+            and y + h <= 1.0001
+        ):
             raise serializers.ValidationError("Crop must stay inside the image.")
         return {"x": round(x, 5), "y": round(y, 5), "w": round(w, 5), "h": round(h, 5)}
 
@@ -92,9 +112,28 @@ class AdminVideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = VideoAsset
         fields = [
-            "id", "kind", "status", "progress", "stage", "original_filename", "source_size", "duration",
-            "source_width", "source_height", "source_fps", "source_codec", "renditions", "audio_tracks",
-            "sprite", "attempts", "error", "log", "queued_at", "started_at", "finished_at", "created_at",
+            "id",
+            "kind",
+            "status",
+            "progress",
+            "stage",
+            "original_filename",
+            "source_size",
+            "duration",
+            "source_width",
+            "source_height",
+            "source_fps",
+            "source_codec",
+            "renditions",
+            "audio_tracks",
+            "sprite",
+            "attempts",
+            "error",
+            "log",
+            "queued_at",
+            "started_at",
+            "finished_at",
+            "created_at",
             "subtitles",
         ]
         read_only_fields = fields

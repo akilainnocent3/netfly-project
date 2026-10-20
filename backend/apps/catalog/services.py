@@ -25,7 +25,9 @@ def has_playable_video(title: Title) -> tuple[bool, bool]:
     """(has any attached video, all attached videos ready)."""
     if title.is_series:
         statuses = list(
-            Episode.objects.filter(season__title=title, video__isnull=False).values_list("video__status", flat=True)
+            Episode.objects.filter(season__title=title, video__isnull=False).values_list(
+                "video__status", flat=True
+            )
         )
     else:
         statuses = [title.video.status] if title.video_id else []
@@ -38,7 +40,9 @@ def publish_blockers(title: Title) -> list[str]:
     if not title.rights_holder:
         problems.append("Add the rights holder before publishing.")
     if title.license_start and title.license_start > now and not title.publish_at:
-        problems.append("The license hasn't started yet — schedule publishing for the license start.")
+        problems.append(
+            "The license hasn't started yet — schedule publishing for the license start."
+        )
     if title.license_end and title.license_end <= now:
         problems.append("The license has expired.")
     if not title.poster_id or not title.backdrop_id:
@@ -47,7 +51,11 @@ def publish_blockers(title: Title) -> list[str]:
         problems.append("Choose a maturity rating.")
     has_video, _ = has_playable_video(title)
     if not has_video:
-        problems.append("Upload a video first." if not title.is_series else "Add at least one episode with a video.")
+        problems.append(
+            "Upload a video first."
+            if not title.is_series
+            else "Add at least one episode with a video."
+        )
     return problems
 
 
@@ -76,9 +84,13 @@ def on_video_ready(asset: VideoAsset) -> None:
 
 @transaction.atomic
 def link_related(title: Title, related: Title, weight: int, two_way: bool = True) -> RelatedTitle:
-    link, _ = RelatedTitle.objects.update_or_create(title=title, related=related, defaults={"weight": weight})
+    link, _ = RelatedTitle.objects.update_or_create(
+        title=title, related=related, defaults={"weight": weight}
+    )
     if two_way:
-        RelatedTitle.objects.update_or_create(title=related, related=title, defaults={"weight": weight})
+        RelatedTitle.objects.update_or_create(
+            title=related, related=title, defaults={"weight": weight}
+        )
     return link
 
 

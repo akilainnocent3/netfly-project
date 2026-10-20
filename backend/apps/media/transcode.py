@@ -65,17 +65,38 @@ class Rung:
 def run(cmd: list[str], timeout: int | None = None) -> str:
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False)
     if result.returncode != 0:
-        raise TranscodeError(f"{Path(cmd[0]).name} exited with {result.returncode}", result.stderr[-6000:])
+        raise TranscodeError(
+            f"{Path(cmd[0]).name} exited with {result.returncode}", result.stderr[-6000:]
+        )
     return result.stdout
 
 
 def probe(path: str) -> Probe:
     try:
-        out = run(["ffprobe", "-v", "error", "-print_format", "json", "-show_format", "-show_streams", path], timeout=120)
+        out = run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-print_format",
+                "json",
+                "-show_format",
+                "-show_streams",
+                path,
+            ],
+            timeout=120,
+        )
     except TranscodeError as exc:
         raise TranscodeError("This file isn't a readable video.", exc.log, permanent=True) from exc
     data = json.loads(out)
-    video = next((s for s in data.get("streams", []) if s.get("codec_type") == "video" and not s.get("disposition", {}).get("attached_pic")), None)
+    video = next(
+        (
+            s
+            for s in data.get("streams", [])
+            if s.get("codec_type") == "video" and not s.get("disposition", {}).get("attached_pic")
+        ),
+        None,
+    )
     if video is None:
         raise TranscodeError("The file has no video stream.", permanent=True)
     width, height = int(video.get("width") or 0), int(video.get("height") or 0)
@@ -86,7 +107,9 @@ def probe(path: str) -> Probe:
     rotation = rotation or abs(int((video.get("tags") or {}).get("rotate", 0) or 0))
     if rotation in (90, 270):
         width, height = height, width
-    num, _, den = (video.get("avg_frame_rate") or video.get("r_frame_rate") or "24/1").partition("/")
+    num, _, den = (video.get("avg_frame_rate") or video.get("r_frame_rate") or "24/1").partition(
+        "/"
+    )
     fps = float(num) / float(den or 1) if float(den or 1) else 24.0
     duration = float(data.get("format", {}).get("duration") or video.get("duration") or 0)
     audio = [
@@ -101,7 +124,9 @@ def probe(path: str) -> Probe:
     ]
     if not width or not height or duration <= 0:
         raise TranscodeError("Couldn't read the video's size or duration.", permanent=True)
-    return Probe(duration, width, height, fps if 1 < fps < 121 else 24.0, video.get("codec_name", ""), audio)
+    return Probe(
+        duration, width, height, fps if 1 < fps < 121 else 24.0, video.get("codec_name", ""), audio
+    )
 
 
 def build_ladder(source: Probe, ladder: list[dict]) -> list[Rung]:
@@ -119,7 +144,14 @@ def build_ladder(source: Probe, ladder: list[dict]) -> list[Rung]:
             continue
         width = int(round(source.width * height / source.height / 2) * 2)
         rungs.append(
-            Rung(item["name"], height, width, int(item["video_kbps"]), int(item.get("max_kbps") or item["video_kbps"] * 1.2), codec)
+            Rung(
+                item["name"],
+                height,
+                width,
+                int(item["video_kbps"]),
+                int(item.get("max_kbps") or item["video_kbps"] * 1.2),
+                codec,
+            )
         )
     if not rungs:
         # Source smaller than the smallest rung: one rung at source size.
@@ -143,8 +175,20 @@ def ffmpeg_command(src: str, out: Path, source: Probe, rungs: list[Rung]) -> lis
     n = len(rungs)
 
     split = f"[0:v]split={n}" + "".join(f"[s{i}]" for i in range(n))
-    scales = ";".join(f"[s{i}]scale={r.width}:{r.height}:flags=lanczos,setsar=1,format=yuv420p[v{i}]" for i, r in enumerate(rungs))
-    cmd = ["ffmpeg", "-hide_banner", "-nostdin", "-y", "-i", src, "-filter_complex", f"{split};{scales}"]
+    scales = ";".join(
+        f"[s{i}]scale={r.width}:{r.height}:flags=lanczos,setsar=1,format=yuv420p[v{i}]"
+        for i, r in enumerate(rungs)
+    )
+    cmd = [
+        "ffmpeg",
+        "-hide_banner",
+        "-nostdin",
+        "-y",
+        "-i",
+        src,
+        "-filter_complex",
+        f"{split};{scales}",
+    ]
     if threads:
         cmd += ["-threads", str(threads)]
     for i, r in enumerate(rungs):
@@ -159,27 +203,60 @@ def ffmpeg_command(src: str, out: Path, source: Probe, rungs: list[Rung]) -> lis
             cmd += [f"-crf:v:{i}", str(crf + 10), f"-preset:v:{i}", "8"]
         cmd += [f"-maxrate:v:{i}", f"{r.max_kbps}k", f"-bufsize:v:{i}", f"{r.max_kbps * 2}k"]
     cmd += [
-        "-g", str(gop), "-keyint_min", str(gop), "-sc_threshold", "0",
-        "-force_key_frames", f"expr:gte(t,n_forced*{seg})",
+        "-g",
+        str(gop),
+        "-keyint_min",
+        str(gop),
+        "-sc_threshold",
+        "0",
+        "-force_key_frames",
+        f"expr:gte(t,n_forced*{seg})",
     ]
     audio_streams = source.audio or []
     for j, a in enumerate(audio_streams):
-        cmd += ["-map", f"0:{a['index']}", f"-c:a:{j}", "aac", f"-b:a:{j}", f"{audio_kbps}k", f"-ac:a:{j}", "2"]
-    var_map = [f"v:{i},agroup:aud,name:v{i}" for i in range(n)] if audio_streams else [f"v:{i},name:v{i}" for i in range(n)]
+        cmd += [
+            "-map",
+            f"0:{a['index']}",
+            f"-c:a:{j}",
+            "aac",
+            f"-b:a:{j}",
+            f"{audio_kbps}k",
+            f"-ac:a:{j}",
+            "2",
+        ]
+    var_map = (
+        [f"v:{i},agroup:aud,name:v{i}" for i in range(n)]
+        if audio_streams
+        else [f"v:{i},name:v{i}" for i in range(n)]
+    )
     for j, a in enumerate(audio_streams):
         lang = re.sub(r"[^a-z]", "", a["language"].lower())[:3] or "und"
-        var_map.append(f"a:{j},agroup:aud,language:{lang},name:a{j}{',default:yes' if j == 0 else ''}")
+        var_map.append(
+            f"a:{j},agroup:aud,language:{lang},name:a{j}{',default:yes' if j == 0 else ''}"
+        )
     cmd += [
-        "-f", "hls",
-        "-hls_time", str(seg),
-        "-hls_playlist_type", "vod",
-        "-hls_segment_type", "fmp4",
-        "-hls_flags", "independent_segments",
-        "-hls_fmp4_init_filename", "init.mp4",
-        "-hls_segment_filename", str(out / "%v" / "seg_%05d.m4s"),
-        "-master_pl_name", "master.m3u8",
-        "-var_stream_map", " ".join(var_map),
-        "-progress", "pipe:1", "-stats_period", "1",
+        "-f",
+        "hls",
+        "-hls_time",
+        str(seg),
+        "-hls_playlist_type",
+        "vod",
+        "-hls_segment_type",
+        "fmp4",
+        "-hls_flags",
+        "independent_segments",
+        "-hls_fmp4_init_filename",
+        "init.mp4",
+        "-hls_segment_filename",
+        str(out / "%v" / "seg_%05d.m4s"),
+        "-master_pl_name",
+        "master.m3u8",
+        "-var_stream_map",
+        " ".join(var_map),
+        "-progress",
+        "pipe:1",
+        "-stats_period",
+        "1",
         str(out / "%v" / "index.m3u8"),
     ]
     return cmd
@@ -266,20 +343,53 @@ def sprites(src: str, out: Path, source: Probe) -> dict:
     out.mkdir(parents=True, exist_ok=True)
     run(
         [
-            "ffmpeg", "-hide_banner", "-nostdin", "-y", "-i", src,
-            "-vf", f"fps=1/{interval},scale={width}:{height}:flags=bicubic,tile={cols}x{rows}",
-            "-q:v", "5", str(out / "sheet_%03d.jpg"),
+            "ffmpeg",
+            "-hide_banner",
+            "-nostdin",
+            "-y",
+            "-i",
+            src,
+            "-vf",
+            f"fps=1/{interval},scale={width}:{height}:flags=bicubic,tile={cols}x{rows}",
+            "-q:v",
+            "5",
+            str(out / "sheet_%03d.jpg"),
         ],
         timeout=max(600, int(source.duration)),
     )
     sheets = sorted(p.name for p in out.glob("sheet_*.jpg"))
-    return {"interval": interval, "columns": cols, "rows": rows, "width": width, "height": height, "count": count, "sheets": sheets}
+    return {
+        "interval": interval,
+        "columns": cols,
+        "rows": rows,
+        "width": width,
+        "height": height,
+        "count": count,
+        "sheets": sheets,
+    }
 
 
 def poster_frame(src: str, out: Path, source: Probe) -> str:
     target = out / "poster.jpg"
     at = max(0.0, min(source.duration * 0.1, source.duration - 0.5))
-    run(["ffmpeg", "-hide_banner", "-nostdin", "-y", "-ss", f"{at:.2f}", "-i", src, "-frames:v", "1", "-q:v", "3", str(target)], timeout=120)
+    run(
+        [
+            "ffmpeg",
+            "-hide_banner",
+            "-nostdin",
+            "-y",
+            "-ss",
+            f"{at:.2f}",
+            "-i",
+            src,
+            "-frames:v",
+            "1",
+            "-q:v",
+            "3",
+            str(target),
+        ],
+        timeout=120,
+    )
     return target.name
 
 
@@ -287,8 +397,12 @@ def upload_tree(root: Path, prefix: str) -> int:
     files = [p for p in root.rglob("*") if p.is_file()]
 
     def put(path: Path):
-        content_type, cache = CONTENT_TYPES.get(path.suffix, ("application/octet-stream", storage.LONG_CACHE))
-        storage.upload_file(str(path), f"{prefix}/{path.relative_to(root).as_posix()}", content_type, cache)
+        content_type, cache = CONTENT_TYPES.get(
+            path.suffix, ("application/octet-stream", storage.LONG_CACHE)
+        )
+        storage.upload_file(
+            str(path), f"{prefix}/{path.relative_to(root).as_posix()}", content_type, cache
+        )
 
     with ThreadPoolExecutor(max_workers=16) as pool:
         list(pool.map(put, files))

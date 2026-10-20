@@ -3472,6 +3472,232 @@
                 }
             }
         },
+        "/api/v1/browse/billboard": {
+            "get": {
+                "operationId": "browse_billboard",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "translation",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "not_translated",
+                                "translated"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "browse"
+                ],
+                "security": [
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/BillboardItem"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/browse/home": {
+            "get": {
+                "operationId": "browse_home",
+                "description": "One page of the infinite home feed (rows of cards).",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "cursor",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "translation",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "not_translated",
+                                "translated"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "browse"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HomePage"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/catalog/poster-wall": {
+            "get": {
+                "operationId": "poster_wall",
+                "tags": [
+                    "catalog"
+                ],
+                "security": [
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "results": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/genres": {
+            "get": {
+                "operationId": "genres",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "translation",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "not_translated",
+                                "translated"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "genres"
+                ],
+                "security": [
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/GenreTile"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/genres/{slug}/titles": {
+            "get": {
+                "operationId": "genre_titles",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "cursor",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "path",
+                        "name": "slug",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "sort",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "az",
+                                "newest",
+                                "suggested",
+                                "year"
+                            ]
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "translation",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "not_translated",
+                                "translated"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "genres"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HomePage"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/legal/{slug}": {
             "get": {
                 "operationId": "legal_page",
@@ -3504,21 +3730,506 @@
                     }
                 }
             }
+        },
+        "/api/v1/my-list": {
+            "get": {
+                "operationId": "my_list",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "translation",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "not_translated",
+                                "translated"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "my-list"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TitleCard"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/my-list/{title_id}": {
+            "put": {
+                "operationId": "my_list_add",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "title_id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "my-list"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "my_list_remove",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "title_id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "my-list"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/playback/{slug}": {
+            "get": {
+                "operationId": "playback",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "episode",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "preview",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "path",
+                        "name": "slug",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "playback"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Playback"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/playback/events": {
+            "post": {
+                "operationId": "playback_events",
+                "description": "Playback analytics in batches. Buffered in Redis, bulk-inserted by a periodic task.",
+                "tags": [
+                    "playback"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EventBatchRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EventBatchRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/playback/progress": {
+            "post": {
+                "operationId": "playback_progress",
+                "description": "Saves position for one or more items (the player calls this every N seconds and on pause/exit).",
+                "tags": [
+                    "playback"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProgressBatchRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProgressBatchRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProgressResult"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/ratings/{title_id}": {
+            "put": {
+                "operationId": "rate_title",
+                "description": "One tap: 👎 -1 · 👍 1 · 👍👍 2. Recommendations react on the next request.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "title_id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "ratings"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RatingInputRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RatingInputRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RatingResult"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "unrate_title",
+                "description": "One tap: 👎 -1 · 👍 1 · 👍👍 2. Recommendations react on the next request.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "title_id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "ratings"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/search": {
+            "get": {
+                "operationId": "search",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "q",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "translation",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "not_translated",
+                                "translated"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "search"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TitleCard"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/search/suggestions": {
+            "get": {
+                "operationId": "search_suggestions",
+                "tags": [
+                    "search"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "top": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "recent": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/titles/{slug}": {
+            "get": {
+                "operationId": "title_detail",
+                "description": "Title detail for the modal / deep link. Viewer state included when signed in.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "slug",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "translation",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "not_translated",
+                                "translated"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "titles"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TitlePage"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/titles/{slug}/seasons/{number}/episodes": {
+            "get": {
+                "operationId": "title_episodes",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "limit",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "path",
+                        "name": "number",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "offset",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "path",
+                        "name": "slug",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "titles"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EpisodePage"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
         }
     },
     "components": {
         "schemas": {
-            "ActionEnum": {
-                "enum": [
-                    "publish",
-                    "archive",
-                    "draft",
-                    "feature",
-                    "unfeature"
-                ],
-                "type": "string",
-                "description": "* `publish` - publish\n* `archive` - archive\n* `draft` - draft\n* `feature` - feature\n* `unfeature` - unfeature"
-            },
             "AdminImage": {
                 "type": "object",
                 "properties": {
@@ -3959,10 +4670,48 @@
                     "title"
                 ]
             },
+            "BillboardItem": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "headline": {
+                        "type": "string"
+                    },
+                    "tagline": {
+                        "type": "string"
+                    },
+                    "use_trailer": {
+                        "type": "boolean"
+                    },
+                    "title": {
+                        "$ref": "#/components/schemas/TitleCard"
+                    }
+                },
+                "required": [
+                    "headline",
+                    "id",
+                    "tagline",
+                    "title",
+                    "use_trailer"
+                ]
+            },
             "BlankEnum": {
                 "enum": [
                     ""
                 ]
+            },
+            "BulkActionActionEnum": {
+                "enum": [
+                    "publish",
+                    "archive",
+                    "draft",
+                    "feature",
+                    "unfeature"
+                ],
+                "type": "string",
+                "description": "* `publish` - publish\n* `archive` - archive\n* `draft` - draft\n* `feature` - feature\n* `unfeature` - unfeature"
             },
             "BulkActionRequest": {
                 "type": "object",
@@ -3976,7 +4725,7 @@
                         "minItems": 1
                     },
                     "action": {
-                        "$ref": "#/components/schemas/ActionEnum"
+                        "$ref": "#/components/schemas/BulkActionActionEnum"
                     }
                 },
                 "required": [
@@ -4007,6 +4756,28 @@
                     "skipped",
                     "updated"
                 ]
+            },
+            "CardContext": {
+                "type": "object",
+                "description": "Row-specific extras (Continue Watching progress, Top 10 rank…).",
+                "properties": {
+                    "progress": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "episode_id": {
+                        "type": "integer"
+                    },
+                    "rank": {
+                        "type": "integer"
+                    },
+                    "other_mode": {
+                        "type": "boolean"
+                    }
+                }
             },
             "CdnTestRequestRequest": {
                 "type": "object",
@@ -4275,6 +5046,64 @@
                     "name"
                 ]
             },
+            "Episode": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "number": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    },
+                    "runtime_minutes": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "thumbnail": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "progress": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true
+                    },
+                    "watched": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "available": {
+                        "type": "boolean",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "available",
+                    "id",
+                    "name",
+                    "number",
+                    "progress",
+                    "thumbnail",
+                    "watched"
+                ]
+            },
             "EpisodeAdmin": {
                 "type": "object",
                 "properties": {
@@ -4412,6 +5241,124 @@
                     "name"
                 ]
             },
+            "EpisodePage": {
+                "type": "object",
+                "properties": {
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Episode"
+                        }
+                    },
+                    "next": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "season": {
+                        "$ref": "#/components/schemas/SeasonSummary"
+                    }
+                },
+                "required": [
+                    "next",
+                    "results",
+                    "season"
+                ]
+            },
+            "EventBatchRequest": {
+                "type": "object",
+                "properties": {
+                    "events": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EventRequest"
+                        }
+                    }
+                },
+                "required": [
+                    "events"
+                ]
+            },
+            "EventKindEnum": {
+                "enum": [
+                    "start",
+                    "play",
+                    "pause",
+                    "seek",
+                    "quality",
+                    "rebuffer",
+                    "complete",
+                    "error",
+                    "heartbeat"
+                ],
+                "type": "string",
+                "description": "* `start` - Start\n* `play` - Play\n* `pause` - Pause\n* `seek` - Seek\n* `quality` - Quality\n* `rebuffer` - Rebuffer\n* `complete` - Complete\n* `error` - Error\n* `heartbeat` - Heartbeat"
+            },
+            "EventRequest": {
+                "type": "object",
+                "properties": {
+                    "session_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/EventKindEnum"
+                    },
+                    "title_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "episode_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "position": {
+                        "type": "number",
+                        "format": "double",
+                        "default": 0.0
+                    },
+                    "value": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "data": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "ts": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "kind",
+                    "session_id"
+                ]
+            },
+            "Genre": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 80
+                    },
+                    "slug": {
+                        "type": "string",
+                        "maxLength": 90,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "slug"
+                ]
+            },
             "GenreAdmin": {
                 "type": "object",
                 "properties": {
@@ -4545,6 +5492,58 @@
                     "slug"
                 ]
             },
+            "GenreTile": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 80
+                    },
+                    "slug": {
+                        "type": "string",
+                        "maxLength": 90,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "artwork": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "title_count": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "sample": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "artwork",
+                    "id",
+                    "name",
+                    "sample",
+                    "slug",
+                    "title_count"
+                ]
+            },
             "Health": {
                 "type": "object",
                 "properties": {
@@ -4554,6 +5553,25 @@
                 },
                 "required": [
                     "ok"
+                ]
+            },
+            "HomePage": {
+                "type": "object",
+                "properties": {
+                    "rows": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Row"
+                        }
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "next",
+                    "rows"
                 ]
             },
             "HomeRowAdmin": {
@@ -4656,6 +5674,39 @@
                 ],
                 "type": "string",
                 "description": "* `poster` - Poster\n* `backdrop` - Backdrop\n* `logo` - Logo\n* `thumbnail` - Thumbnail\n* `artwork` - Artwork"
+            },
+            "ImageRef": {
+                "type": "object",
+                "description": "What viewers get: a loader key plus a blur placeholder.",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "blur": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "color": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "width": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0
+                    },
+                    "height": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0
+                    }
+                },
+                "required": [
+                    "blur",
+                    "color",
+                    "key"
+                ]
             },
             "ImageStatusEnum": {
                 "enum": [
@@ -4761,6 +5812,38 @@
                 "required": [
                     "password",
                     "username"
+                ]
+            },
+            "NextEpisode": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    },
+                    "thumbnail": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "id",
+                    "label",
+                    "name",
+                    "synopsis",
+                    "thumbnail"
                 ]
             },
             "PaginatedTitleAdminListList": {
@@ -5259,6 +6342,219 @@
                     }
                 }
             },
+            "PlayTarget": {
+                "type": "object",
+                "description": "What the smart Play button does.",
+                "properties": {
+                    "action": {
+                        "$ref": "#/components/schemas/PlayTargetActionEnum"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "episode_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "season_number": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "position": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "progress": {
+                        "type": "number",
+                        "format": "double"
+                    }
+                },
+                "required": [
+                    "action",
+                    "episode_id",
+                    "label",
+                    "position",
+                    "progress",
+                    "season_number"
+                ]
+            },
+            "PlayTargetActionEnum": {
+                "enum": [
+                    "play",
+                    "resume"
+                ],
+                "type": "string",
+                "description": "* `play` - play\n* `resume` - resume"
+            },
+            "Playback": {
+                "type": "object",
+                "properties": {
+                    "session_id": {
+                        "type": "string"
+                    },
+                    "asset_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "master_url": {
+                        "type": "string"
+                    },
+                    "thumbnails_url": {
+                        "type": "string"
+                    },
+                    "duration": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "start_at": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "max_height": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "title": {
+                        "$ref": "#/components/schemas/PlaybackTitle"
+                    },
+                    "episode": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PlaybackEpisode"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "next": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/NextEpisode"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "renditions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RenditionInfo"
+                        }
+                    },
+                    "subtitles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SubtitleInfo"
+                        }
+                    },
+                    "is_preview": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "asset_id",
+                    "duration",
+                    "episode",
+                    "is_preview",
+                    "master_url",
+                    "max_height",
+                    "next",
+                    "renditions",
+                    "session_id",
+                    "start_at",
+                    "subtitles",
+                    "thumbnails_url",
+                    "title"
+                ]
+            },
+            "PlaybackEpisode": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "number": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "season_number": {
+                        "type": "integer"
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    },
+                    "intro_start": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "intro_end": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "credits_start": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "credits_start",
+                    "id",
+                    "intro_end",
+                    "intro_start",
+                    "name",
+                    "number",
+                    "season_number",
+                    "synopsis"
+                ]
+            },
+            "PlaybackTitle": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "maturity_rating": {
+                        "type": "string"
+                    },
+                    "logo": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "backdrop": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "backdrop",
+                    "id",
+                    "logo",
+                    "maturity_rating",
+                    "slug",
+                    "title",
+                    "type"
+                ]
+            },
             "Preview": {
                 "type": "object",
                 "properties": {
@@ -5279,6 +6575,73 @@
                     "thumbnails_url"
                 ]
             },
+            "ProgressBatchRequest": {
+                "type": "object",
+                "properties": {
+                    "updates": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProgressUpdateRequest"
+                        }
+                    }
+                },
+                "required": [
+                    "updates"
+                ]
+            },
+            "ProgressResult": {
+                "type": "object",
+                "properties": {
+                    "saved": {
+                        "type": "integer"
+                    },
+                    "completed": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "required": [
+                    "completed",
+                    "saved"
+                ]
+            },
+            "ProgressUpdateRequest": {
+                "type": "object",
+                "properties": {
+                    "title_id": {
+                        "type": "integer"
+                    },
+                    "episode_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "position": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0
+                    },
+                    "duration": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0
+                    },
+                    "watched": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 3600,
+                        "minimum": 0,
+                        "default": 0.0,
+                        "description": "Seconds watched since the last update."
+                    }
+                },
+                "required": [
+                    "duration",
+                    "position",
+                    "title_id"
+                ]
+            },
             "PublicConfig": {
                 "type": "object",
                 "properties": {
@@ -5289,6 +6652,33 @@
                 },
                 "required": [
                     "values"
+                ]
+            },
+            "RatingInputRequest": {
+                "type": "object",
+                "properties": {
+                    "value": {
+                        "$ref": "#/components/schemas/ValueEnum"
+                    }
+                },
+                "required": [
+                    "value"
+                ]
+            },
+            "RatingResult": {
+                "type": "object",
+                "properties": {
+                    "title_id": {
+                        "type": "integer"
+                    },
+                    "value": {
+                        "type": "integer",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "title_id",
+                    "value"
                 ]
             },
             "RelatedAdmin": {
@@ -5457,6 +6847,25 @@
                     "width"
                 ]
             },
+            "RenditionInfo": {
+                "type": "object",
+                "properties": {
+                    "height": {
+                        "type": "integer"
+                    },
+                    "width": {
+                        "type": "integer"
+                    },
+                    "bandwidth": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "bandwidth",
+                    "height",
+                    "width"
+                ]
+            },
             "RenditionRequest": {
                 "type": "object",
                 "properties": {
@@ -5517,6 +6926,36 @@
                 ],
                 "type": "string",
                 "description": "* `superadmin` - Super admin\n* `content_manager` - Content manager\n* `analyst` - Analyst"
+            },
+            "Row": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TitleCard"
+                        }
+                    },
+                    "seed": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "items",
+                    "key",
+                    "kind",
+                    "title"
+                ]
             },
             "SeasonAdmin": {
                 "type": "object",
@@ -5596,6 +7035,38 @@
                         "nullable": true
                     }
                 }
+            },
+            "SeasonSummary": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "number": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "display_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "episode_count": {
+                        "type": "integer",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "display_name",
+                    "episode_count",
+                    "id",
+                    "number"
+                ]
             },
             "Session": {
                 "type": "object",
@@ -5760,6 +7231,25 @@
                 "required": [
                     "created_at",
                     "id",
+                    "label",
+                    "language"
+                ]
+            },
+            "SubtitleInfo": {
+                "type": "object",
+                "properties": {
+                    "language": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "is_default",
                     "label",
                     "language"
                 ]
@@ -6284,6 +7774,343 @@
                     "type"
                 ]
             },
+            "TitleCard": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "slug": {
+                        "type": "string",
+                        "maxLength": 140,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/TitleTypeEnum"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "maximum": 2100,
+                        "minimum": 1888,
+                        "nullable": true
+                    },
+                    "maturity_rating": {
+                        "type": "string",
+                        "maxLength": 12
+                    },
+                    "runtime_minutes": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "season_count": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "short_synopsis": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "translation_status": {
+                        "$ref": "#/components/schemas/TranslationStatusEnum"
+                    },
+                    "translator_name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "poster": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "backdrop": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "logo": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "genres": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    },
+                    "has_preview": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "match": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "context": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CardContext"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "in_my_list": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "rating": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "backdrop",
+                    "context",
+                    "genres",
+                    "has_preview",
+                    "id",
+                    "in_my_list",
+                    "logo",
+                    "match",
+                    "poster",
+                    "rating",
+                    "season_count",
+                    "slug",
+                    "title",
+                    "translation_status",
+                    "type"
+                ]
+            },
+            "TitleDetail": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "slug": {
+                        "type": "string",
+                        "maxLength": 140,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/TitleTypeEnum"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "maximum": 2100,
+                        "minimum": 1888,
+                        "nullable": true
+                    },
+                    "maturity_rating": {
+                        "type": "string",
+                        "maxLength": 12
+                    },
+                    "runtime_minutes": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "season_count": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "short_synopsis": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "translation_status": {
+                        "$ref": "#/components/schemas/TranslationStatusEnum"
+                    },
+                    "translator_name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "poster": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "backdrop": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "logo": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "genres": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    },
+                    "has_preview": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "match": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "context": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CardContext"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "in_my_list": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "rating": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "original_title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "type": "string",
+                        "maxLength": 12
+                    },
+                    "cast": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 120
+                        }
+                    },
+                    "directors": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 120
+                        }
+                    },
+                    "genres_full": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Genre"
+                        },
+                        "readOnly": true
+                    },
+                    "seasons": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SeasonSummary"
+                        },
+                        "readOnly": true
+                    },
+                    "published_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "backdrop",
+                    "context",
+                    "genres",
+                    "genres_full",
+                    "has_preview",
+                    "id",
+                    "in_my_list",
+                    "logo",
+                    "match",
+                    "poster",
+                    "rating",
+                    "season_count",
+                    "seasons",
+                    "slug",
+                    "title",
+                    "translation_status",
+                    "type"
+                ]
+            },
+            "TitlePage": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "$ref": "#/components/schemas/TitleDetail"
+                    },
+                    "viewer": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ViewerState"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "more_like_this": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TitleCard"
+                        }
+                    }
+                },
+                "required": [
+                    "more_like_this",
+                    "title",
+                    "viewer"
+                ]
+            },
             "TitleStatusEnum": {
                 "enum": [
                     "draft",
@@ -6538,6 +8365,15 @@
                     "username"
                 ]
             },
+            "ValueEnum": {
+                "enum": [
+                    -1,
+                    1,
+                    2
+                ],
+                "type": "integer",
+                "description": "* `-1` - -1\n* `1` - 1\n* `2` - 2"
+            },
             "ValueTypeEnum": {
                 "enum": [
                     "string",
@@ -6731,6 +8567,36 @@
                 ],
                 "type": "string",
                 "description": "* `uploading` - Uploading\n* `uploaded` - Uploaded\n* `queued` - Queued\n* `transcoding` - Transcoding\n* `ready` - Ready\n* `failed` - Failed"
+            },
+            "ViewerState": {
+                "type": "object",
+                "properties": {
+                    "in_my_list": {
+                        "type": "boolean"
+                    },
+                    "rating": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "play": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PlayTarget"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "last_season": {
+                        "type": "integer",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "in_my_list",
+                    "last_season",
+                    "play",
+                    "rating"
+                ]
             }
         },
         "securitySchemes": {

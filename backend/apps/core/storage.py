@@ -284,8 +284,18 @@ def test_connection(overrides: dict[str, str] | None = None) -> dict[str, Any]:
     probe = f"{s.prefix}.netfly-connection-test"
     steps: list[str] = []
     try:
-        c.head_bucket(Bucket=s.bucket)
-        steps.append("bucket reachable")
+        try:
+            c.head_bucket(Bucket=s.bucket)
+            steps.append("bucket reachable")
+        except ClientError as exc:
+            # Prefix-scoped policies often deny HeadBucket but allow object access: keep going.
+            if exc.response.get("Error", {}).get("Code") not in (
+                "403",
+                "AccessDenied",
+                "Forbidden",
+            ):
+                raise
+            steps.append("bucket-level access denied (object access checked next)")
         c.put_object(Bucket=s.bucket, Key=probe, Body=b"ok")
         steps.append("write ok")
         c.get_object(Bucket=s.bucket, Key=probe)["Body"].read()

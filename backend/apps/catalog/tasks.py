@@ -18,9 +18,9 @@ logger = logging.getLogger(__name__)
 def publish_scheduled_titles() -> int:
     """Publish titles whose `publish_at` has arrived (and whose license allows it)."""
     now = timezone.now()
-    due = Title.objects.filter(status__in=[Title.Status.DRAFT, Title.Status.PROCESSING], publish_at__lte=now).filter(
-        Q(license_start__isnull=True) | Q(license_start__lte=now)
-    )
+    due = Title.objects.filter(
+        status__in=[Title.Status.DRAFT, Title.Status.PROCESSING], publish_at__lte=now
+    ).filter(Q(license_start__isnull=True) | Q(license_start__lte=now))
     count = 0
     for title in due:
         if services.publish_blockers(title):
@@ -40,7 +40,9 @@ def enforce_licenses() -> dict:
     for title in expired:
         title.status = Title.Status.ARCHIVED
         title.save(update_fields=["status", "updated_at"])
-        record(None, "title.license_expired", title, changes={"license_end": str(title.license_end)})
+        record(
+            None, "title.license_expired", title, changes={"license_end": str(title.license_end)}
+        )
     days = config.get_int("content.license_warning_days", 14)
     warn = Title.objects.filter(
         status=Title.Status.PUBLISHED,
@@ -50,7 +52,9 @@ def enforce_licenses() -> dict:
     )
     warned = []
     for title in warn:
-        record(None, "title.license_expiring", title, changes={"license_end": str(title.license_end)})
+        record(
+            None, "title.license_expiring", title, changes={"license_end": str(title.license_end)}
+        )
         logger.warning("License for %s expires %s", title.title, title.license_end)
         warned.append(title.pk)
     Title.objects.filter(pk__in=warned).update(license_warning_sent_at=now)

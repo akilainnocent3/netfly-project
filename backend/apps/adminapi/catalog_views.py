@@ -11,7 +11,16 @@ from rest_framework.views import APIView
 
 from apps.accounts.permissions import StaffPermission
 from apps.catalog import services
-from apps.catalog.models import Billboard, Collection, Episode, Genre, HomeRow, RelatedTitle, Season, Title
+from apps.catalog.models import (
+    Billboard,
+    Collection,
+    Episode,
+    Genre,
+    HomeRow,
+    RelatedTitle,
+    Season,
+    Title,
+)
 from apps.core.audit import client_ip, record
 from apps.core.exceptions import APIError
 from apps.core.throttling import throttle
@@ -29,7 +38,9 @@ TITLE_FILTERS = [
     OpenApiParameter("translation", str, enum=["translated", "not_translated"]),
     OpenApiParameter("genre", int),
     OpenApiParameter("featured", bool),
-    OpenApiParameter("ordering", str, enum=["-updated_at", "title", "-published_at", "-popularity", "year"]),
+    OpenApiParameter(
+        "ordering", str, enum=["-updated_at", "title", "-published_at", "-popularity", "year"]
+    ),
 ]
 
 
@@ -41,16 +52,26 @@ class TitleViewSet(AuditedMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         qs = Title.objects.all()
         if self.action == "list":
-            qs = qs.select_related("poster", "video").prefetch_related("genres").annotate(
-                season_count=Count("seasons", distinct=True),
-                episode_count=Count("seasons__episodes", distinct=True),
+            qs = (
+                qs.select_related("poster", "video")
+                .prefetch_related("genres")
+                .annotate(
+                    season_count=Count("seasons", distinct=True),
+                    episode_count=Count("seasons__episodes", distinct=True),
+                )
             )
             p = self.request.query_params
             if search := p.get("search", "").strip():
                 qs = qs.annotate(sim=TrigramSimilarity("title", search)).filter(
-                    Q(title__icontains=search) | Q(original_title__icontains=search) | Q(sim__gt=0.2)
+                    Q(title__icontains=search)
+                    | Q(original_title__icontains=search)
+                    | Q(sim__gt=0.2)
                 )
-            for field, param in (("type", "type"), ("status", "status"), ("translation_status", "translation")):
+            for field, param in (
+                ("type", "type"),
+                ("status", "status"),
+                ("translation_status", "translation"),
+            ):
                 if value := p.get(param):
                     qs = qs.filter(**{field: value})
             if genre := p.get("genre"):
@@ -114,14 +135,23 @@ class TitleViewSet(AuditedMixin, viewsets.ModelViewSet):
                         continue
                     services.publish(title)
                 elif verb in ("archive", "draft"):
-                    title.status = Title.Status.ARCHIVED if verb == "archive" else Title.Status.DRAFT
+                    title.status = (
+                        Title.Status.ARCHIVED if verb == "archive" else Title.Status.DRAFT
+                    )
                     title.save(update_fields=["status", "updated_at"])
                 else:
                     title.is_featured = verb == "feature"
                     title.save(update_fields=["is_featured", "updated_at"])
                 updated.append(title.pk)
-        record(request.user, f"title.bulk_{verb}", None, target_type="catalog.title", target_id=",".join(map(str, updated))[:150],
-               changes={"ids": updated, "skipped": skipped}, ip=client_ip(request))
+        record(
+            request.user,
+            f"title.bulk_{verb}",
+            None,
+            target_type="catalog.title",
+            target_id=",".join(map(str, updated))[:150],
+            changes={"ids": updated, "skipped": skipped},
+            ip=client_ip(request),
+        )
         return Response({"updated": updated, "skipped": skipped})
 
     @extend_schema(responses=s.SeasonAdminSerializer(many=True))
@@ -129,7 +159,12 @@ class TitleViewSet(AuditedMixin, viewsets.ModelViewSet):
     def seasons(self, request, pk=None):
         title = self.get_object()
         seasons = title.seasons.select_related("poster").prefetch_related(
-            Prefetch("episodes", queryset=Episode.objects.select_related("thumbnail", "video").prefetch_related("video__subtitles"))
+            Prefetch(
+                "episodes",
+                queryset=Episode.objects.select_related("thumbnail", "video").prefetch_related(
+                    "video__subtitles"
+                ),
+            )
         )
         return Response(s.SeasonAdminSerializer(seasons, many=True).data)
 
@@ -139,7 +174,9 @@ class TitleViewSet(AuditedMixin, viewsets.ModelViewSet):
         title = self.get_object()
         links = title.related_links.select_related("related__poster")
         reverse = set(RelatedTitle.objects.filter(related=title).values_list("title_id", flat=True))
-        return Response(s.RelatedAdminSerializer(links, many=True, context={"reverse_pairs": reverse}).data)
+        return Response(
+            s.RelatedAdminSerializer(links, many=True, context={"reverse_pairs": reverse}).data
+        )
 
     @extend_schema(request=s.RelatedAdminSerializer, responses=s.RelatedAdminSerializer)
     @related.mapping.post
@@ -150,26 +187,51 @@ class TitleViewSet(AuditedMixin, viewsets.ModelViewSet):
         related = data.validated_data["related"]
         if related.pk == title.pk:
             raise APIError("A title can't be related to itself.", "validation_error")
-        link = services.link_related(title, related, data.validated_data["weight"], data.validated_data["two_way"])
-        self._audit("related_add", title, {"related": related.pk, "weight": link.weight, "two_way": data.validated_data["two_way"]})
+        link = services.link_related(
+            title, related, data.validated_data["weight"], data.validated_data["two_way"]
+        )
+        self._audit(
+            "related_add",
+            title,
+            {
+                "related": related.pk,
+                "weight": link.weight,
+                "two_way": data.validated_data["two_way"],
+            },
+        )
         return Response(s.RelatedAdminSerializer(link).data, status=status.HTTP_201_CREATED)
 
 
-class SeasonViewSet(AuditedMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class SeasonViewSet(
+    AuditedMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet
+):
     audit_type = "season"
     queryset = Season.objects.select_related("poster")
     serializer_class = s.SeasonAdminSerializer
 
-    @extend_schema(request=s.SeasonAdminSerializer, responses=s.SeasonAdminSerializer, parameters=[OpenApiParameter("title", int, required=True)])
+    @extend_schema(
+        request=s.SeasonAdminSerializer,
+        responses=s.SeasonAdminSerializer,
+        parameters=[OpenApiParameter("title", int, required=True)],
+    )
     def create(self, request):
-        title = get_object_or_404(Title, pk=request.query_params.get("title"), type=Title.Type.SERIES)
+        title = get_object_or_404(
+            Title, pk=request.query_params.get("title"), type=Title.Type.SERIES
+        )
         data = s.SeasonAdminSerializer(data=request.data)
         data.is_valid(raise_exception=True)
-        season = data.save(title=title, number=data.validated_data.get("number") or services.next_season_number(title))
+        season = data.save(
+            title=title,
+            number=data.validated_data.get("number") or services.next_season_number(title),
+        )
         self._audit("create", season, {"title": title.pk, "number": season.number})
         return Response(s.SeasonAdminSerializer(season).data, status=status.HTTP_201_CREATED)
 
-    @extend_schema(request=s.ReorderSerializer, responses={204: None}, parameters=[OpenApiParameter("title", int, required=True)])
+    @extend_schema(
+        request=s.ReorderSerializer,
+        responses={204: None},
+        parameters=[OpenApiParameter("title", int, required=True)],
+    )
     @action(detail=False, methods=["post"])
     def reorder(self, request):
         data = s.ReorderSerializer(data=request.data)
@@ -179,7 +241,15 @@ class SeasonViewSet(AuditedMixin, mixins.UpdateModelMixin, mixins.DestroyModelMi
             services.renumber(Season, "title_id", title_id, data.validated_data["ids"])
         except ValueError as exc:
             raise APIError(str(exc), "validation_error") from exc
-        record(request.user, "season.reorder", None, target_type="catalog.title", target_id=str(title_id), changes={"order": data.validated_data["ids"]}, ip=client_ip(request))
+        record(
+            request.user,
+            "season.reorder",
+            None,
+            target_type="catalog.title",
+            target_id=str(title_id),
+            changes={"order": data.validated_data["ids"]},
+            ip=client_ip(request),
+        )
         return Response(status=204)
 
     @extend_schema(request=s.EpisodeAdminSerializer, responses=s.EpisodeAdminSerializer)
@@ -188,7 +258,10 @@ class SeasonViewSet(AuditedMixin, mixins.UpdateModelMixin, mixins.DestroyModelMi
         season = self.get_object()
         data = s.EpisodeAdminSerializer(data=request.data)
         data.is_valid(raise_exception=True)
-        episode = data.save(season=season, number=data.validated_data.get("number") or services.next_episode_number(season))
+        episode = data.save(
+            season=season,
+            number=data.validated_data.get("number") or services.next_episode_number(season),
+        )
         self._audit("episode_create", season, {"episode": episode.pk, "number": episode.number})
         return Response(s.EpisodeAdminSerializer(episode).data, status=status.HTTP_201_CREATED)
 
@@ -206,7 +279,13 @@ class SeasonViewSet(AuditedMixin, mixins.UpdateModelMixin, mixins.DestroyModelMi
         return Response(status=204)
 
 
-class EpisodeViewSet(AuditedMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class EpisodeViewSet(
+    AuditedMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
     audit_type = "episode"
     queryset = Episode.objects.select_related("thumbnail", "video")
     serializer_class = s.EpisodeAdminSerializer
@@ -225,20 +304,26 @@ class RelatedLinkViewSet(AuditedMixin, mixins.UpdateModelMixin, viewsets.Generic
         data.is_valid(raise_exception=True)
         link.weight = data.validated_data["weight"]
         link.save(update_fields=["weight"])
-        RelatedTitle.objects.filter(title_id=link.related_id, related_id=link.title_id).update(weight=link.weight)
+        RelatedTitle.objects.filter(title_id=link.related_id, related_id=link.title_id).update(
+            weight=link.weight
+        )
         self._audit("update", link, {"weight": link.weight})
         return Response(s.RelatedAdminSerializer(link).data)
 
     def perform_update(self, serializer):
         link = serializer.save()
-        RelatedTitle.objects.filter(title_id=link.related_id, related_id=link.title_id).update(weight=link.weight)
+        RelatedTitle.objects.filter(title_id=link.related_id, related_id=link.title_id).update(
+            weight=link.weight
+        )
         self._audit("update", link, {"weight": link.weight})
 
     @extend_schema(parameters=[OpenApiParameter("two_way", bool)], responses={204: None})
     def destroy(self, request, pk=None):
         link = self.get_object()
         two_way = request.query_params.get("two_way", "true") != "false"
-        self._audit("delete", link, {"title": link.title_id, "related": link.related_id, "two_way": two_way})
+        self._audit(
+            "delete", link, {"title": link.title_id, "related": link.related_id, "two_way": two_way}
+        )
         services.unlink_related(link, two_way)
         return Response(status=204)
 
@@ -249,7 +334,11 @@ class GenreViewSet(AuditedMixin, viewsets.ModelViewSet):
     pagination_class = None
 
     def get_queryset(self):
-        return Genre.objects.select_related("artwork").annotate(title_count=Count("titles")).order_by("order", "name")
+        return (
+            Genre.objects.select_related("artwork")
+            .annotate(title_count=Count("titles"))
+            .order_by("order", "name")
+        )
 
     def perform_create(self, serializer):
         order = (Genre.objects.aggregate(m=Max("order"))["m"] or 0) + 1
@@ -264,7 +353,14 @@ class GenreViewSet(AuditedMixin, viewsets.ModelViewSet):
         with transaction.atomic():
             for order, pk in enumerate(data.validated_data["ids"]):
                 Genre.objects.filter(pk=pk).update(order=order)
-        record(request.user, "genre.reorder", None, target_type="catalog.genre", changes={"order": data.validated_data["ids"]}, ip=client_ip(request))
+        record(
+            request.user,
+            "genre.reorder",
+            None,
+            target_type="catalog.genre",
+            changes={"order": data.validated_data["ids"]},
+            ip=client_ip(request),
+        )
         return Response(status=204)
 
 
@@ -288,7 +384,14 @@ class OrderedViewSet(AuditedMixin, viewsets.ModelViewSet):
         with transaction.atomic():
             for order, pk in enumerate(data.validated_data["ids"]):
                 model.objects.filter(pk=pk).update(order=order)
-        record(request.user, f"{self.audit_type}.reorder", None, target_type=model._meta.label_lower, changes={"order": data.validated_data["ids"]}, ip=client_ip(request))
+        record(
+            request.user,
+            f"{self.audit_type}.reorder",
+            None,
+            target_type=model._meta.label_lower,
+            changes={"order": data.validated_data["ids"]},
+            ip=client_ip(request),
+        )
         return Response(status=204)
 
 
@@ -311,18 +414,25 @@ class CollectionViewSet(AuditedMixin, viewsets.ModelViewSet):
     queryset = Collection.objects.prefetch_related("items__title__poster")
 
 
-class ImageViewSet(AuditedMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+class ImageViewSet(
+    AuditedMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet
+):
     audit_type = "image"
     queryset = ImageAsset.objects.all()
     serializer_class = AdminImageSerializer
     throttle_classes = [throttle("security.rate_upload", per_user=True)]
     parser_classes = [JSONParser, MultiPartParser]
 
-    @extend_schema(request={"multipart/form-data": ImageUploadSerializer}, responses={201: AdminImageSerializer})
+    @extend_schema(
+        request={"multipart/form-data": ImageUploadSerializer},
+        responses={201: AdminImageSerializer},
+    )
     def create(self, request):
         data = ImageUploadSerializer(data=request.data)
         data.is_valid(raise_exception=True)
-        asset = images.ingest(data.validated_data["file"], data.validated_data["kind"], request.user)
+        asset = images.ingest(
+            data.validated_data["file"], data.validated_data["kind"], request.user
+        )
         self._audit("upload", asset, {"kind": asset.kind})
         return Response(AdminImageSerializer(asset).data, status=status.HTTP_201_CREATED)
 
@@ -332,7 +442,9 @@ class ImageViewSet(AuditedMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMi
 
         from apps.media.tasks import render_image
 
-        asset = serializer.save(status=ImageAsset.Status.PROCESSING, version=serializer.instance.version + 1)
+        asset = serializer.save(
+            status=ImageAsset.Status.PROCESSING, version=serializer.instance.version + 1
+        )
         cache.delete(f"img:{asset.id}")
         self._audit("crop", asset, {"crop": asset.crop})
         render_image.delay(str(asset.id))
@@ -343,12 +455,19 @@ class TitlePickerView(APIView):
 
     permission_classes = [StaffPermission]
 
-    @extend_schema(parameters=[OpenApiParameter("q", str), OpenApiParameter("exclude", int)], responses=s.RelatedBriefSerializer(many=True))
+    @extend_schema(
+        parameters=[OpenApiParameter("q", str), OpenApiParameter("exclude", int)],
+        responses=s.RelatedBriefSerializer(many=True),
+    )
     def get(self, request):
         q = request.query_params.get("q", "").strip()
         qs = Title.objects.select_related("poster")
         if q:
-            qs = qs.annotate(sim=TrigramSimilarity("title", q)).filter(Q(title__icontains=q) | Q(sim__gt=0.2)).order_by("-sim")
+            qs = (
+                qs.annotate(sim=TrigramSimilarity("title", q))
+                .filter(Q(title__icontains=q) | Q(sim__gt=0.2))
+                .order_by("-sim")
+            )
         else:
             qs = qs.order_by("-updated_at")
         if exclude := request.query_params.get("exclude"):

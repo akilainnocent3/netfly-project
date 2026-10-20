@@ -18,12 +18,19 @@ def image_meta(asset_id: str) -> dict | None:
     key = f"img:{asset_id}"
     meta = cache.get(key)
     if meta is None:
-        asset = ImageAsset.objects.filter(pk=asset_id, status=ImageAsset.Status.READY).only(
-            "id", "version", "widths", "formats"
-        ).first()
+        asset = (
+            ImageAsset.objects.filter(pk=asset_id, status=ImageAsset.Status.READY)
+            .only("id", "version", "widths", "formats")
+            .first()
+        )
         if asset is None:
             return None
-        meta = {"key": asset.key, "version": asset.version, "widths": asset.widths, "formats": asset.formats}
+        meta = {
+            "key": asset.key,
+            "version": asset.version,
+            "widths": asset.widths,
+            "formats": asset.formats,
+        }
         cache.set(key, meta, 86400)
     return meta
 
@@ -56,14 +63,20 @@ class StreamView(View):
     def get(self, request, asset_id, name: str):
         token = request.GET.get("t", "")
         if not STREAM_NAME.match(name) or delivery.check_token(token, str(asset_id)) is None:
-            return JsonResponse({"code": "forbidden", "message": "This playback link has expired."}, status=403)
+            return JsonResponse(
+                {"code": "forbidden", "message": "This playback link has expired."}, status=403
+            )
         asset = VideoAsset.objects.filter(pk=asset_id, status=VideoAsset.Status.READY).first()
         if asset is None:
-            return JsonResponse({"code": "not_found", "message": "Video not available."}, status=404)
+            return JsonResponse(
+                {"code": "not_found", "message": "Video not available."}, status=404
+            )
         try:
             if name == "master":
                 max_h = request.GET.get("max_height")
-                body = delivery.master_playlist(asset, token, max_height=int(max_h) if max_h and max_h.isdigit() else None)
+                body = delivery.master_playlist(
+                    asset, token, max_height=int(max_h) if max_h and max_h.isdigit() else None
+                )
             elif name[0] == "v":
                 body = delivery.media_playlist(asset, asset.renditions[int(name[1:])]["playlist"])
             elif name[0] == "a":
@@ -71,10 +84,14 @@ class StreamView(View):
             else:
                 sub = asset.subtitles.filter(pk=int(name[1:])).first()
                 if sub is None:
-                    return JsonResponse({"code": "not_found", "message": "Subtitle not found."}, status=404)
+                    return JsonResponse(
+                        {"code": "not_found", "message": "Subtitle not found."}, status=404
+                    )
                 body = delivery.subtitle_playlist(asset, sub)
         except IndexError:
-            return JsonResponse({"code": "not_found", "message": "Rendition not found."}, status=404)
+            return JsonResponse(
+                {"code": "not_found", "message": "Rendition not found."}, status=404
+            )
         response = HttpResponse(body, content_type="application/vnd.apple.mpegurl")
         response["Cache-Control"] = "private, max-age=60"
         return response
@@ -86,7 +103,11 @@ class ThumbnailsView(View):
             return JsonResponse({"code": "forbidden", "message": "Expired."}, status=403)
         asset = VideoAsset.objects.filter(pk=asset_id, status=VideoAsset.Status.READY).first()
         if asset is None:
-            return JsonResponse({"code": "not_found", "message": "Video not available."}, status=404)
-        response = HttpResponse(delivery.thumbnails_vtt(asset), content_type="text/vtt; charset=utf-8")
+            return JsonResponse(
+                {"code": "not_found", "message": "Video not available."}, status=404
+            )
+        response = HttpResponse(
+            delivery.thumbnails_vtt(asset), content_type="text/vtt; charset=utf-8"
+        )
         response["Cache-Control"] = "private, max-age=300"
         return response

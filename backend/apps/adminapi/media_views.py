@@ -1,6 +1,11 @@
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_field, inline_serializer
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    extend_schema,
+    extend_schema_field,
+    inline_serializer,
+)
 from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import JSONParser, MultiPartParser
@@ -39,7 +44,17 @@ class UploadSessionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UploadSession
-        fields = ["id", "asset_id", "filename", "size", "part_size", "part_count", "status", "completed_parts", "created_at"]
+        fields = [
+            "id",
+            "asset_id",
+            "filename",
+            "size",
+            "part_size",
+            "part_count",
+            "status",
+            "completed_parts",
+            "created_at",
+        ]
 
     @extend_schema_field(PartSerializer(many=True))
     def get_completed_parts(self, obj):
@@ -47,7 +62,9 @@ class UploadSessionSerializer(serializers.ModelSerializer):
 
 
 class SignPartsSerializer(serializers.Serializer):
-    numbers = serializers.ListField(child=serializers.IntegerField(min_value=1), min_length=1, max_length=100)
+    numbers = serializers.ListField(
+        child=serializers.IntegerField(min_value=1), min_length=1, max_length=100
+    )
 
 
 class CompleteSerializer(serializers.Serializer):
@@ -71,8 +88,13 @@ class UploadViewSet(AuditedMixin, viewsets.GenericViewSet):
         data.is_valid(raise_exception=True)
         session, parts = uploads.start(user=request.user, **data.validated_data)
         if not parts:
-            self._audit("start", session.asset, {"filename": session.filename, "size": session.size})
-        return Response(UploadSessionSerializer(session, context={"parts": parts}).data, status=status.HTTP_201_CREATED)
+            self._audit(
+                "start", session.asset, {"filename": session.filename, "size": session.size}
+            )
+        return Response(
+            UploadSessionSerializer(session, context={"parts": parts}).data,
+            status=status.HTTP_201_CREATED,
+        )
 
     @extend_schema(request=SignPartsSerializer, responses=SignedPartSerializer(many=True))
     @action(detail=True, methods=["post"])
@@ -107,8 +129,15 @@ class VideoJobSerializer(AdminVideoSerializer):
         read_only_fields = fields
 
     def get_usage(self, obj) -> list[str]:
-        out = [f"{t.title}{' (trailer)' if t.trailer_id == obj.pk else ''}" for t in obj._titles] if hasattr(obj, "_titles") else []
-        out += [f"{e.season.title.title} S{e.season.number}:E{e.number}" for e in getattr(obj, "_episodes", [])]
+        out = (
+            [f"{t.title}{' (trailer)' if t.trailer_id == obj.pk else ''}" for t in obj._titles]
+            if hasattr(obj, "_titles")
+            else []
+        )
+        out += [
+            f"{e.season.title.title} S{e.season.number}:E{e.number}"
+            for e in getattr(obj, "_episodes", [])
+        ]
         return out
 
 
@@ -126,7 +155,9 @@ class SubtitleUploadSerializer(serializers.Serializer):
     is_forced = serializers.BooleanField(default=False)
 
 
-class VideoViewSet(AuditedMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class VideoViewSet(
+    AuditedMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
     audit_type = "video"
     serializer_class = VideoJobSerializer
     pagination_class = AdminPagination
@@ -140,17 +171,29 @@ class VideoViewSet(AuditedMixin, mixins.ListModelMixin, mixins.RetrieveModelMixi
 
     def _attach_usage(self, assets):
         ids = [a.pk for a in assets]
-        titles = list(Title.objects.filter(Q(video_id__in=ids) | Q(trailer_id__in=ids)).only("title", "video_id", "trailer_id"))
-        episodes = list(Episode.objects.filter(video_id__in=ids).select_related("season__title").only("number", "video_id", "season__number", "season__title__title"))
+        titles = list(
+            Title.objects.filter(Q(video_id__in=ids) | Q(trailer_id__in=ids)).only(
+                "title", "video_id", "trailer_id"
+            )
+        )
+        episodes = list(
+            Episode.objects.filter(video_id__in=ids)
+            .select_related("season__title")
+            .only("number", "video_id", "season__number", "season__title__title")
+        )
         for a in assets:
             a._titles = [t for t in titles if a.pk in (t.video_id, t.trailer_id)]
             a._episodes = [e for e in episodes if e.video_id == a.pk]
         return assets
 
-    @extend_schema(parameters=[OpenApiParameter("status", str, description="Comma-separated statuses")])
+    @extend_schema(
+        parameters=[OpenApiParameter("status", str, description="Comma-separated statuses")]
+    )
     def list(self, request, *args, **kwargs):
         page = self.paginate_queryset(self.get_queryset())
-        return self.get_paginated_response(self.get_serializer(self._attach_usage(page), many=True).data)
+        return self.get_paginated_response(
+            self.get_serializer(self._attach_usage(page), many=True).data
+        )
 
     def retrieve(self, request, *args, **kwargs):
         return Response(self.get_serializer(self._attach_usage([self.get_object()])[0]).data)
@@ -158,13 +201,21 @@ class VideoViewSet(AuditedMixin, mixins.ListModelMixin, mixins.RetrieveModelMixi
     @extend_schema(
         responses=inline_serializer(
             "TranscodeStats",
-            {"queued": serializers.IntegerField(), "transcoding": serializers.IntegerField(), "failed": serializers.IntegerField(), "ready": serializers.IntegerField(), "uploading": serializers.IntegerField()},
+            {
+                "queued": serializers.IntegerField(),
+                "transcoding": serializers.IntegerField(),
+                "failed": serializers.IntegerField(),
+                "ready": serializers.IntegerField(),
+                "uploading": serializers.IntegerField(),
+            },
         )
     )
     @action(detail=False, methods=["get"])
     def stats(self, request):
         counts = dict(VideoAsset.objects.values_list("status").annotate(n=Count("id")).order_by())
-        return Response({k: counts.get(k, 0) for k in ("queued", "transcoding", "failed", "ready", "uploading")})
+        return Response(
+            {k: counts.get(k, 0) for k in ("queued", "transcoding", "failed", "ready", "uploading")}
+        )
 
     @extend_schema(request=None, responses=VideoJobSerializer)
     @action(detail=True, methods=["post"])
@@ -195,7 +246,10 @@ class VideoViewSet(AuditedMixin, mixins.ListModelMixin, mixins.RetrieveModelMixi
             }
         )
 
-    @extend_schema(request={"multipart/form-data": SubtitleUploadSerializer}, responses={201: SubtitleSerializer})
+    @extend_schema(
+        request={"multipart/form-data": SubtitleUploadSerializer},
+        responses={201: SubtitleSerializer},
+    )
     @action(detail=True, methods=["post"])
     def subtitles(self, request, pk=None):
         asset = self.get_object()
@@ -203,8 +257,13 @@ class VideoViewSet(AuditedMixin, mixins.ListModelMixin, mixins.RetrieveModelMixi
         data.is_valid(raise_exception=True)
         upload = data.validated_data["file"]
         ext = upload.name.rsplit(".", 1)[-1].lower()
-        if ext not in (config.get_json("upload.allowed_subtitle_types") or ["vtt", "srt"]) or upload.size > 5 * 1024 * 1024:
-            raise APIError("Upload a .vtt or .srt subtitle file (max 5 MB).", "invalid_subtitle", 415)
+        if (
+            ext not in (config.get_json("upload.allowed_subtitle_types") or ["vtt", "srt"])
+            or upload.size > 5 * 1024 * 1024
+        ):
+            raise APIError(
+                "Upload a .vtt or .srt subtitle file (max 5 MB).", "invalid_subtitle", 415
+            )
         try:
             text = upload.read().decode("utf-8-sig")
         except UnicodeDecodeError as exc:
@@ -213,12 +272,23 @@ class VideoViewSet(AuditedMixin, mixins.ListModelMixin, mixins.RetrieveModelMixi
         if "-->" not in vtt:
             raise APIError("No subtitle cues found in that file.", "invalid_subtitle", 415)
         lang = data.validated_data["language"]
-        key = storage.put_bytes(f"subs/{asset.pk}/{lang}{'-forced' if data.validated_data['is_forced'] else ''}.vtt", vtt.encode(), "text/vtt", storage.SHORT_CACHE)
+        key = storage.put_bytes(
+            f"subs/{asset.pk}/{lang}{'-forced' if data.validated_data['is_forced'] else ''}.vtt",
+            vtt.encode(),
+            "text/vtt",
+            storage.SHORT_CACHE,
+        )
         if data.validated_data["is_default"]:
             asset.subtitles.update(is_default=False)
         track, _ = SubtitleTrack.objects.update_or_create(
-            asset=asset, language=lang, is_forced=data.validated_data["is_forced"],
-            defaults={"label": data.validated_data["label"], "key": key, "is_default": data.validated_data["is_default"]},
+            asset=asset,
+            language=lang,
+            is_forced=data.validated_data["is_forced"],
+            defaults={
+                "label": data.validated_data["label"],
+                "key": key,
+                "is_default": data.validated_data["is_default"],
+            },
         )
         self._audit("subtitle_add", asset, {"language": lang})
         return Response(SubtitleSerializer(track).data, status=status.HTTP_201_CREATED)

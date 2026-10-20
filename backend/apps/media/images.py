@@ -17,7 +17,13 @@ from .models import ImageAsset
 
 WIDTHS = [160, 320, 480, 640, 960, 1280, 1920, 2560]
 ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp", "image/avif", "image/gif", "image/heic"}
-MIN_SIZE = {"poster": (300, 450), "backdrop": (960, 540), "thumbnail": (480, 270), "artwork": (480, 270), "logo": (200, 50)}
+MIN_SIZE = {
+    "poster": (300, 450),
+    "backdrop": (960, 540),
+    "thumbnail": (480, 270),
+    "artwork": (480, 270),
+    "logo": (200, 50),
+}
 Image.MAX_IMAGE_PIXELS = 80_000_000  # decompression-bomb guard
 
 
@@ -26,24 +32,34 @@ def ingest(upload, kind: str, user=None) -> ImageAsset:
     if kind not in ImageAsset.Kind.values:
         raise APIError("Unknown image type.", "validation_error")
     if not storage.is_configured():
-        raise APIError("Storage isn't configured yet. Add your S3 bucket in Settings → Storage & CDN.", "storage_not_configured", 409)
+        raise APIError(
+            "Storage isn't configured yet. Add your S3 bucket in Settings → Storage & CDN.",
+            "storage_not_configured",
+            409,
+        )
     max_mb = config.get_int("upload.max_image_size_mb", 20)
     if upload.size > max_mb * 1024 * 1024:
         raise APIError(f"Images can be at most {max_mb} MB.", "file_too_large", 413)
     data = upload.read()
     sniffed = filetype.guess(data)
     if sniffed is None or sniffed.mime not in ALLOWED_MIME:
-        raise APIError("That file isn't a supported image (JPEG, PNG, WebP or AVIF).", "invalid_image", 415)
+        raise APIError(
+            "That file isn't a supported image (JPEG, PNG, WebP or AVIF).", "invalid_image", 415
+        )
     try:
         with Image.open(io.BytesIO(data)) as probe:
             probe.verify()
         image = Image.open(io.BytesIO(data))
         image = ImageOps.exif_transpose(image)
     except (Image.DecompressionBombError, OSError, SyntaxError) as exc:
-        raise APIError("That image couldn't be read. Try exporting it again.", "invalid_image", 415) from exc
+        raise APIError(
+            "That image couldn't be read. Try exporting it again.", "invalid_image", 415
+        ) from exc
     min_w, min_h = MIN_SIZE.get(kind, (1, 1))
     if image.width < min_w or image.height < min_h:
-        raise APIError(f"This image is too small. Use at least {min_w}×{min_h} pixels.", "image_too_small")
+        raise APIError(
+            f"This image is too small. Use at least {min_w}×{min_h} pixels.", "image_too_small"
+        )
 
     # Re-encode the original server-side (strips metadata, normalises the format).
     asset_id = uuid.uuid4()
@@ -55,7 +71,9 @@ def ingest(upload, kind: str, user=None) -> ImageAsset:
     else:
         image.convert("RGB").save(original, "JPEG", quality=94, optimize=True)
         ext, mime = "jpg", "image/jpeg"
-    key = storage.put_bytes(f"images/{asset_id}/original.{ext}", original.getvalue(), mime, storage.LONG_CACHE)
+    key = storage.put_bytes(
+        f"images/{asset_id}/original.{ext}", original.getvalue(), mime, storage.LONG_CACHE
+    )
     asset = ImageAsset.objects.create(
         id=asset_id,
         kind=kind,
@@ -106,14 +124,20 @@ def render(asset: ImageAsset) -> None:
     formats = ["webp"] + (["avif"] if features.check("avif") else [])
     for width in widths:
         height = round(image.height * width / image.width)
-        resized = image.resize((width, height), Image.Resampling.LANCZOS) if width != image.width else image
+        resized = (
+            image.resize((width, height), Image.Resampling.LANCZOS)
+            if width != image.width
+            else image
+        )
         for fmt in formats:
             buffer = io.BytesIO()
             if fmt == "webp":
                 resized.save(buffer, "WEBP", quality=82, method=5)
             else:
                 resized.save(buffer, "AVIF", quality=58, speed=6)
-            storage.put_bytes(asset.variant_key(width, fmt), buffer.getvalue(), f"image/{fmt}", storage.LONG_CACHE)
+            storage.put_bytes(
+                asset.variant_key(width, fmt), buffer.getvalue(), f"image/{fmt}", storage.LONG_CACHE
+            )
 
     tiny = image.copy()
     tiny.thumbnail((24, 24))

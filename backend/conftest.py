@@ -67,7 +67,9 @@ def _staff_client(role):
     from apps.accounts.models import User
     from apps.accounts.tokens import issue_access_token
 
-    user = User.objects.create_user(f"staff_{role}", "correct-horse", full_name=role, is_staff=True, role=role)
+    user = User.objects.create_user(
+        f"staff_{role}", "correct-horse", full_name=role, is_staff=True, role=role
+    )
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {issue_access_token(user)[0]}")
     client.user = user

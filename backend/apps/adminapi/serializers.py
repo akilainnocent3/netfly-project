@@ -46,7 +46,18 @@ class GenreAdminSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ["id", "name", "slug", "description", "order", "show_on_home", "is_active", "artwork", "artwork_id", "title_count"]
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "description",
+            "order",
+            "show_on_home",
+            "is_active",
+            "artwork",
+            "artwork_id",
+            "title_count",
+        ]
         read_only_fields = ["order"]
         extra_kwargs = {"slug": {"required": False}}
 
@@ -74,14 +85,31 @@ class TitleAdminListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = [
-            "id", "slug", "title", "type", "status", "translation_status", "year", "maturity_rating",
-            "is_featured", "poster", "genres", "video_status", "season_count", "episode_count",
-            "publish_at", "published_at", "license_end", "updated_at",
+            "id",
+            "slug",
+            "title",
+            "type",
+            "status",
+            "translation_status",
+            "year",
+            "maturity_rating",
+            "is_featured",
+            "poster",
+            "genres",
+            "video_status",
+            "season_count",
+            "episode_count",
+            "publish_at",
+            "published_at",
+            "license_end",
+            "updated_at",
         ]
 
 
 class TitleAdminSerializer(serializers.ModelSerializer):
-    genre_ids = serializers.PrimaryKeyRelatedField(source="genres", many=True, queryset=Genre.objects.all(), required=False)
+    genre_ids = serializers.PrimaryKeyRelatedField(
+        source="genres", many=True, queryset=Genre.objects.all(), required=False
+    )
     genres = GenreBriefSerializer(many=True, read_only=True)
     poster_id = ImageIdField(kind="poster", source="poster")
     backdrop_id = ImageIdField(kind="backdrop", source="backdrop")
@@ -99,12 +127,45 @@ class TitleAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = [
-            "id", "type", "slug", "title", "original_title", "synopsis", "short_synopsis", "year",
-            "maturity_rating", "runtime_minutes", "language", "translation_status", "translator_name",
-            "cast", "directors", "genres", "genre_ids", "poster", "poster_id", "backdrop", "backdrop_id",
-            "logo", "logo_id", "video", "video_id", "trailer", "trailer_id", "status", "publish_at",
-            "published_at", "is_featured", "rights_holder", "license_start", "license_end",
-            "popularity", "created_at", "updated_at", "publish_blockers", "is_billboard",
+            "id",
+            "type",
+            "slug",
+            "title",
+            "original_title",
+            "synopsis",
+            "short_synopsis",
+            "year",
+            "maturity_rating",
+            "runtime_minutes",
+            "language",
+            "translation_status",
+            "translator_name",
+            "cast",
+            "directors",
+            "genres",
+            "genre_ids",
+            "poster",
+            "poster_id",
+            "backdrop",
+            "backdrop_id",
+            "logo",
+            "logo_id",
+            "video",
+            "video_id",
+            "trailer",
+            "trailer_id",
+            "status",
+            "publish_at",
+            "published_at",
+            "is_featured",
+            "rights_holder",
+            "license_start",
+            "license_end",
+            "popularity",
+            "created_at",
+            "updated_at",
+            "publish_blockers",
+            "is_billboard",
         ]
         read_only_fields = ["status", "published_at", "popularity", "created_at", "updated_at"]
         extra_kwargs = {"slug": {"required": False}}
@@ -135,13 +196,19 @@ class TitleAdminSerializer(serializers.ModelSerializer):
         start = attrs.get("license_start", getattr(self.instance, "license_start", None))
         end = attrs.get("license_end", getattr(self.instance, "license_end", None))
         if start and end and end <= start:
-            raise serializers.ValidationError({"license_end": "License end must be after the start."})
+            raise serializers.ValidationError(
+                {"license_end": "License end must be after the start."}
+            )
         kind = attrs.get("type", getattr(self.instance, "type", None))
         if self.instance and "type" in attrs and attrs["type"] != self.instance.type:
             if self.instance.seasons.exists() or self.instance.video_id:
-                raise serializers.ValidationError({"type": "Remove the video or seasons before changing the type."})
+                raise serializers.ValidationError(
+                    {"type": "Remove the video or seasons before changing the type."}
+                )
         if kind == Title.Type.SERIES and attrs.get("video"):
-            raise serializers.ValidationError({"video_id": "Series play episodes — attach videos to episodes."})
+            raise serializers.ValidationError(
+                {"video_id": "Series play episodes — attach videos to episodes."}
+            )
         status = attrs.get("translation_status", getattr(self.instance, "translation_status", None))
         if status == "not_translated":
             attrs["translator_name"] = ""  # translator credits only apply to translated titles
@@ -163,8 +230,20 @@ class EpisodeAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Episode
         fields = [
-            "id", "season", "number", "name", "synopsis", "runtime_minutes", "thumbnail", "thumbnail_id",
-            "video", "video_id", "intro_start", "intro_end", "credits_start", "created_at",
+            "id",
+            "season",
+            "number",
+            "name",
+            "synopsis",
+            "runtime_minutes",
+            "thumbnail",
+            "thumbnail_id",
+            "video",
+            "video_id",
+            "intro_start",
+            "intro_end",
+            "credits_start",
+            "created_at",
         ]
         read_only_fields = ["season", "created_at"]
         extra_kwargs = {"number": {"required": False}}
@@ -176,7 +255,9 @@ class EpisodeAdminSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"intro_end": "Intro must end after it starts."})
         credits = attrs.get("credits_start", getattr(self.instance, "credits_start", None))
         if credits is not None and end is not None and credits <= end:
-            raise serializers.ValidationError({"credits_start": "Credits should start after the intro."})
+            raise serializers.ValidationError(
+                {"credits_start": "Credits should start after the intro."}
+            )
         return attrs
 
 
@@ -187,7 +268,17 @@ class SeasonAdminSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Season
-        fields = ["id", "title", "number", "name", "synopsis", "poster", "poster_id", "episodes", "created_at"]
+        fields = [
+            "id",
+            "title",
+            "number",
+            "name",
+            "synopsis",
+            "poster",
+            "poster_id",
+            "episodes",
+            "created_at",
+        ]
         read_only_fields = ["title", "created_at"]
         extra_kwargs = {"number": {"required": False}}
 
@@ -202,7 +293,9 @@ class RelatedBriefSerializer(serializers.ModelSerializer):
 
 class RelatedAdminSerializer(serializers.ModelSerializer):
     related = RelatedBriefSerializer(read_only=True)
-    related_id = serializers.PrimaryKeyRelatedField(source="related", queryset=Title.objects.all(), write_only=True)
+    related_id = serializers.PrimaryKeyRelatedField(
+        source="related", queryset=Title.objects.all(), write_only=True
+    )
     two_way = serializers.BooleanField(write_only=True, required=False, default=True)
     is_two_way = serializers.SerializerMethodField()
 
@@ -214,7 +307,9 @@ class RelatedAdminSerializer(serializers.ModelSerializer):
         reverse = self.context.get("reverse_pairs")
         if reverse is not None:
             return obj.related_id in reverse
-        return RelatedTitle.objects.filter(title_id=obj.related_id, related_id=obj.title_id).exists()
+        return RelatedTitle.objects.filter(
+            title_id=obj.related_id, related_id=obj.title_id
+        ).exists()
 
 
 class RelatedWeightSerializer(serializers.Serializer):
@@ -223,7 +318,9 @@ class RelatedWeightSerializer(serializers.Serializer):
 
 class BulkActionSerializer(serializers.Serializer):
     ids = serializers.ListField(child=serializers.IntegerField(), min_length=1, max_length=500)
-    action = serializers.ChoiceField(choices=["publish", "archive", "draft", "feature", "unfeature"])
+    action = serializers.ChoiceField(
+        choices=["publish", "archive", "draft", "feature", "unfeature"]
+    )
 
 
 class BulkResultSerializer(serializers.Serializer):
@@ -245,11 +342,24 @@ class CollectionItemSerializer(serializers.ModelSerializer):
 
 class CollectionAdminSerializer(serializers.ModelSerializer):
     items = CollectionItemSerializer(many=True, read_only=True)
-    title_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True, required=False)
+    title_ids = serializers.ListField(
+        child=serializers.IntegerField(), write_only=True, required=False
+    )
 
     class Meta:
         model = Collection
-        fields = ["id", "name", "slug", "description", "starts_at", "ends_at", "is_active", "items", "title_ids", "created_at"]
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "description",
+            "starts_at",
+            "ends_at",
+            "is_active",
+            "items",
+            "title_ids",
+            "created_at",
+        ]
         extra_kwargs = {"slug": {"required": False}}
 
     def validate(self, attrs):
@@ -265,7 +375,11 @@ class CollectionAdminSerializer(serializers.ModelSerializer):
         collection.items.all().delete()
         existing = set(Title.objects.filter(pk__in=ids).values_list("pk", flat=True))
         CollectionItem.objects.bulk_create(
-            [CollectionItem(collection=collection, title_id=pk, order=i) for i, pk in enumerate(ids) if pk in existing]
+            [
+                CollectionItem(collection=collection, title_id=pk, order=i)
+                for i, pk in enumerate(ids)
+                if pk in existing
+            ]
         )
 
     def create(self, validated):
@@ -287,14 +401,28 @@ class HomeRowAdminSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HomeRow
-        fields = ["id", "kind", "title", "collection", "collection_name", "genre", "genre_name", "order", "is_active"]
+        fields = [
+            "id",
+            "kind",
+            "title",
+            "collection",
+            "collection_name",
+            "genre",
+            "genre_name",
+            "order",
+            "is_active",
+        ]
         read_only_fields = ["order"]
 
     def validate(self, attrs):
         kind = attrs.get("kind", getattr(self.instance, "kind", None))
-        if kind == HomeRow.Kind.COLLECTION and not attrs.get("collection", getattr(self.instance, "collection", None)):
+        if kind == HomeRow.Kind.COLLECTION and not attrs.get(
+            "collection", getattr(self.instance, "collection", None)
+        ):
             raise serializers.ValidationError({"collection": "Pick a collection for this row."})
-        if kind == HomeRow.Kind.GENRE and not attrs.get("genre", getattr(self.instance, "genre", None)):
+        if kind == HomeRow.Kind.GENRE and not attrs.get(
+            "genre", getattr(self.instance, "genre", None)
+        ):
             raise serializers.ValidationError({"genre": "Pick a genre for this row."})
         return attrs
 
@@ -304,5 +432,16 @@ class BillboardAdminSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Billboard
-        fields = ["id", "title", "title_detail", "headline", "tagline", "use_trailer", "order", "starts_at", "ends_at", "is_active"]
+        fields = [
+            "id",
+            "title",
+            "title_detail",
+            "headline",
+            "tagline",
+            "use_trailer",
+            "order",
+            "starts_at",
+            "ends_at",
+            "is_active",
+        ]
         read_only_fields = ["order"]
