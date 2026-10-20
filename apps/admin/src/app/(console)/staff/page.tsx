@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldCheck, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/components/providers/auth";
-import { useToast } from "@/components/providers/toast";
+import { useAction, useConfirm } from "@/components/ui/actions";
 import {
   Button,
   Card,
@@ -33,7 +33,6 @@ const ROLES: Array<{ value: Role; label: string; description: string }> = [
 ];
 
 export default function StaffPage() {
-  const toast = useToast();
   const { user: me } = useAuth();
   const queryClient = useQueryClient();
   const staff = useQuery({
@@ -49,43 +48,50 @@ export default function StaffPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const refresh = () => void queryClient.invalidateQueries({ queryKey: ["staff"] });
 
-  const add = async () => {
-    setErrors({});
-    try {
-      await unwrap(api.POST("/api/v1/admin/staff", { body: form }));
-      toast(`@${form.username} now has ${form.role.replace("_", " ")} access`);
+  const confirm = useConfirm();
+  const [changing, setChanging] = useState<number | null>(null);
+  const add = useAction(
+    async () => {
+      setErrors({});
+      try {
+        await unwrap(api.POST("/api/v1/admin/staff", { body: form }));
+      } catch (e) {
+        if (e instanceof ApiError && Object.keys(e.fields).length) setErrors(e.fields);
+        throw e;
+      }
+      const message = `@${form.username} now has ${form.role.replace("_", " ")} access`;
       setForm({ username: "", full_name: "", role: "content_manager", password: "" });
       refresh();
-    } catch (e) {
-      setErrors(
-        e instanceof ApiError
-          ? Object.keys(e.fields).length
-            ? e.fields
-            : { username: e.message }
-          : {},
-      );
-    }
-  };
-  const change = async (id: number, role: Role) => {
-    try {
-      await unwrap(
-        api.PATCH("/api/v1/admin/staff/{id}", { params: { path: { id } }, body: { role } }),
-      );
-      toast("Role updated");
-      refresh();
-    } catch (e) {
-      toast(e instanceof ApiError ? e.message : "Couldn't change role", "error");
-    }
-  };
-  const revoke = async (id: number, name: string) => {
-    if (!window.confirm(`Remove staff access for @${name}? Their viewer account stays.`)) return;
-    try {
-      await unwrap(api.DELETE("/api/v1/admin/staff/{id}", { params: { path: { id } } }));
-      refresh();
-    } catch (e) {
-      toast(e instanceof ApiError ? e.message : "Couldn't remove", "error");
-    }
-  };
+      return message;
+    },
+    { success: (m) => m },
+  );
+  const changeRole = useAction(
+    async (id: number, role: Role) => {
+      setChanging(id);
+      try {
+        await unwrap(
+          api.PATCH("/api/v1/admin/staff/{id}", { params: { path: { id } }, body: { role } }),
+        );
+        refresh();
+      } finally {
+        setChanging(null);
+      }
+    },
+    { success: "Role updated" },
+  );
+  const revoke = (id: number, name: string) =>
+    confirm({
+      title: `Remove staff access for @${name}?`,
+      body: "Their viewer account stays; they are signed out of the studio.",
+      confirmLabel: "Remove access",
+      destructive: true,
+      success: `@${name} is no longer staff`,
+      action: async () => {
+        await unwrap(api.DELETE("/api/v1/admin/staff/{id}", { params: { path: { id } } }));
+        refresh();
+      },
+    });
 
   return (
     <>
@@ -120,8 +126,8 @@ export default function StaffPage() {
                   </div>
                   <Select
                     value={s.role}
-                    onChange={(e) => void change(s.id, e.target.value as Role)}
-                    disabled={s.id === me?.id}
+                    disabled={changing !== null || s.id === me?.id}
+                    onChange={(e) => void changeRole.run(s.id, e.target.value as Role)}
                     aria-label={`Role for ${s.username}`}
                   >
                     {ROLES.map((r) => (
@@ -135,7 +141,7 @@ export default function StaffPage() {
                     variant="ghost"
                     disabled={s.id === me?.id}
                     aria-label={`Remove ${s.username}`}
-                    onClick={() => void revoke(s.id, s.username)}
+                    onClick={() => revoke(s.id, s.username)}
                   >
                     <Trash2 className="size-4" />
                   </Button>
@@ -153,7 +159,7 @@ export default function StaffPage() {
               className="space-y-3"
               onSubmit={(e) => {
                 e.preventDefault();
-                void add();
+                void add.run();
               }}
             >
               <div>
@@ -209,7 +215,12 @@ export default function StaffPage() {
                   ))}
                 </Select>
               </div>
-              <Button type="submit" variant="primary" disabled={!form.username}>
+              <Button
+                type="submit"
+                variant="primary"
+                loading={add.pending}
+                disabled={!form.username}
+              >
                 Grant access
               </Button>
             </form>

@@ -11,6 +11,7 @@ import {
   Clapperboard,
   Plus,
   Search,
+  Rocket,
   Star,
   Upload,
 } from "lucide-react";
@@ -18,6 +19,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { StatusChip, TranslationChip, VideoChip } from "@/components/catalog/status";
+import { PriorityBadge, PrioritySegmented } from "@/components/catalog/priority";
 import { Thumb } from "@/components/catalog/thumb";
 import { useAuth } from "@/components/providers/auth";
 import { useToast } from "@/components/providers/toast";
@@ -39,9 +41,11 @@ type Filters = {
   status: string;
   translation: string;
   genre: string;
+  priority: string;
+  ordering: string;
   page: number;
 };
-type BulkAction = "publish" | "archive" | "draft" | "feature" | "unfeature";
+type BulkAction = "publish" | "archive" | "draft" | "feature" | "unfeature" | "set_priority";
 
 function TitlesTable() {
   const router = useRouter();
@@ -55,9 +59,12 @@ function TitlesTable() {
     status: params.get("status") ?? "",
     translation: params.get("translation") ?? "",
     genre: params.get("genre") ?? "",
+    priority: params.get("priority") ?? "",
+    ordering: params.get("ordering") ?? "",
     page: Number(params.get("page") ?? 1),
   });
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [priorityOpen, setPriorityOpen] = useState(false);
   const search = useDebounced(filters.search, 250);
 
   // Filters apply instantly and live in the URL so views are shareable.
@@ -85,6 +92,8 @@ function TitlesTable() {
               status: (filters.status || undefined) as "draft" | undefined,
               translation: (filters.translation || undefined) as "translated" | undefined,
               genre: filters.genre ? Number(filters.genre) : undefined,
+              priority: (filters.priority || undefined) as "boosted" | undefined,
+              ordering: (filters.ordering || undefined) as "-boost" | undefined,
               page: filters.page,
               page_size: 25,
             },
@@ -94,14 +103,17 @@ function TitlesTable() {
   });
 
   const bulk = useMutation({
-    mutationFn: (action: BulkAction) =>
-      unwrap(api.POST("/api/v1/admin/titles/bulk", { body: { ids: [...selected], action } })),
-    onSuccess: (result, action) => {
+    mutationFn: ({ action, boost }: { action: BulkAction; boost?: number }) =>
+      unwrap(
+        api.POST("/api/v1/admin/titles/bulk", { body: { ids: [...selected], action, boost } }),
+      ),
+    onSuccess: (result, { action }) => {
       const skipped = Object.keys(result.skipped).length;
       toast(
         `${result.updated.length} updated${skipped ? `, ${skipped} skipped (not ready to ${action})` : ""}`,
         skipped ? "error" : "success",
       );
+      setPriorityOpen(false);
       setSelected(new Set());
       void queryClient.invalidateQueries({ queryKey: ["titles"] });
     },
@@ -191,12 +203,41 @@ function TitlesTable() {
             </option>
           ))}
         </Select>
+        <Select
+          value={filters.priority}
+          onChange={(e) => set({ priority: e.target.value })}
+          aria-label="Priority"
+        >
+          <option value="">Any priority</option>
+          <option value="boosted">Boosted</option>
+          <option value="demoted">Demoted</option>
+          <option value="normal">Normal</option>
+        </Select>
+        <Select
+          value={filters.ordering}
+          onChange={(e) => set({ ordering: e.target.value })}
+          aria-label="Sort"
+        >
+          <option value="">Recently updated</option>
+          <option value="-boost">Highest priority</option>
+          <option value="-popularity">Most popular</option>
+          <option value="title">A–Z</option>
+        </Select>
         {hasFilters && (
           <Button
             variant="ghost"
             size="sm"
             onClick={() =>
-              setFilters({ search: "", type: "", status: "", translation: "", genre: "", page: 1 })
+              setFilters({
+                search: "",
+                type: "",
+                status: "",
+                translation: "",
+                genre: "",
+                priority: "",
+                ordering: "",
+                page: 1,
+              })
             }
           >
             Clear
@@ -224,6 +265,7 @@ function TitlesTable() {
                 </th>
                 <th className="px-2 py-2 font-medium">Title</th>
                 <th className="px-2 py-2 font-medium">Status</th>
+                <th className="px-2 py-2 font-medium">Priority</th>
                 <th className="px-2 py-2 font-medium">Translation</th>
                 <th className="px-2 py-2 font-medium">Video</th>
                 <th className="px-2 py-2 font-medium">Genres</th>
@@ -239,7 +281,7 @@ function TitlesTable() {
               {list.isPending &&
                 Array.from({ length: 8 }, (_, i) => (
                   <tr key={i}>
-                    <td className="px-3 py-2.5" colSpan={7}>
+                    <td className="px-3 py-2.5" colSpan={8}>
                       <Skeleton className="h-9 w-full" />
                     </td>
                   </tr>
@@ -296,6 +338,9 @@ function TitlesTable() {
                   </td>
                   <td className="px-2 py-2">
                     <StatusChip status={row.status} />
+                  </td>
+                  <td className="px-2 py-2">
+                    <PriorityBadge boost={row.boost ?? 0} effective={row.effective_boost} />
                   </td>
                   <td className="px-2 py-2">
                     <TranslationChip value={row.translation_status} />
@@ -366,27 +411,56 @@ function TitlesTable() {
             className="border-line bg-panel fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-xl border p-1.5 pl-4 shadow-2xl"
           >
             <span className="tabular mr-2 text-[13px] font-medium">{selected.size} selected</span>
+            {(
+              [
+                ["publish", "Publish", <Upload key="i" className="size-3.5" />, "primary"],
+                ["feature", "Feature", <Star key="i" className="size-3.5" />, "secondary"],
+                ["unfeature", "Unfeature", null, "secondary"],
+                ["draft", "Move to draft", null, "secondary"],
+                ["archive", "Archive", <Archive key="i" className="size-3.5" />, "secondary"],
+              ] as const
+            ).map(([action, label, icon, variant]) => (
+              <Button
+                key={action}
+                size="sm"
+                variant={variant}
+                disabled={bulk.isPending}
+                loading={bulk.isPending && bulk.variables?.action === action}
+                onClick={() => bulk.mutate({ action })}
+              >
+                {icon} {label}
+              </Button>
+            ))}
+            <div className="relative">
+              <Button
+                size="sm"
+                disabled={bulk.isPending && bulk.variables?.action !== "set_priority"}
+                onClick={() => setPriorityOpen((o) => !o)}
+                aria-expanded={priorityOpen}
+              >
+                <Rocket className="size-3.5" /> Set priority…
+              </Button>
+              {priorityOpen && (
+                <div className="border-line bg-panel absolute bottom-10 left-1/2 -translate-x-1/2 rounded-lg border p-2 shadow-xl">
+                  <PrioritySegmented
+                    size="sm"
+                    value={Number.NaN}
+                    pending={
+                      bulk.isPending && bulk.variables?.action === "set_priority"
+                        ? (bulk.variables.boost ?? null)
+                        : null
+                    }
+                    onChange={(boost) => bulk.mutate({ action: "set_priority", boost })}
+                  />
+                </div>
+              )}
+            </div>
             <Button
               size="sm"
-              variant="primary"
-              loading={bulk.isPending}
-              onClick={() => bulk.mutate("publish")}
+              variant="ghost"
+              disabled={bulk.isPending}
+              onClick={() => setSelected(new Set())}
             >
-              <Upload className="size-3.5" /> Publish
-            </Button>
-            <Button size="sm" onClick={() => bulk.mutate("feature")}>
-              <Star className="size-3.5" /> Feature
-            </Button>
-            <Button size="sm" onClick={() => bulk.mutate("unfeature")}>
-              Unfeature
-            </Button>
-            <Button size="sm" onClick={() => bulk.mutate("draft")}>
-              Move to draft
-            </Button>
-            <Button size="sm" onClick={() => bulk.mutate("archive")}>
-              <Archive className="size-3.5" /> Archive
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
               Cancel
             </Button>
           </motion.div>

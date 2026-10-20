@@ -134,7 +134,18 @@ function prettyKey(entry: Entry): string {
 function EntryRow({ entry }: { entry: Entry }) {
   const save = useSaveEntry();
   const [error, setError] = useState<string | null>(null);
-  const commit = async (value: unknown) => setError(await save(entry.key, value));
+  const [saving, setSaving] = useState(false);
+  const commit = async (value: unknown): Promise<boolean> => {
+    if (saving) return false;
+    setSaving(true);
+    try {
+      const failure = await save(entry.key, value);
+      setError(failure);
+      return failure === null;
+    } finally {
+      setSaving(false);
+    }
+  };
   return (
     <li className="grid gap-2 px-5 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] md:gap-6">
       <div>
@@ -142,12 +153,15 @@ function EntryRow({ entry }: { entry: Entry }) {
           <p className="font-medium">{prettyKey(entry)}</p>
           {entry.is_public && <Badge>public</Badge>}
           <HistoryButton entry={entry} />
+          {saving && <Loader2 className="text-subtle size-3.5 animate-spin" aria-label="Saving" />}
         </div>
         <p className="text-muted mt-0.5 text-[12.5px]">{entry.description}</p>
         <code className="text-subtle mt-1 block text-[11px]">{entry.key}</code>
       </div>
       <div>
-        <Editor entry={entry} onCommit={(v) => void commit(v)} invalid={!!error} />
+        <fieldset disabled={saving} aria-busy={saving}>
+          <Editor entry={entry} onCommit={commit} invalid={!!error} />
+        </fieldset>
         {error && (
           <p role="alert" className="mt-1.5 flex items-center gap-1 text-[12px] text-red-500">
             <CircleAlert className="size-3.5" /> {error}
@@ -164,7 +178,7 @@ function Editor({
   invalid,
 }: {
   entry: Entry;
-  onCommit: (v: unknown) => void;
+  onCommit: (v: unknown) => Promise<boolean>;
   invalid: boolean;
 }) {
   const value = entry.value as unknown;
@@ -381,9 +395,16 @@ function JsonEditor({
   );
 }
 
-function SecretEditor({ entry, onCommit }: { entry: Entry; onCommit: (v: unknown) => void }) {
+function SecretEditor({
+  entry,
+  onCommit,
+}: {
+  entry: Entry;
+  onCommit: (v: unknown) => Promise<boolean>;
+}) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState("");
+  const [saving, setSaving] = useState(false);
   if (!editing) {
     return (
       <div className="flex items-center gap-2">
@@ -399,11 +420,16 @@ function SecretEditor({ entry, onCommit }: { entry: Entry; onCommit: (v: unknown
   return (
     <form
       className="flex gap-2"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        onCommit(value);
-        setEditing(false);
-        setValue("");
+        if (saving || !value) return;
+        setSaving(true);
+        const ok = await onCommit(value);
+        setSaving(false);
+        if (ok) {
+          setEditing(false);
+          setValue("");
+        }
       }}
     >
       <Input
@@ -415,7 +441,7 @@ function SecretEditor({ entry, onCommit }: { entry: Entry; onCommit: (v: unknown
         placeholder="New value (write-only)"
         aria-label={`New ${prettyKey(entry)}`}
       />
-      <Button type="submit" size="sm" variant="primary" disabled={!value}>
+      <Button type="submit" size="sm" variant="primary" disabled={!value} loading={saving}>
         Save
       </Button>
       <Button

@@ -25,6 +25,7 @@ import { useEffect, useState } from "react";
 import { ImageSlot } from "@/components/catalog/editor/image-slot";
 import { useAuth } from "@/components/providers/auth";
 import { useToast } from "@/components/providers/toast";
+import { IconButton, useAction, useConfirm } from "@/components/ui/actions";
 import {
   Button,
   Card,
@@ -152,27 +153,37 @@ function GenreCard({
   readOnly: boolean;
   refresh: () => void;
 }) {
-  const toast = useToast();
+  const confirm = useConfirm();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: genre.id,
     disabled: readOnly,
   });
-  const save = async (patch: Partial<GenreAdmin> & { artwork_id?: string | null }) => {
-    try {
+  const saveAction = useAction(
+    async (patch: Partial<GenreAdmin> & { artwork_id?: string | null }) => {
       await unwrap(
         api.PATCH("/api/v1/admin/genres/{id}", { params: { path: { id: genre.id } }, body: patch }),
       );
-      toast("Saved");
       refresh();
-    } catch (e) {
-      toast(e instanceof ApiError ? e.message : "Save failed", "error");
-    }
+    },
+    { success: "Saved ✓" },
+  );
+  const save = async (patch: Partial<GenreAdmin> & { artwork_id?: string | null }) => {
+    await saveAction.run(patch);
   };
-  const remove = async () => {
-    if (!window.confirm(`Delete “${genre.name}”? Titles keep their other genres.`)) return;
-    await unwrap(api.DELETE("/api/v1/admin/genres/{id}", { params: { path: { id: genre.id } } }));
-    refresh();
-  };
+  const remove = () =>
+    confirm({
+      title: `Delete “${genre.name}”?`,
+      body: "Titles keep their other genres; the genre's home row disappears.",
+      confirmLabel: "Delete genre",
+      destructive: true,
+      success: "Genre deleted",
+      action: async () => {
+        await unwrap(
+          api.DELETE("/api/v1/admin/genres/{id}", { params: { path: { id: genre.id } } }),
+        );
+        refresh();
+      },
+    });
   return (
     <div
       ref={setNodeRef}
@@ -218,21 +229,16 @@ function GenreCard({
           <label className="flex items-center gap-2 text-[12.5px]">
             <Switch
               checked={genre.show_on_home ?? false}
-              disabled={readOnly}
+              disabled={readOnly || saveAction.pending}
               onCheckedChange={(v) => void save({ show_on_home: v })}
               label="Show as home row"
             />
             <Home className="text-subtle size-3.5" /> Home row
           </label>
           {!readOnly && (
-            <Button
-              size="sm"
-              variant="ghost"
-              aria-label={`Delete ${genre.name}`}
-              onClick={() => void remove()}
-            >
+            <IconButton label={`Delete ${genre.name}`} tone="danger" onClick={remove}>
               <Trash2 className="size-3.5" />
-            </Button>
+            </IconButton>
           )}
         </div>
       </Card>

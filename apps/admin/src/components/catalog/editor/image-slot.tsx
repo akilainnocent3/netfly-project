@@ -8,6 +8,7 @@ import { Crop, ImagePlus, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import { useToast } from "@/components/providers/toast";
+import { IconButton, useConfirm } from "@/components/ui/actions";
 import { Button } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
 import type { AdminImage } from "@/lib/types";
@@ -108,6 +109,7 @@ export function ImageSlot({
   const [dragging, setDragging] = useState(false);
   const [cropOpen, setCropOpen] = useState(false);
   const live = useImage(image?.id, image);
+  const confirm = useConfirm();
   const current = live.data ?? image ?? null;
 
   const handleFile = useCallback(
@@ -184,14 +186,38 @@ export function ImageSlot({
         {current && !disabled && (
           <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
             {ASPECT[kind] && current.status !== "processing" && (
-              <IconButton label="Adjust crop" onClick={() => setCropOpen(true)}>
+              <IconButton
+                tone="overlay"
+                size="sm"
+                label="Adjust crop"
+                onClick={() => setCropOpen(true)}
+              >
                 <Crop className="size-3.5" />
               </IconButton>
             )}
-            <IconButton label="Replace" onClick={() => input.current?.click()}>
+            <IconButton
+              tone="overlay"
+              size="sm"
+              label="Replace"
+              onClick={() => input.current?.click()}
+            >
               <RefreshCw className="size-3.5" />
             </IconButton>
-            <IconButton label="Remove" onClick={() => void onAttach(null)}>
+            <IconButton
+              tone="overlay"
+              size="sm"
+              label="Remove"
+              onClick={() =>
+                confirm({
+                  title: `Remove the ${label.toLowerCase()}?`,
+                  body: "The image file stays in storage; you can upload a new one any time.",
+                  confirmLabel: "Remove",
+                  destructive: true,
+                  success: `${label} removed`,
+                  action: () => onAttach(null),
+                })
+              }
+            >
               <Trash2 className="size-3.5" />
             </IconButton>
           </div>
@@ -217,28 +243,6 @@ export function ImageSlot({
         />
       )}
     </div>
-  );
-}
-
-function IconButton({
-  label,
-  onClick,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      className="grid size-7 place-items-center rounded-md bg-black/60 text-white backdrop-blur hover:bg-black/80"
-    >
-      {children}
-    </button>
   );
 }
 

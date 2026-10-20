@@ -4184,11 +4184,12 @@ export interface operations {
             query?: {
                 featured?: boolean;
                 genre?: number;
-                ordering?: "-popularity" | "-published_at" | "-updated_at" | "title" | "year";
+                ordering?: "-boost" | "-popularity" | "-published_at" | "-updated_at" | "boost" | "title" | "year";
                 /** @description A page number within the paginated result set. */
                 page?: number;
                 /** @description Number of results to return per page. */
                 page_size?: number;
+                priority?: "boosted" | "demoted" | "normal";
                 search?: string;
                 status?: "archived" | "draft" | "processing" | "published";
                 translation?: "not_translated" | "translated";

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { AuthProvider } from "./auth";
 import { ConfigProvider } from "./config";
 import { ThemeProvider } from "./theme";
+import { ConfirmProvider } from "../ui/actions";
 import { ToastProvider } from "./toast";
 
 export function Providers({
@@ -28,7 +29,9 @@ export function Providers({
         <QueryClientProvider client={client}>
           <MotionConfig reducedMotion="user">
             <ToastProvider>
-              <AuthProvider>{children}</AuthProvider>
+              <ConfirmProvider>
+                <AuthProvider>{children}</AuthProvider>
+              </ConfirmProvider>
             </ToastProvider>
           </MotionConfig>
         </QueryClientProvider>

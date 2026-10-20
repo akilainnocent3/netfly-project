@@ -1,23 +1,26 @@
 "use client";
 
-import { ApiError, unwrap } from "@netfly/api-client";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeftRight, ArrowRight, Link2, Plus, Search, Trash2 } from "lucide-react";
+import { unwrap } from "@netfly/api-client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeftRight, ArrowRight, Link2, Loader2, Plus, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { useToast } from "@/components/providers/toast";
+import { IconButton, useAction, useConfirm } from "@/components/ui/actions";
 import { Button, Card, Empty, Input, Skeleton, Switch } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
+import type { RelatedAdmin } from "@/lib/types";
 import { useDebounced } from "@/lib/use-debounced";
 import { Thumb } from "../thumb";
 
 export function RelatedTab({ titleId, readOnly }: { titleId: number; readOnly: boolean }) {
-  const toast = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
   const [q, setQ] = useState("");
   const [twoWay, setTwoWay] = useState(true);
   const [weight, setWeight] = useState(3);
+  const [adding, setAdding] = useState<number | null>(null);
   const query = useDebounced(q, 200);
   const key = ["related", titleId];
+  const refresh = () => void queryClient.invalidateQueries({ queryKey: key });
 
   const links = useQuery({
     queryKey: key,
@@ -35,33 +38,43 @@ export function RelatedTab({ titleId, readOnly }: { titleId: number; readOnly: b
   });
   const linked = new Set(links.data?.map((l) => l.related.id));
 
-  const add = useMutation({
-    mutationFn: (relatedId: number) =>
-      unwrap(
-        api.POST("/api/v1/admin/titles/{id}/related", {
-          params: { path: { id: titleId } },
-          body: { related_id: relatedId, weight, two_way: twoWay },
-        }),
-      ),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: key }),
-    onError: (e) => toast(e instanceof ApiError ? e.message : "Couldn't link", "error"),
-  });
-  const update = useMutation({
-    mutationFn: ({ id, w }: { id: number; w: number }) =>
-      unwrap(
-        api.PATCH("/api/v1/admin/related/{id}", { params: { path: { id } }, body: { weight: w } }),
-      ),
-    onSuccess: () => toast("Weight saved"),
-  });
-  const remove = useMutation({
-    mutationFn: ({ id, both }: { id: number; both: boolean }) =>
-      unwrap(
-        api.DELETE("/api/v1/admin/related/{id}", {
-          params: { path: { id }, query: { two_way: both } },
-        }),
-      ),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: key }),
-  });
+  const add = useAction(
+    async (relatedId: number, name: string) => {
+      setAdding(relatedId);
+      try {
+        await unwrap(
+          api.POST("/api/v1/admin/titles/{id}/related", {
+            params: { path: { id: titleId } },
+            body: { related_id: relatedId, weight, two_way: twoWay },
+          }),
+        );
+        refresh();
+        return name;
+      } finally {
+        setAdding(null);
+      }
+    },
+    { success: (name) => `Linked ${name}` },
+  );
+
+  const remove = (link: RelatedAdmin) =>
+    confirm({
+      title: `Unlink “${link.related.title}”?`,
+      body: link.is_two_way
+        ? "Both directions of the link are removed."
+        : "Viewers who like this title will no longer be pointed to it.",
+      confirmLabel: "Unlink",
+      destructive: true,
+      success: "Link removed",
+      action: async () => {
+        await unwrap(
+          api.DELETE("/api/v1/admin/related/{id}", {
+            params: { path: { id: link.id }, query: { two_way: link.is_two_way } },
+          }),
+        );
+        refresh();
+      },
+    });
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
@@ -81,55 +94,12 @@ export function RelatedTab({ titleId, readOnly }: { titleId: number; readOnly: b
         ) : links.data?.length ? (
           <ul className="divide-line divide-y">
             {links.data.map((link) => (
-              <li key={link.id} className="flex items-center gap-3 px-4 py-2.5">
-                <Thumb image={link.related.poster} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{link.related.title}</p>
-                  <p className="text-muted flex items-center gap-1 text-[12px]">
-                    {link.is_two_way ? (
-                      <ArrowLeftRight className="size-3" />
-                    ) : (
-                      <ArrowRight className="size-3" />
-                    )}
-                    {link.is_two_way ? "Two-way" : "One-way"} · {link.related.type}
-                    {link.related.year ? ` · ${link.related.year}` : ""}
-                  </p>
-                </div>
-                <label className="text-muted flex items-center gap-2 text-[12px]">
-                  Weight
-                  <input
-                    type="range"
-                    min={1}
-                    max={5}
-                    defaultValue={link.weight}
-                    disabled={readOnly}
-                    onMouseUp={(e) =>
-                      update.mutate({
-                        id: link.id,
-                        w: Number((e.target as HTMLInputElement).value),
-                      })
-                    }
-                    onKeyUp={(e) =>
-                      update.mutate({
-                        id: link.id,
-                        w: Number((e.target as HTMLInputElement).value),
-                      })
-                    }
-                    className="w-24 accent-[var(--accent)]"
-                    aria-label={`Weight for ${link.related.title}`}
-                  />
-                </label>
-                {!readOnly && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    aria-label="Remove"
-                    onClick={() => remove.mutate({ id: link.id, both: link.is_two_way })}
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                )}
-              </li>
+              <LinkRow
+                key={link.id}
+                link={link}
+                readOnly={readOnly}
+                onRemove={() => remove(link)}
+              />
             ))}
           </ul>
         ) : (
@@ -170,25 +140,90 @@ export function RelatedTab({ titleId, readOnly }: { titleId: number; readOnly: b
           <ul className="mt-3 max-h-[420px] space-y-0.5 overflow-y-auto">
             {picker.data?.map((t) => (
               <li key={t.id}>
-                <button
-                  type="button"
-                  disabled={linked.has(t.id) || add.isPending}
-                  onClick={() => add.mutate(t.id)}
-                  className="hover:bg-hover flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left disabled:opacity-40"
+                <Button
+                  variant="ghost"
+                  className="text-fg h-auto w-full justify-start gap-2.5 px-2 py-1.5 text-left"
+                  disabled={linked.has(t.id) || add.pending}
+                  onClick={() => void add.run(t.id, t.title)}
                 >
                   <Thumb image={t.poster} className="w-7" />
                   <span className="min-w-0 flex-1 truncate">{t.title}</span>
                   {linked.has(t.id) ? (
                     <span className="text-subtle text-[11.5px]">linked</span>
+                  ) : adding === t.id ? (
+                    <Loader2 className="text-subtle size-3.5 animate-spin" />
                   ) : (
                     <Plus className="text-subtle size-3.5" />
                   )}
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
         </Card>
       )}
     </div>
+  );
+}
+
+function LinkRow({
+  link,
+  readOnly,
+  onRemove,
+}: {
+  link: RelatedAdmin;
+  readOnly: boolean;
+  onRemove: () => void;
+}) {
+  const [weight, setWeight] = useState(link.weight ?? 3);
+  const update = useAction(
+    async (w: number) => {
+      await unwrap(
+        api.PATCH("/api/v1/admin/related/{id}", {
+          params: { path: { id: link.id } },
+          body: { weight: w },
+        }),
+      );
+    },
+    { success: "Weight saved" },
+  );
+  const commit = () => {
+    if (weight !== link.weight) void update.run(weight);
+  };
+  return (
+    <li className="flex items-center gap-3 px-4 py-2.5">
+      <Thumb image={link.related.poster} />
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-medium">{link.related.title}</p>
+        <p className="text-muted flex items-center gap-1 text-[12px]">
+          {link.is_two_way ? (
+            <ArrowLeftRight className="size-3" />
+          ) : (
+            <ArrowRight className="size-3" />
+          )}
+          {link.is_two_way ? "Two-way" : "One-way"} · {link.related.type}
+          {link.related.year ? ` · ${link.related.year}` : ""}
+        </p>
+      </div>
+      <label className="text-muted flex items-center gap-2 text-[12px]">
+        {update.pending ? <Loader2 className="size-3 animate-spin" /> : `Weight ${weight}`}
+        <input
+          type="range"
+          min={1}
+          max={5}
+          value={weight}
+          disabled={readOnly || update.pending}
+          onChange={(e) => setWeight(Number(e.target.value))}
+          onPointerUp={commit}
+          onKeyUp={commit}
+          className="w-24 accent-[var(--accent)]"
+          aria-label={`Weight for ${link.related.title}`}
+        />
+      </label>
+      {!readOnly && (
+        <IconButton label={`Unlink ${link.related.title}`} tone="danger" onClick={onRemove}>
+          <Trash2 className="size-3.5" />
+        </IconButton>
+      )}
+    </li>
   );
 }

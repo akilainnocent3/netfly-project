@@ -1,12 +1,12 @@
 "use client";
 
-import { ApiError, unwrap } from "@netfly/api-client";
+import { unwrap } from "@netfly/api-client";
 import { cn, formatBytes, formatDuration } from "@netfly/ui";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Cpu, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/components/providers/auth";
-import { useToast } from "@/components/providers/toast";
+import { useAction } from "@/components/ui/actions";
 import { Badge, Button, Card, Empty, PageHeader, Skeleton } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
 
@@ -27,7 +27,6 @@ const TONE = {
 } as const;
 
 export default function TranscodingPage() {
-  const toast = useToast();
   const { can } = useAuth();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState("");
@@ -52,15 +51,20 @@ export default function TranscodingPage() {
         ? 2000
         : 10000,
   });
-  const retry = async (id: string) => {
-    try {
-      await unwrap(api.POST("/api/v1/admin/videos/{id}/retry", { params: { path: { id } } }));
-      toast("Queued again");
-      void queryClient.invalidateQueries({ queryKey: ["videos"] });
-    } catch (e) {
-      toast(e instanceof ApiError ? e.message : "Retry failed", "error");
-    }
-  };
+  const [retrying, setRetrying] = useState<string | null>(null);
+  const retry = useAction(
+    async (id: string) => {
+      setRetrying(id);
+      try {
+        await unwrap(api.POST("/api/v1/admin/videos/{id}/retry", { params: { path: { id } } }));
+        void queryClient.invalidateQueries({ queryKey: ["videos"] });
+      } finally {
+        setRetrying(null);
+      }
+    },
+    { success: "Queued again" },
+  );
+
   const s = stats.data;
   return (
     <>
@@ -162,7 +166,12 @@ export default function TranscodingPage() {
                       {job.status}
                     </Badge>
                     {job.status === "failed" && can("content_manager") && (
-                      <Button size="sm" onClick={() => void retry(job.id)}>
+                      <Button
+                        size="sm"
+                        loading={retrying === job.id}
+                        disabled={retrying !== null}
+                        onClick={() => void retry.run(job.id)}
+                      >
                         <RotateCcw className="size-3.5" /> Retry
                       </Button>
                     )}

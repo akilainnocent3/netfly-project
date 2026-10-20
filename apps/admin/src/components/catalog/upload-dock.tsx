@@ -6,12 +6,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CircleAlert, Pause, Play, UploadCloud, X } from "lucide-react";
 import { useEffect } from "react";
 import { useUploads } from "@/stores/uploads";
+import { IconButton, useConfirm } from "../ui/actions";
 
 /** Floating progress panel for all running uploads (survives navigation). */
 export function UploadDock() {
   const items = useUploads((s) => s.items);
   const completedVersion = useUploads((s) => s.completedVersion);
   const { pause, resume, cancel, dismiss, loadPending } = useUploads();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
   const list = Object.values(items);
 
@@ -69,23 +71,35 @@ export function UploadDock() {
                   </p>
                 </div>
                 {item.state === "uploading" && (
-                  <IconBtn label="Pause" onClick={() => pause(item.key)}>
+                  <IconButton size="sm" label="Pause" onClick={() => pause(item.key)}>
                     <Pause className="size-3.5" />
-                  </IconBtn>
+                  </IconButton>
                 )}
                 {item.state === "paused" && (
-                  <IconBtn label="Resume" onClick={() => resume(item.key)}>
+                  <IconButton size="sm" label="Resume" onClick={() => resume(item.key)}>
                     <Play className="size-3.5" />
-                  </IconBtn>
+                  </IconButton>
                 )}
-                <IconBtn
+                <IconButton
+                  size="sm"
                   label={
                     item.state === "done" || item.state === "error" ? "Dismiss" : "Cancel upload"
                   }
-                  onClick={() => (item.state === "done" ? dismiss(item.key) : cancel(item.key))}
+                  onClick={() =>
+                    item.state === "done" || item.state === "error"
+                      ? dismiss(item.key)
+                      : confirm({
+                          title: `Cancel uploading ${item.filename}?`,
+                          body: "Parts already sent to S3 are discarded.",
+                          confirmLabel: "Cancel upload",
+                          destructive: true,
+                          success: "Upload cancelled",
+                          action: async () => cancel(item.key),
+                        })
+                  }
                 >
                   <X className="size-3.5" />
-                </IconBtn>
+                </IconButton>
               </div>
               <div className="bg-raised mt-2 h-1 overflow-hidden rounded-full">
                 <div
@@ -98,27 +112,5 @@ export function UploadDock() {
         })}
       </AnimatePresence>
     </div>
-  );
-}
-
-function IconBtn({
-  label,
-  onClick,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      className="text-muted hover:bg-hover hover:text-fg grid size-6 place-items-center rounded"
-    >
-      {children}
-    </button>
   );
 }

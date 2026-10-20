@@ -23,6 +23,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, GripVertical, ListVideo, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/providers/toast";
+import { useAction, useConfirm } from "@/components/ui/actions";
 import { Button, Card, Empty, Input, Skeleton, Textarea } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
 import type { EpisodeAdmin, SeasonAdmin } from "@/lib/types";
@@ -76,11 +77,23 @@ export function SeasonsTab({
     },
     onError: (e) => toast(e instanceof ApiError ? e.message : "Couldn't add season", "error"),
   });
-  const deleteSeason = useMutation({
-    mutationFn: (id: number) =>
-      unwrap(api.DELETE("/api/v1/admin/seasons/{id}", { params: { path: { id } } })),
-    onSuccess: refresh,
-  });
+  const confirm = useConfirm();
+  const deleteSeason = (season: SeasonAdmin) =>
+    confirm({
+      title: `Delete ${season.name || `Season ${season.number}`}?`,
+      body: season.episodes.length
+        ? `Its ${season.episodes.length} episode${season.episodes.length === 1 ? "" : "s"} and their progress are deleted too.`
+        : "This season has no episodes.",
+      confirmLabel: "Delete season",
+      destructive: true,
+      success: "Season deleted",
+      action: async () => {
+        await unwrap(
+          api.DELETE("/api/v1/admin/seasons/{id}", { params: { path: { id: season.id } } }),
+        );
+        refresh();
+      },
+    });
 
   if (seasons.isPending) return <Skeleton className="h-64" />;
   const active = seasons.data?.find((s) => s.id === activeId);
@@ -123,16 +136,7 @@ export function SeasonsTab({
           season={active}
           readOnly={readOnly}
           refresh={refresh}
-          onDelete={() => {
-            if (
-              active.episodes.length === 0 ||
-              window.confirm(
-                `Delete ${active.name || `Season ${active.number}`} and its ${active.episodes.length} episodes?`,
-              )
-            ) {
-              deleteSeason.mutate(active.id);
-            }
-          }}
+          onDelete={() => deleteSeason(active)}
           renderEpisodeVideo={renderEpisodeVideo}
           tools={renderSeasonTools?.(active, refresh)}
         />
@@ -172,13 +176,19 @@ function SeasonPanel({
   useEffect(() => setOrder(season.episodes.map((e) => e.id)), [season.episodes]);
   const byId = new Map(season.episodes.map((e) => [e.id, e]));
 
-  const saveSeason = async (patch: { name?: string; synopsis?: string }) => {
-    await unwrap(
-      api.PATCH("/api/v1/admin/seasons/{id}", { params: { path: { id: season.id } }, body: patch }),
-    );
-    toast("Saved");
-    refresh();
-  };
+  const saveSeasonAction = useAction(
+    async (patch: { name?: string; synopsis?: string }) => {
+      await unwrap(
+        api.PATCH("/api/v1/admin/seasons/{id}", {
+          params: { path: { id: season.id } },
+          body: patch,
+        }),
+      );
+      refresh();
+    },
+    { success: "Saved ✓" },
+  );
+  const saveSeason = saveSeasonAction.run;
   const addEpisode = useMutation({
     mutationFn: () =>
       unwrap(
@@ -323,32 +333,38 @@ function EpisodeRow({
   refresh: () => void;
   renderVideo?: EpisodeVideoRenderer;
 }) {
-  const toast = useToast();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: episode.id,
     disabled: readOnly,
   });
-  const save = async (patch: Record<string, unknown>) => {
-    try {
+  const confirm = useConfirm();
+  const saveAction = useAction(
+    async (patch: Record<string, unknown>) => {
       await unwrap(
         api.PATCH("/api/v1/admin/episodes/{id}", {
           params: { path: { id: episode.id } },
           body: patch,
         }),
       );
-      toast("Saved");
       refresh();
-    } catch (e) {
-      toast(e instanceof ApiError ? e.message : "Save failed", "error");
-    }
-  };
-  const remove = async () => {
-    if (!window.confirm(`Delete episode ${episode.number} “${episode.name}”?`)) return;
-    await unwrap(
-      api.DELETE("/api/v1/admin/episodes/{id}", { params: { path: { id: episode.id } } }),
-    );
-    refresh();
-  };
+    },
+    { success: "Saved ✓" },
+  );
+  const save = saveAction.run;
+  const remove = () =>
+    confirm({
+      title: `Delete episode ${episode.number} “${episode.name}”?`,
+      body: "Its video stays in the transcoding library; viewer progress for it is removed.",
+      confirmLabel: "Delete episode",
+      destructive: true,
+      success: "Episode deleted",
+      action: async () => {
+        await unwrap(
+          api.DELETE("/api/v1/admin/episodes/{id}", { params: { path: { id: episode.id } } }),
+        );
+        refresh();
+      },
+    });
 
   return (
     <li
@@ -420,7 +436,7 @@ function EpisodeRow({
             />
             {renderVideo?.({ episode, readOnly, onChanged: refresh })}
             {!readOnly && (
-              <Button size="sm" variant="ghost" onClick={() => void remove()}>
+              <Button size="sm" variant="ghost" onClick={remove} disabled={saveAction.pending}>
                 <Trash2 className="size-3.5" /> Delete episode
               </Button>
             )}

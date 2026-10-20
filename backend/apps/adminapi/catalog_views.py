@@ -40,8 +40,11 @@ TITLE_FILTERS = [
     OpenApiParameter("genre", int),
     OpenApiParameter("featured", bool),
     OpenApiParameter(
-        "ordering", str, enum=["-updated_at", "title", "-published_at", "-popularity", "year"]
+        "ordering",
+        str,
+        enum=["-updated_at", "title", "-published_at", "-popularity", "year", "-boost", "boost"],
     ),
+    OpenApiParameter("priority", str, enum=["boosted", "demoted", "normal"]),
 ]
 
 

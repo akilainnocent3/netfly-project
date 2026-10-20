@@ -20,6 +20,7 @@ import { useToast } from "@/components/providers/toast";
 import { Badge, Button, Card, Input, Label } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
 import type { AdminVideo, EpisodeAdmin, SeasonAdmin, TitleDetail } from "@/lib/types";
+import { IconButton, useAction, useConfirm } from "@/components/ui/actions";
 import { useUploads, type UploadTarget } from "@/stores/uploads";
 import type { EpisodeSlotProps } from "./seasons-tab";
 
@@ -118,23 +119,25 @@ function VideoSlot({
     }
     add(file, kind, target);
   };
-  const retry = async () => {
-    if (!asset) return;
-    try {
+  const retry = useAction(
+    async () => {
+      if (!asset) return;
       const updated = await unwrap(
         api.POST("/api/v1/admin/videos/{id}/retry", { params: { path: { id: asset.id } } }),
       );
       queryClient.setQueryData(["videos", asset.id], updated);
-      toast("Transcode queued again");
-    } catch (e) {
-      toast(e instanceof ApiError ? e.message : "Retry failed", "error");
-    }
-  };
+    },
+    { success: "Transcode queued again" },
+  );
 
   const body = (
     <>
       {asset ? (
-        <AssetStatus asset={asset} onRetry={readOnly ? undefined : () => void retry()} />
+        <AssetStatus
+          asset={asset}
+          retrying={retry.pending}
+          onRetry={readOnly ? undefined : () => void retry.run()}
+        />
       ) : !uploading ? (
         <button
           type="button"
@@ -203,7 +206,15 @@ function VideoSlot({
   );
 }
 
-function AssetStatus({ asset, onRetry }: { asset: AdminVideo; onRetry?: () => void }) {
+function AssetStatus({
+  asset,
+  onRetry,
+  retrying,
+}: {
+  asset: AdminVideo;
+  onRetry?: () => void;
+  retrying?: boolean;
+}) {
   const tone = asset.status === "ready" ? "green" : asset.status === "failed" ? "red" : "amber";
   const [showLog, setShowLog] = useState(false);
   return (
@@ -225,7 +236,7 @@ function AssetStatus({ asset, onRetry }: { asset: AdminVideo; onRetry?: () => vo
           <span className="text-muted text-[12px]">· {formatDuration(asset.duration)}</span>
         ) : null}
         {asset.status === "failed" && onRetry && (
-          <Button size="sm" className="ml-auto" onClick={onRetry}>
+          <Button size="sm" className="ml-auto" onClick={onRetry} loading={retrying}>
             <RotateCcw className="size-3.5" /> Retry
           </Button>
         )}
@@ -370,14 +381,22 @@ function Subtitles({ asset, readOnly }: { asset: AdminVideo; readOnly: boolean }
       setBusy(false);
     }
   };
-  const remove = async (subId: number) => {
-    await unwrap(
-      api.DELETE("/api/v1/admin/videos/{id}/subtitles/{sub_id}", {
-        params: { path: { id: asset.id, sub_id: String(subId) } },
-      }),
-    );
-    void queryClient.invalidateQueries({ queryKey: ["videos", asset.id] });
-  };
+  const confirm = useConfirm();
+  const remove = (subId: number, label: string) =>
+    confirm({
+      title: `Remove the ${label} subtitles?`,
+      confirmLabel: "Remove",
+      destructive: true,
+      success: `${label} subtitles removed`,
+      action: async () => {
+        await unwrap(
+          api.DELETE("/api/v1/admin/videos/{id}/subtitles/{sub_id}", {
+            params: { path: { id: asset.id, sub_id: String(subId) } },
+          }),
+        );
+        void queryClient.invalidateQueries({ queryKey: ["videos", asset.id] });
+      },
+    });
 
   return (
     <div className="border-line rounded-lg border p-3">
@@ -395,14 +414,14 @@ function Subtitles({ asset, readOnly }: { asset: AdminVideo; readOnly: boolean }
               </span>
             </span>
             {!readOnly && (
-              <button
-                type="button"
-                aria-label={`Remove ${s.label}`}
-                onClick={() => void remove(s.id)}
-                className="text-subtle hover:text-red-500"
+              <IconButton
+                size="sm"
+                tone="danger"
+                label={`Remove ${s.label}`}
+                onClick={() => remove(s.id, s.label)}
               >
                 <Trash2 className="size-3.5" />
-              </button>
+              </IconButton>
             )}
           </li>
         ))}
@@ -492,9 +511,12 @@ function MarkerEditor({
     credits_start: episode.credits_start ?? null,
   });
 
+  const [savingMark, setSavingMark] = useState<keyof typeof marks | null>(null);
   const setMark = async (key: keyof typeof marks, value: number | null) => {
+    if (savingMark) return;
     const next = { ...marks, [key]: value === null ? null : Math.round(value * 10) / 10 };
     setMarks(next);
+    setSavingMark(key);
     try {
       await unwrap(
         api.PATCH("/api/v1/admin/episodes/{id}", {
@@ -510,6 +532,8 @@ function MarkerEditor({
         "error",
       );
       setMarks(marks);
+    } finally {
+      setSavingMark(null);
     }
   };
   const pos = (v: number | null) =>
@@ -553,13 +577,19 @@ function MarkerEditor({
             </p>
             {!readOnly && (
               <div className="mt-1 flex gap-1">
-                <Button size="sm" onClick={() => video && void setMark(key, video.currentTime)}>
+                <Button
+                  size="sm"
+                  loading={savingMark === key}
+                  disabled={!!savingMark}
+                  onClick={() => video && void setMark(key, video.currentTime)}
+                >
                   Set to playhead
                 </Button>
                 {marks[key] !== null && (
                   <Button
                     size="sm"
                     variant="ghost"
+                    disabled={!!savingMark}
                     onClick={() => void setMark(key, null)}
                     aria-label={`Clear ${label}`}
                   >

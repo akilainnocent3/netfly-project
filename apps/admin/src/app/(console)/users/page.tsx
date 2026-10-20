@@ -1,13 +1,13 @@
 "use client";
 
-import { ApiError, unwrap } from "@netfly/api-client";
+import { unwrap } from "@netfly/api-client";
 import { cn } from "@netfly/ui";
 import * as Dialog from "@radix-ui/react-dialog";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ban, KeyRound, Search, ThumbsDown, ThumbsUp, Users, X } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/components/providers/auth";
-import { useToast } from "@/components/providers/toast";
+import { useAction, useConfirm } from "@/components/ui/actions";
 import {
   Badge,
   Button,
@@ -134,7 +134,6 @@ export default function UsersPage() {
 }
 
 function UserDrawer({ id, onClose }: { id: number | null; onClose: () => void }) {
-  const toast = useToast();
   const { can, user: me } = useAuth();
   const queryClient = useQueryClient();
   const [temp, setTemp] = useState<string | null>(null);
@@ -143,28 +142,48 @@ function UserDrawer({ id, onClose }: { id: number | null; onClose: () => void })
     enabled: id !== null,
     queryFn: () => unwrap(api.GET("/api/v1/admin/users/{id}", { params: { path: { id: id! } } })),
   });
-  const act = async (verb: "disable" | "enable" | "reset-password") => {
-    if (id === null) return;
-    try {
-      if (verb === "reset-password") {
+  const confirm = useConfirm();
+  const refreshUser = () => {
+    void queryClient.invalidateQueries({ queryKey: ["users"] });
+    void queryClient.invalidateQueries({ queryKey: ["user", id] });
+  };
+  const enable = useAction(
+    async () => {
+      if (id === null) return;
+      await unwrap(api.POST("/api/v1/admin/users/{id}/enable", { params: { path: { id } } }));
+      refreshUser();
+    },
+    { success: "Account enabled" },
+  );
+  const disable = () =>
+    id !== null &&
+    confirm({
+      title: "Disable this account?",
+      body: "They are signed out everywhere and can't sign in until you enable the account again.",
+      confirmLabel: "Disable account",
+      destructive: true,
+      success: "Account disabled and signed out",
+      action: async () => {
+        await unwrap(api.POST("/api/v1/admin/users/{id}/disable", { params: { path: { id } } }));
+        refreshUser();
+      },
+    });
+  const resetPassword = () =>
+    id !== null &&
+    confirm({
+      title: "Reset this viewer's password?",
+      body: "A one-time temporary password is generated and shown once. They are signed out everywhere.",
+      confirmLabel: "Reset password",
+      destructive: true,
+      success: "Temporary password created",
+      action: async () => {
         const r = await unwrap(
           api.POST("/api/v1/admin/users/{id}/reset-password", { params: { path: { id } } }),
         );
         setTemp(r.temporary_password);
-      } else {
-        await unwrap(
-          verb === "disable"
-            ? api.POST("/api/v1/admin/users/{id}/disable", { params: { path: { id } } })
-            : api.POST("/api/v1/admin/users/{id}/enable", { params: { path: { id } } }),
-        );
-        toast(verb === "disable" ? "Account disabled and signed out" : "Account enabled");
-      }
-      void queryClient.invalidateQueries({ queryKey: ["users"] });
-      void queryClient.invalidateQueries({ queryKey: ["user", id] });
-    } catch (e) {
-      toast(e instanceof ApiError ? e.message : "Action failed", "error");
-    }
-  };
+        refreshUser();
+      },
+    });
   const d = detail.data;
   return (
     <Dialog.Root
@@ -205,15 +224,15 @@ function UserDrawer({ id, onClose }: { id: number | null; onClose: () => void })
               {can("content_manager") && d.user.id !== me?.id && (
                 <div className="flex flex-wrap gap-2">
                   {d.user.is_active ? (
-                    <Button size="sm" variant="danger" onClick={() => void act("disable")}>
+                    <Button size="sm" variant="danger" onClick={disable}>
                       <Ban className="size-3.5" /> Disable account
                     </Button>
                   ) : (
-                    <Button size="sm" onClick={() => void act("enable")}>
+                    <Button size="sm" loading={enable.pending} onClick={() => void enable.run()}>
                       Enable account
                     </Button>
                   )}
-                  <Button size="sm" onClick={() => void act("reset-password")}>
+                  <Button size="sm" onClick={resetPassword}>
                     <KeyRound className="size-3.5" /> Reset password
                   </Button>
                 </div>

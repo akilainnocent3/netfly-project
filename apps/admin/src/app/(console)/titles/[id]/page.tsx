@@ -68,6 +68,8 @@ export default function TitleEditorPage({ params }: { params: Promise<{ id: stri
   const change = (patch: Partial<TitleDetail> & { genre_ids?: number[] }) => {
     setDraft((d) => (d ? { ...d, ...patch } : d));
     autosave.queue(patch);
+    // Priority is a deliberate one-click choice: save it now so viewers see it within a second.
+    if ("boost" in patch) void autosave.flush();
   };
   const attach = async (
     field: "poster_id" | "backdrop_id" | "logo_id" | "video_id" | "trailer_id",

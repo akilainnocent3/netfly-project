@@ -2452,9 +2452,11 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "-boost",
                                 "-popularity",
                                 "-published_at",
                                 "-updated_at",
+                                "boost",
                                 "title",
                                 "year"
                             ]
@@ -2476,6 +2478,18 @@
                         "description": "Number of results to return per page.",
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "priority",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "boosted",
+                                "demoted",
+                                "normal"
+                            ]
                         }
                     },
                     {

@@ -1,17 +1,22 @@
 "use client";
 
-import { ApiError, unwrap } from "@netfly/api-client";
+import { unwrap } from "@netfly/api-client";
 import { useQueryClient } from "@tanstack/react-query";
-import { CircleAlert, CircleCheck } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/components/providers/toast";
+import { CircleAlert, CircleCheck, Rocket } from "lucide-react";
+import { useAction } from "@/components/ui/actions";
 import { Button, Card, Input, Label, Switch } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
 import type { TitleDetail } from "@/lib/types";
+import { PrioritySegmented, explainPriority } from "../priority";
 import { StatusChip } from "../status";
 
-const toLocal = (iso?: string | null) => (iso ? new Date(iso).toISOString().slice(0, 16) : "");
-const fromLocal = (v: string) => (v ? new Date(v).toISOString() : null);
+/** `datetime-local` works in local time; ISO strings are UTC. */
+export const toLocal = (iso?: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+};
+export const fromLocal = (v: string) => (v ? new Date(v).toISOString() : null);
 
 export function PublishingTab({
   title,
@@ -24,51 +29,50 @@ export function PublishingTab({
   errors: Record<string, string>;
   readOnly: boolean;
 }) {
-  const toast = useToast();
   const queryClient = useQueryClient();
-  const [busy, setBusy] = useState(false);
   const refresh = () => void queryClient.invalidateQueries({ queryKey: ["title", title.id] });
 
-  const publish = async (verb: "publish" | "unpublish") => {
-    setBusy(true);
-    try {
+  const publish = useAction(
+    async (verb: "publish" | "unpublish") => {
       const updated = await unwrap(
         verb === "publish"
           ? api.POST("/api/v1/admin/titles/{id}/publish", { params: { path: { id: title.id } } })
           : api.POST("/api/v1/admin/titles/{id}/unpublish", { params: { path: { id: title.id } } }),
       );
-      toast(
-        updated.status === "processing"
+      queryClient.setQueryData(["title", title.id], updated);
+      return updated;
+    },
+    {
+      success: (u) =>
+        u.status === "processing"
           ? "Will go live when the video finishes processing"
-          : verb === "publish"
+          : u.status === "published"
             ? "Published"
             : "Moved to draft",
-      );
-      queryClient.setQueryData(["title", title.id], updated);
-    } catch (e) {
-      toast(e instanceof ApiError ? e.message : "Couldn't change status", "error");
-    } finally {
-      setBusy(false);
-    }
-  };
+    },
+  );
 
-  const toggleBillboard = async (on: boolean) => {
-    const existing = await unwrap(api.GET("/api/v1/admin/billboards"));
-    const mine = existing.filter((b) => b.title === title.id);
-    if (on && !mine.length)
-      await unwrap(api.POST("/api/v1/admin/billboards", { body: { title: title.id } }));
-    if (!on)
-      await Promise.all(
-        mine.map((b) =>
-          unwrap(api.DELETE("/api/v1/admin/billboards/{id}", { params: { path: { id: b.id } } })),
-        ),
-      );
-    toast(on ? "Added to the home billboard" : "Removed from the billboard");
-    refresh();
-  };
+  const billboard = useAction(
+    async (on: boolean) => {
+      const existing = await unwrap(api.GET("/api/v1/admin/billboards"));
+      const mine = existing.filter((b) => b.title === title.id);
+      if (on && !mine.length)
+        await unwrap(api.POST("/api/v1/admin/billboards", { body: { title: title.id } }));
+      if (!on)
+        await Promise.all(
+          mine.map((b) =>
+            unwrap(api.DELETE("/api/v1/admin/billboards/{id}", { params: { path: { id: b.id } } })),
+          ),
+        );
+      refresh();
+      return on;
+    },
+    { success: (on) => (on ? "Added to the home billboard" : "Removed from the billboard") },
+  );
 
   const blockers = title.publish_blockers;
   const live = title.status === "published" || title.status === "processing";
+  const boost = title.boost ?? 0;
   return (
     <fieldset disabled={readOnly} className="grid gap-4 lg:grid-cols-2">
       <Card className="space-y-4 p-5">
@@ -98,15 +102,15 @@ export function PublishingTab({
         ) : null}
         <div className="flex gap-2">
           {live ? (
-            <Button onClick={() => void publish("unpublish")} loading={busy}>
+            <Button onClick={() => void publish.run("unpublish")} loading={publish.pending}>
               Unpublish
             </Button>
           ) : (
             <Button
               variant="primary"
               disabled={blockers.length > 0}
-              onClick={() => void publish("publish")}
-              loading={busy}
+              onClick={() => void publish.run("publish")}
+              loading={publish.pending}
             >
               Publish now
             </Button>
@@ -138,56 +142,111 @@ export function PublishingTab({
         <div className="border-line flex items-center justify-between rounded-md border p-3">
           <div>
             <p className="font-medium">Home billboard</p>
-            <p className="text-muted text-[12.5px]">Rotate this title in the hero.</p>
+            <p className="text-muted text-[12.5px]">
+              {billboard.pending ? "Saving…" : "Rotate this title in the hero."}
+            </p>
           </div>
           <Switch
             checked={title.is_billboard}
-            onCheckedChange={(v) => void toggleBillboard(v)}
+            onCheckedChange={(v) => void billboard.run(v)}
             label="Home billboard"
+            disabled={readOnly || billboard.pending}
+          />
+        </div>
+      </Card>
+
+      <div className="space-y-4">
+        <Card className="space-y-4 p-5">
+          <div className="flex items-start gap-3">
+            <span className="bg-accent/10 text-accent grid size-8 shrink-0 place-items-center rounded-md">
+              <Rocket className="size-4" />
+            </span>
+            <div>
+              <p className="font-medium">Recommendation priority</p>
+              <p className="text-muted text-[12.5px]">
+                Applies to Top picks, genre rows, new releases and the billboard. Top 10 and
+                Trending stay data-driven.
+              </p>
+            </div>
+          </div>
+          <PrioritySegmented
+            value={boost}
+            onChange={(v) => onChange({ boost: v })}
             disabled={readOnly}
           />
-        </div>
-      </Card>
-      <Card className="space-y-4 p-5">
-        <div>
-          <p className="font-medium">Rights & license</p>
-          <p className="text-muted text-[12.5px]">
-            Titles unpublish automatically when the license ends; staff are warned beforehand.
+          <p className="text-[12.5px]" aria-live="polite" data-testid="priority-explanation">
+            {explainPriority(boost, title.boost_starts_at, title.boost_ends_at)}
           </p>
-        </div>
-        <div>
-          <Label htmlFor="p-rights">Rights holder</Label>
-          <Input
-            id="p-rights"
-            value={title.rights_holder ?? ""}
-            onChange={(e) => onChange({ rights_holder: e.target.value })}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="b-start" hint="optional">
+                Campaign starts
+              </Label>
+              <Input
+                id="b-start"
+                type="datetime-local"
+                value={toLocal(title.boost_starts_at)}
+                onChange={(e) => onChange({ boost_starts_at: fromLocal(e.target.value) })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="b-end" hint="optional">
+                Campaign ends
+              </Label>
+              <Input
+                id="b-end"
+                type="datetime-local"
+                value={toLocal(title.boost_ends_at)}
+                invalid={!!errors.boost_ends_at}
+                onChange={(e) => onChange({ boost_ends_at: fromLocal(e.target.value) })}
+              />
+              {errors.boost_ends_at && (
+                <p className="mt-1 text-[12px] text-red-500">{errors.boost_ends_at}</p>
+              )}
+            </div>
+          </div>
+        </Card>
+        <Card className="space-y-4 p-5">
           <div>
-            <Label htmlFor="p-ls">License start</Label>
-            <Input
-              id="p-ls"
-              type="datetime-local"
-              value={toLocal(title.license_start)}
-              onChange={(e) => onChange({ license_start: fromLocal(e.target.value) })}
-            />
+            <p className="font-medium">Rights & license</p>
+            <p className="text-muted text-[12.5px]">
+              Titles unpublish automatically when the license ends; staff are warned beforehand.
+            </p>
           </div>
           <div>
-            <Label htmlFor="p-le">License end</Label>
+            <Label htmlFor="p-rights">Rights holder</Label>
             <Input
-              id="p-le"
-              type="datetime-local"
-              value={toLocal(title.license_end)}
-              invalid={!!errors.license_end}
-              onChange={(e) => onChange({ license_end: fromLocal(e.target.value) })}
+              id="p-rights"
+              value={title.rights_holder ?? ""}
+              onChange={(e) => onChange({ rights_holder: e.target.value })}
             />
-            {errors.license_end && (
-              <p className="mt-1 text-[12px] text-red-500">{errors.license_end}</p>
-            )}
           </div>
-        </div>
-      </Card>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="p-ls">License start</Label>
+              <Input
+                id="p-ls"
+                type="datetime-local"
+                value={toLocal(title.license_start)}
+                onChange={(e) => onChange({ license_start: fromLocal(e.target.value) })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="p-le">License end</Label>
+              <Input
+                id="p-le"
+                type="datetime-local"
+                value={toLocal(title.license_end)}
+                invalid={!!errors.license_end}
+                onChange={(e) => onChange({ license_end: fromLocal(e.target.value) })}
+              />
+              {errors.license_end && (
+                <p className="mt-1 text-[12px] text-red-500">{errors.license_end}</p>
+              )}
+            </div>
+          </div>
+        </Card>
+      </div>
     </fieldset>
   );
 }

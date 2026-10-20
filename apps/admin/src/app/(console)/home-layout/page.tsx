@@ -1,6 +1,6 @@
 "use client";
 
-import { ApiError, unwrap, type Schemas } from "@netfly/api-client";
+import { unwrap, type Schemas } from "@netfly/api-client";
 import { cn } from "@netfly/ui";
 import {
   DndContext,
@@ -20,12 +20,13 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, EyeOff, GripVertical, Plus, Search, Trash2 } from "lucide-react";
+import { Eye, EyeOff, GripVertical, Plus, Search, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { BoostedPanel } from "@/components/catalog/boosted-panel";
 import { Thumb } from "@/components/catalog/thumb";
 import { useAuth } from "@/components/providers/auth";
 import { useConfig } from "@/components/providers/config";
-import { useToast } from "@/components/providers/toast";
+import { IconButton, useAction, useConfirm } from "@/components/ui/actions";
 import {
   Badge,
   Button,
@@ -58,7 +59,7 @@ const KIND_LABEL: Record<Kind, string> = {
 
 function useSortList<T extends { id: number }>(
   items: T[] | undefined,
-  reorder: (ids: number[]) => Promise<void>,
+  reorder: (ids: number[]) => Promise<unknown>,
 ) {
   const [order, setOrder] = useState<number[]>([]);
   useEffect(() => setOrder(items?.map((i) => i.id) ?? []), [items]);
@@ -68,16 +69,30 @@ function useSortList<T extends { id: number }>(
   );
   const onDragEnd = async ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
+    const previous = order;
     const next = arrayMove(order, order.indexOf(Number(active.id)), order.indexOf(Number(over.id)));
     setOrder(next);
-    await reorder(next);
+    const ok = await reorder(next);
+    if (ok === undefined) setOrder(previous); // failed: roll back the optimistic order
   };
   const byId = new Map(items?.map((i) => [i.id, i]));
   return { order, sensors, onDragEnd, byId };
 }
 
+function DragHandle(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      type="button"
+      className="text-subtle hover:text-fg cursor-grab touch-none p-1"
+      aria-label="Drag to reorder"
+      {...props}
+    >
+      <GripVertical className="size-4" />
+    </button>
+  );
+}
+
 export default function HomeLayoutPage() {
-  const toast = useToast();
   const { can } = useAuth();
   const readOnly = !can("content_manager");
   const queryClient = useQueryClient();
@@ -93,21 +108,25 @@ export default function HomeLayoutPage() {
     queryKey: ["genres"],
     queryFn: () => unwrap(api.GET("/api/v1/admin/genres")),
   });
+  const [previewKey, setPreviewKey] = useState(0);
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ["home-rows"] });
     setPreviewKey((k) => k + 1);
   };
-  const [previewKey, setPreviewKey] = useState(0);
-  const list = useSortList(rows.data, async (ids) => {
-    await unwrap(api.POST("/api/v1/admin/home-rows/reorder", { body: { ids } }));
-    toast("Row order saved");
-    refresh();
-  });
+  const reorder = useAction(
+    async (ids: number[]) => {
+      await unwrap(api.POST("/api/v1/admin/home-rows/reorder", { body: { ids } }));
+      refresh();
+      return true;
+    },
+    { success: "Row order saved" },
+  );
+  const list = useSortList(rows.data, reorder.run);
   const [kind, setKind] = useState<Kind>("trending");
   const [target, setTarget] = useState("");
 
-  const add = async () => {
-    try {
+  const add = useAction(
+    async () => {
       await unwrap(
         api.POST("/api/v1/admin/home-rows", {
           body: {
@@ -118,26 +137,10 @@ export default function HomeLayoutPage() {
           },
         }),
       );
-      toast("Row added");
       refresh();
-    } catch (e) {
-      toast(
-        e instanceof ApiError ? (Object.values(e.fields)[0] ?? e.message) : "Couldn't add",
-        "error",
-      );
-    }
-  };
-  const patch = async (row: HomeRow, body: Partial<HomeRow>) => {
-    await unwrap(
-      api.PATCH("/api/v1/admin/home-rows/{id}", { params: { path: { id: row.id } }, body }),
-    );
-    toast("Saved ✓");
-    refresh();
-  };
-  const remove = async (row: HomeRow) => {
-    await unwrap(api.DELETE("/api/v1/admin/home-rows/{id}", { params: { path: { id: row.id } } }));
-    refresh();
-  };
+    },
+    { success: "Row added" },
+  );
 
   return (
     <>
@@ -147,6 +150,7 @@ export default function HomeLayoutPage() {
       />
       <div className="grid gap-5 xl:grid-cols-[1fr_420px]">
         <div className="space-y-5">
+          <BoostedPanel readOnly={readOnly} />
           <Card>
             <div className="border-line border-b px-4 py-3 font-medium">Rows</div>
             {rows.isPending ? (
@@ -166,13 +170,7 @@ export default function HomeLayoutPage() {
                     {list.order.map((id) => {
                       const row = list.byId.get(id);
                       return row ? (
-                        <RowItem
-                          key={id}
-                          row={row}
-                          readOnly={readOnly}
-                          onPatch={(b) => void patch(row, b)}
-                          onRemove={() => void remove(row)}
-                        />
+                        <RowItem key={id} row={row} readOnly={readOnly} refresh={refresh} />
                       ) : null;
                     })}
                   </ul>
@@ -230,7 +228,8 @@ export default function HomeLayoutPage() {
                 )}
                 <Button
                   variant="primary"
-                  onClick={() => void add()}
+                  loading={add.pending}
+                  onClick={() => void add.run()}
                   disabled={(kind === "collection" || kind === "genre") && !target}
                 >
                   <Plus className="size-4" /> Add
@@ -250,18 +249,27 @@ export default function HomeLayoutPage() {
 function RowItem({
   row,
   readOnly,
-  onPatch,
-  onRemove,
+  refresh,
 }: {
   row: HomeRow;
   readOnly: boolean;
-  onPatch: (b: Partial<HomeRow>) => void;
-  onRemove: () => void;
+  refresh: () => void;
 }) {
+  const confirm = useConfirm();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.id,
     disabled: readOnly,
   });
+  const patch = useAction(
+    async (body: Partial<HomeRow>) => {
+      await unwrap(
+        api.PATCH("/api/v1/admin/home-rows/{id}", { params: { path: { id: row.id } }, body }),
+      );
+      refresh();
+    },
+    { success: "Saved ✓" },
+  );
+  const name = row.title || row.collection_name || row.genre_name || KIND_LABEL[row.kind];
   return (
     <li
       ref={setNodeRef}
@@ -272,21 +280,9 @@ function RowItem({
         !row.is_active && "opacity-50",
       )}
     >
-      {!readOnly && (
-        <button
-          type="button"
-          className="text-subtle hover:text-fg cursor-grab touch-none p-1"
-          aria-label="Drag to reorder"
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="size-4" />
-        </button>
-      )}
+      {!readOnly && <DragHandle {...attributes} {...listeners} />}
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">
-          {row.title || row.collection_name || row.genre_name || KIND_LABEL[row.kind]}
-        </p>
+        <p className="truncate font-medium">{name}</p>
         <p className="text-muted text-[12px]">
           {KIND_LABEL[row.kind]}
           {row.collection_name ? ` · ${row.collection_name}` : ""}
@@ -300,22 +296,42 @@ function RowItem({
               defaultValue={row.title ?? ""}
               placeholder="Custom heading"
               aria-label="Custom heading"
+              disabled={patch.pending}
               onBlur={(e) =>
-                e.target.value !== (row.title ?? "") && onPatch({ title: e.target.value })
+                e.target.value !== (row.title ?? "") && void patch.run({ title: e.target.value })
               }
             />
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            aria-label={row.is_active ? "Hide row" : "Show row"}
-            onClick={() => onPatch({ is_active: !row.is_active })}
+          <IconButton
+            label={row.is_active ? "Hide row" : "Show row"}
+            loading={patch.pending}
+            onClick={() => void patch.run({ is_active: !row.is_active })}
           >
             {row.is_active ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-          </Button>
-          <Button size="sm" variant="ghost" aria-label="Remove row" onClick={onRemove}>
+          </IconButton>
+          <IconButton
+            label="Remove row"
+            tone="danger"
+            onClick={() =>
+              confirm({
+                title: `Remove “${name}” from the home page?`,
+                body: "Viewers stop seeing this row immediately. You can add it again later.",
+                confirmLabel: "Remove row",
+                destructive: true,
+                success: "Row removed",
+                action: async () => {
+                  await unwrap(
+                    api.DELETE("/api/v1/admin/home-rows/{id}", {
+                      params: { path: { id: row.id } },
+                    }),
+                  );
+                  refresh();
+                },
+              })
+            }
+          >
             <Trash2 className="size-4" />
-          </Button>
+          </IconButton>
         </>
       )}
     </li>
@@ -325,9 +341,11 @@ function RowItem({
 function TitleSearch({
   onPick,
   placeholder,
+  busy,
 }: {
-  onPick: (t: Schemas["RelatedBrief"]) => void;
+  onPick: (t: Schemas["RelatedBrief"]) => Promise<unknown>;
   placeholder: string;
+  busy?: boolean;
 }) {
   const [q, setQ] = useState("");
   const query = useDebounced(q, 200);
@@ -351,18 +369,19 @@ function TitleSearch({
         <ul className="border-line bg-panel absolute inset-x-0 top-9 z-20 max-h-64 overflow-y-auto rounded-md border p-1 shadow-xl">
           {results.data.map((t) => (
             <li key={t.id}>
-              <button
-                type="button"
-                onClick={() => {
-                  onPick(t);
+              <Button
+                variant="ghost"
+                className="text-fg h-auto w-full justify-start gap-2 px-2 py-1.5 text-left"
+                disabled={busy}
+                onClick={async () => {
+                  await onPick(t);
                   setQ("");
                 }}
-                className="hover:bg-hover flex w-full items-center gap-2 rounded px-2 py-1.5 text-left"
               >
                 <Thumb image={t.poster} className="w-6" />{" "}
                 <span className="truncate">{t.title}</span>
                 {t.status !== "published" && <Badge className="ml-auto">{t.status}</Badge>}
-              </button>
+              </Button>
             </li>
           ))}
           {results.data.length === 0 && <li className="text-muted px-2 py-1.5">No titles</li>}
@@ -373,7 +392,6 @@ function TitleSearch({
 }
 
 function Billboards({ readOnly, onChange }: { readOnly: boolean; onChange: () => void }) {
-  const toast = useToast();
   const queryClient = useQueryClient();
   const billboards = useQuery({
     queryKey: ["billboards"],
@@ -383,17 +401,30 @@ function Billboards({ readOnly, onChange }: { readOnly: boolean; onChange: () =>
     void queryClient.invalidateQueries({ queryKey: ["billboards"] });
     onChange();
   };
-  const list = useSortList(billboards.data, async (ids) => {
-    await unwrap(api.POST("/api/v1/admin/billboards/reorder", { body: { ids } }));
-    toast("Billboard order saved");
-    refresh();
-  });
+  const reorder = useAction(
+    async (ids: number[]) => {
+      await unwrap(api.POST("/api/v1/admin/billboards/reorder", { body: { ids } }));
+      refresh();
+      return true;
+    },
+    { success: "Billboard order saved" },
+  );
+  const add = useAction(
+    async (t: Schemas["RelatedBrief"]) => {
+      await unwrap(api.POST("/api/v1/admin/billboards", { body: { title: t.id } }));
+      refresh();
+      return t.title;
+    },
+    { success: (name) => `${name} added to the billboard` },
+  );
+  const list = useSortList(billboards.data, reorder.run);
   return (
     <Card>
       <div className="border-line border-b px-4 py-3">
         <p className="font-medium">Hero billboard</p>
         <p className="text-muted text-[12.5px]">
-          Rotates in this order. Leave empty to feature titles automatically.
+          Rotates in this order, topped up with boosted and featured titles. Leave empty to feature
+          titles automatically.
         </p>
       </div>
       <DndContext
@@ -416,10 +447,8 @@ function Billboards({ readOnly, onChange }: { readOnly: boolean; onChange: () =>
         <div className="border-line border-t p-4">
           <TitleSearch
             placeholder="Add a title to the billboard…"
-            onPick={async (t) => {
-              await unwrap(api.POST("/api/v1/admin/billboards", { body: { title: t.id } }));
-              refresh();
-            }}
+            busy={add.pending}
+            onPick={add.run}
           />
         </div>
       )}
@@ -436,33 +465,27 @@ function BillboardItem({
   readOnly: boolean;
   refresh: () => void;
 }) {
+  const confirm = useConfirm();
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: item.id,
     disabled: readOnly,
   });
-  const patch = async (body: Partial<Schemas["BillboardAdmin"]>) => {
-    await unwrap(
-      api.PATCH("/api/v1/admin/billboards/{id}", { params: { path: { id: item.id } }, body }),
-    );
-    refresh();
-  };
+  const patch = useAction(
+    async (body: Partial<Schemas["BillboardAdmin"]>) => {
+      await unwrap(
+        api.PATCH("/api/v1/admin/billboards/{id}", { params: { path: { id: item.id } }, body }),
+      );
+      refresh();
+    },
+    { success: "Saved ✓" },
+  );
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className="bg-panel flex items-center gap-3 px-3 py-2"
     >
-      {!readOnly && (
-        <button
-          type="button"
-          className="text-subtle cursor-grab touch-none p-1"
-          aria-label="Drag to reorder"
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="size-4" />
-        </button>
-      )}
+      {!readOnly && <DragHandle {...attributes} {...listeners} />}
       <Thumb image={item.title_detail.poster} />
       <span className="min-w-0 flex-1 truncate font-medium">{item.title_detail.title}</span>
       {!readOnly && (
@@ -472,32 +495,42 @@ function BillboardItem({
               defaultValue={item.headline ?? ""}
               placeholder="Headline (optional)"
               aria-label="Headline"
+              disabled={patch.pending}
               onBlur={(e) =>
-                e.target.value !== (item.headline ?? "") && void patch({ headline: e.target.value })
+                e.target.value !== (item.headline ?? "") &&
+                void patch.run({ headline: e.target.value })
               }
             />
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            aria-label={item.is_active ? "Pause" : "Activate"}
-            onClick={() => void patch({ is_active: !item.is_active })}
+          <IconButton
+            label={item.is_active ? "Pause" : "Activate"}
+            loading={patch.pending}
+            onClick={() => void patch.run({ is_active: !item.is_active })}
           >
             {item.is_active ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            aria-label="Remove"
-            onClick={async () => {
-              await unwrap(
-                api.DELETE("/api/v1/admin/billboards/{id}", { params: { path: { id: item.id } } }),
-              );
-              refresh();
-            }}
+          </IconButton>
+          <IconButton
+            label="Remove from billboard"
+            tone="danger"
+            onClick={() =>
+              confirm({
+                title: `Remove “${item.title_detail.title}” from the billboard?`,
+                confirmLabel: "Remove",
+                destructive: true,
+                success: "Removed from the billboard",
+                action: async () => {
+                  await unwrap(
+                    api.DELETE("/api/v1/admin/billboards/{id}", {
+                      params: { path: { id: item.id } },
+                    }),
+                  );
+                  refresh();
+                },
+              })
+            }
           >
             <Trash2 className="size-4" />
-          </Button>
+          </IconButton>
         </>
       )}
     </li>
@@ -505,7 +538,7 @@ function BillboardItem({
 }
 
 function Collections({ readOnly, onChange }: { readOnly: boolean; onChange: () => void }) {
-  const toast = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
   const collections = useQuery({
     queryKey: ["collections"],
@@ -516,16 +549,26 @@ function Collections({ readOnly, onChange }: { readOnly: boolean; onChange: () =
     void queryClient.invalidateQueries({ queryKey: ["collections"] });
     onChange();
   };
-  const save = async (c: Schemas["CollectionAdmin"], ids: number[]) => {
-    await unwrap(
-      api.PATCH("/api/v1/admin/collections/{id}", {
-        params: { path: { id: c.id } },
-        body: { title_ids: ids },
-      }),
-    );
-    toast("Collection saved");
-    refresh();
-  };
+  const save = useAction(
+    async (c: Schemas["CollectionAdmin"], ids: number[]) => {
+      await unwrap(
+        api.PATCH("/api/v1/admin/collections/{id}", {
+          params: { path: { id: c.id } },
+          body: { title_ids: ids },
+        }),
+      );
+      refresh();
+    },
+    { success: "Collection saved" },
+  );
+  const create = useAction(
+    async () => {
+      await unwrap(api.POST("/api/v1/admin/collections", { body: { name: name.trim() } }));
+      setName("");
+      refresh();
+    },
+    { success: "Collection created" },
+  );
   return (
     <Card>
       <div className="border-line border-b px-4 py-3">
@@ -547,45 +590,54 @@ function Collections({ readOnly, onChange }: { readOnly: boolean; onChange: () =
                 </span>
               )}
               {!readOnly && (
-                <Button
-                  size="sm"
-                  variant="ghost"
+                <IconButton
+                  label="Delete collection"
+                  tone="danger"
                   className="ml-auto"
-                  aria-label="Delete collection"
-                  onClick={async () => {
-                    await unwrap(
-                      api.DELETE("/api/v1/admin/collections/{id}", {
-                        params: { path: { id: c.id } },
-                      }),
-                    );
-                    refresh();
-                  }}
+                  onClick={() =>
+                    confirm({
+                      title: `Delete the “${c.name}” collection?`,
+                      body: "Any home row that shows it disappears too. Titles are not affected.",
+                      confirmLabel: "Delete collection",
+                      destructive: true,
+                      success: "Collection deleted",
+                      action: async () => {
+                        await unwrap(
+                          api.DELETE("/api/v1/admin/collections/{id}", {
+                            params: { path: { id: c.id } },
+                          }),
+                        );
+                        refresh();
+                      },
+                    })
+                  }
                 >
                   <Trash2 className="size-4" />
-                </Button>
+                </IconButton>
               )}
             </div>
             <div className="flex flex-wrap gap-1.5">
               {c.items.map((item) => (
                 <span
                   key={item.id}
-                  className="border-line bg-raised inline-flex items-center gap-1.5 rounded-md border py-0.5 pr-2 pl-0.5 text-[12.5px]"
+                  className="border-line bg-raised inline-flex items-center gap-1.5 rounded-md border py-0.5 pr-0.5 pl-0.5 text-[12.5px]"
                 >
                   <Thumb image={item.title.poster} className="w-5" /> {item.title.title}
                   {!readOnly && (
-                    <button
-                      type="button"
-                      aria-label={`Remove ${item.title.title}`}
-                      className="text-subtle hover:text-red-500"
+                    <IconButton
+                      size="sm"
+                      tone="danger"
+                      label={`Remove ${item.title.title}`}
+                      disabled={save.pending}
                       onClick={() =>
-                        void save(
+                        void save.run(
                           c,
                           c.items.filter((i) => i.id !== item.id).map((i) => i.title.id),
                         )
                       }
                     >
-                      ×
-                    </button>
+                      <X className="size-3" />
+                    </IconButton>
                   )}
                 </span>
               ))}
@@ -593,7 +645,8 @@ function Collections({ readOnly, onChange }: { readOnly: boolean; onChange: () =
             {!readOnly && (
               <TitleSearch
                 placeholder={`Add to ${c.name}…`}
-                onPick={(t) => void save(c, [...c.items.map((i) => i.title.id), t.id])}
+                busy={save.pending}
+                onPick={(t) => save.run(c, [...c.items.map((i) => i.title.id), t.id])}
               />
             )}
           </li>
@@ -602,12 +655,9 @@ function Collections({ readOnly, onChange }: { readOnly: boolean; onChange: () =
       {!readOnly && (
         <form
           className="border-line flex gap-2 border-t p-4"
-          onSubmit={async (e) => {
+          onSubmit={(e) => {
             e.preventDefault();
-            if (!name.trim()) return;
-            await unwrap(api.POST("/api/v1/admin/collections", { body: { name: name.trim() } }));
-            setName("");
-            refresh();
+            if (name.trim()) void create.run();
           }}
         >
           <Input
@@ -616,7 +666,7 @@ function Collections({ readOnly, onChange }: { readOnly: boolean; onChange: () =
             placeholder="New collection name"
             aria-label="New collection name"
           />
-          <Button type="submit" disabled={!name.trim()}>
+          <Button type="submit" loading={create.pending} disabled={!name.trim()}>
             <Plus className="size-4" /> Create
           </Button>
         </form>
@@ -625,7 +675,7 @@ function Collections({ readOnly, onChange }: { readOnly: boolean; onChange: () =
   );
 }
 
-/** The real viewer home, as a new viewer sees it, in an iframe-free preview using the public billboard + layout. */
+/** Sketch of the viewer home in layout order (personal rows vary per viewer). */
 function LivePreview() {
   const config = useConfig();
   const clientUrl = config
@@ -653,8 +703,8 @@ function LivePreview() {
           Open viewer app ↗
         </a>
       </div>
-      <div className="border-line overflow-hidden rounded-xl border bg-[#0b0b0f] text-white shadow-lg">
-        <div className="relative aspect-[16/9] bg-gradient-to-br from-[#2a1a22] to-[#0b0b0f]">
+      <div className="border-line overflow-hidden rounded-xl border bg-[#141414] text-white shadow-lg">
+        <div className="relative aspect-[16/9] bg-gradient-to-br from-[#2a1416] to-[#141414]">
           {hero && (
             <div className="absolute inset-0 opacity-70">
               <Thumb
@@ -663,7 +713,7 @@ function LivePreview() {
               />
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b0f] via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
           <div className="absolute bottom-4 left-4">
             <p className="text-[11px] tracking-widest text-white/60 uppercase">Billboard</p>
             <p className="text-[18px] font-black uppercase">
