@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, m } from "framer-motion";
+import { Button } from "./button";
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 
 interface Toast {
@@ -46,19 +47,21 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               exit={{ opacity: 0, y: 8, scale: 0.98 }}
               className="border-line bg-elevated/95 pointer-events-auto flex items-center gap-4 rounded-full border px-5 py-3 text-sm shadow-2xl shadow-black/50 backdrop-blur-xl"
             >
-              {toast.tone === "success" && <span className="text-emerald-400">✓</span>}
+              {toast.tone === "success" && <span className="text-match">✓</span>}
+              {toast.tone === "error" && <span className="font-bold text-[#ff6b72]">!</span>}
               <span>{toast.message}</span>
               {toast.action && (
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-accent h-auto px-2 py-1"
                   onClick={() => {
                     toast.action?.onClick();
                     dismiss(toast.id);
                   }}
-                  className="text-accent font-semibold hover:underline"
                 >
                   {toast.action.label}
-                </button>
+                </Button>
               )}
             </m.div>
           ))}

@@ -1,6 +1,33 @@
-import { DM_Sans, Inter, Manrope, Outfit, Plus_Jakarta_Sans } from "next/font/google";
+import {
+  DM_Sans,
+  Inter,
+  Inter_Tight,
+  Manrope,
+  Outfit,
+  Plus_Jakarta_Sans,
+  Roboto,
+} from "next/font/google";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+// next/font self-hosts the files and generates size-adjusted fallbacks (no layout shift on swap).
+const interTight = Inter_Tight({
+  subsets: ["latin"],
+  variable: "--font-inter-tight",
+  display: "swap",
+  adjustFontFallback: true,
+});
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+  preload: false,
+});
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["400", "500", "700", "900"],
+  variable: "--font-roboto",
+  display: "swap",
+  preload: false,
+});
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-manrope",
@@ -26,12 +53,14 @@ const dmSans = DM_Sans({
   preload: false,
 });
 
-export const fontVariables = [inter, manrope, outfit, jakarta, dmSans]
+export const fontVariables = [interTight, inter, roboto, manrope, outfit, jakarta, dmSans]
   .map((f) => f.variable)
   .join(" ");
 
 const FONT_VAR: Record<string, string> = {
+  "Inter Tight": "var(--font-inter-tight)",
   Inter: "var(--font-inter)",
+  Roboto: "var(--font-roboto)",
   Manrope: "var(--font-manrope)",
   Outfit: "var(--font-outfit)",
   "Plus Jakarta Sans": "var(--font-jakarta)",
@@ -39,5 +68,5 @@ const FONT_VAR: Record<string, string> = {
 };
 
 export function fontFor(name: string): string {
-  return FONT_VAR[name] ?? FONT_VAR.Inter!;
+  return FONT_VAR[name] ?? FONT_VAR["Inter Tight"]!;
 }

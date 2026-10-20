@@ -31,7 +31,7 @@ export function TabBar() {
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-full flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors",
+                  "text-caption flex h-full flex-col items-center justify-center gap-1 font-medium transition-colors",
                   active ? "text-white" : "text-white/55",
                 )}
               >

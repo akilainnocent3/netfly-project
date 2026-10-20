@@ -1,5 +1,6 @@
 import { cn } from "@netfly/ui";
 import { CloudOff, Film } from "lucide-react";
+import { Button } from "./button";
 
 /** Empty / error / offline states, designed with the same care as content. */
 export function StateMessage({
@@ -27,16 +28,12 @@ export function StateMessage({
         <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(circle,rgb(var(--accent-rgb)/0.25),transparent_70%)]" />
         <Icon className="relative size-8 text-white/80" />
       </div>
-      <h2 className="text-[22px] font-bold tracking-tight">{title}</h2>
-      {children && <p className="text-muted mt-2 text-[15px] leading-relaxed">{children}</p>}
+      <h2 className="text-h3 font-bold tracking-tight">{title}</h2>
+      {children && <p className="text-muted text-body mt-2 leading-relaxed">{children}</p>}
       {action && (
-        <button
-          type="button"
-          onClick={action.onClick}
-          className="mt-6 rounded-full bg-white px-6 py-2.5 text-[15px] font-semibold text-black transition hover:bg-white/85"
-        >
+        <Button variant="play" className="mt-6" onClick={action.onClick}>
           {action.label}
-        </button>
+        </Button>
       )}
     </div>
   );

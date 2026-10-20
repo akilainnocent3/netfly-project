@@ -19,7 +19,7 @@ export function Logo({ className, href = "/browse" }: { className?: string; href
         // eslint-disable-next-line @next/next/no-img-element
         <img src={logo} alt={name} className="h-7 w-auto md:h-8" />
       ) : (
-        <span className="flex items-center gap-1.5 text-[22px] font-black tracking-[-0.04em] uppercase md:text-[26px]">
+        <span className="text-h3 md:text-h1 flex items-center gap-1.5 font-black tracking-[-0.04em] uppercase">
           <span className="bg-accent relative inline-block size-[0.8em] rotate-45 rounded-[0.18em] shadow-[0_0_24px_rgb(var(--accent-rgb)/0.6)]">
             <span className="bg-bg/90 absolute inset-[0.2em] rounded-[0.08em]" />
           </span>

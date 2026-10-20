@@ -83,8 +83,8 @@ export function PageShell({
     <div className="px-[max(4vw,16px)] pt-[calc(var(--header-h)+28px)] pb-28 lg:pb-16">
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[clamp(26px,3.4vw,42px)] font-black tracking-tight">{title}</h1>
-          {subtitle && <p className="text-muted mt-1 text-[15px]">{subtitle}</p>}
+          <h1 className="text-h1 font-black tracking-tight">{title}</h1>
+          {subtitle && <p className="text-muted text-body mt-1">{subtitle}</p>}
         </div>
         {actions}
       </div>

@@ -13,6 +13,7 @@ import { PreviewVideo } from "../browse/preview-video";
 import { RatingButton } from "../browse/rating-button";
 import { StateMessage } from "../ui/state-message";
 import { NetflyImage } from "../ui/netfly-image";
+import { Button, IconButton } from "../ui/button";
 import { Episodes } from "./episodes";
 
 export function TitleView({
@@ -52,14 +53,15 @@ export function TitleView({
 
 function CloseButton({ onClose }: { onClose: () => void }) {
   return (
-    <button
-      type="button"
+    <IconButton
+      variant="ghost"
+      size="lg"
+      label="Close"
       onClick={onClose}
-      aria-label="Close"
-      className="bg-bg/80 hover:bg-bg absolute top-4 right-4 z-30 grid size-10 place-items-center rounded-full text-white backdrop-blur"
+      className="bg-bg/80 hover:bg-bg absolute top-4 right-4 z-30 backdrop-blur"
     >
-      <X className="size-5" />
-    </button>
+      <X />
+    </IconButton>
   );
 }
 
@@ -116,28 +118,25 @@ function TitleContent({
             id="title-heading"
             className={cn(
               "text-shadow leading-[0.95] font-black tracking-tight uppercase",
-              title.logo ? "sr-only" : "mb-5 text-[clamp(30px,5vw,56px)]",
+              title.logo ? "sr-only" : "text-title mb-5",
             )}
           >
             {title.title}
           </h2>
           <div className="flex flex-wrap items-center gap-2.5">
             {play ? (
-              <Link
-                href={playHref}
-                className="flex h-11 items-center gap-2.5 rounded-md bg-white px-6 text-[17px] font-bold text-black transition hover:bg-white/85"
+              <Button
+                asChild
+                variant="play"
+                size="lg"
+                icon={play.action === "resume" ? <RotateCcw /> : <Play className="fill-current" />}
               >
-                {play.action === "resume" ? (
-                  <RotateCcw className="size-5" />
-                ) : (
-                  <Play className="size-5 fill-current" />
-                )}
-                {play.label}
-              </Link>
+                <Link href={playHref}>{play.label}</Link>
+              </Button>
             ) : (
-              <span className="flex h-11 items-center rounded-md bg-white/15 px-5 text-[15px] font-semibold text-white/70">
+              <Button variant="secondary" size="lg" disabled>
                 Coming soon
-              </span>
+              </Button>
             )}
             {viewer && <MyListButton title={card} size="lg" initial={viewer.in_my_list} />}
             {viewer && (
@@ -149,7 +148,7 @@ function TitleContent({
             )}
           </div>
           {play && play.progress > 0 && (
-            <div className="mt-3 flex max-w-xs items-center gap-3 text-[13px] text-white/75">
+            <div className="text-meta mt-3 flex max-w-xs items-center gap-3 text-white/75">
               <div className="h-1 flex-1 rounded-full bg-white/25">
                 <div
                   className="bg-accent h-full rounded-full"
@@ -166,38 +165,38 @@ function TitleContent({
 
       <div className="grid gap-8 px-[5%] pt-6 pb-12 md:grid-cols-[1.8fr_1fr]">
         <div>
-          <div className="flex flex-wrap items-center gap-2.5 text-[15px]">
+          <div className="text-body flex flex-wrap items-center gap-2.5">
             {typeof title.match === "number" && (
               <span className="font-bold text-emerald-400">{title.match}% match</span>
             )}
             {title.year && <span className="text-white/80">{title.year}</span>}
             {meta && <span className="text-white/80">{meta}</span>}
             {title.maturity_rating && (
-              <span className="rounded border border-white/40 px-1.5 text-[12px] leading-5 font-medium">
+              <span className="text-meta rounded border border-white/40 px-1.5 leading-5 font-medium">
                 {title.maturity_rating}
               </span>
             )}
-            <span className="rounded border border-white/30 px-1 text-[11px] leading-4 font-semibold text-white/70">
+            <span className="text-caption rounded border border-white/30 px-1 leading-4 font-semibold text-white/70">
               HD
             </span>
           </div>
           <div className="mt-3">
             {title.translation_status === "translated" ? (
-              <span className="bg-accent/15 ring-accent/40 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[13px] font-semibold text-white ring-1">
+              <span className="bg-accent/15 ring-accent/40 text-meta inline-flex items-center gap-2 rounded-full px-3 py-1 font-semibold text-white ring-1">
                 <span className="bg-accent size-1.5 rounded-full" /> Translated
                 {title.translator_name ? ` by ${title.translator_name}` : ""}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1 text-[13px] font-semibold text-white/85 ring-1 ring-white/15">
+              <span className="text-meta inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1 font-semibold text-white/85 ring-1 ring-white/15">
                 Original language
               </span>
             )}
           </div>
-          <p className="mt-5 text-[16px] leading-relaxed text-white/90">
+          <p className="text-body mt-5 leading-relaxed text-white/90">
             {title.synopsis || title.short_synopsis}
           </p>
         </div>
-        <dl className="space-y-3 text-[14px]">
+        <dl className="text-body space-y-3">
           {(title.cast ?? []).length > 0 && (
             <Meta label="Cast" value={(title.cast ?? []).join(", ")} />
           )}
@@ -228,7 +227,7 @@ function TitleContent({
 
       {more_like_this.length > 0 && (
         <section aria-labelledby="more-heading" className="px-[5%] pt-10 pb-14">
-          <h3 id="more-heading" className="mb-5 text-[22px] font-bold">
+          <h3 id="more-heading" className="text-h3 mb-5 font-bold">
             More Like This
           </h3>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -244,7 +243,7 @@ function TitleContent({
                 </Link>
                 <div className="space-y-2 p-3">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-white/75">
+                    <div className="text-meta flex flex-wrap items-center gap-1.5 text-white/75">
                       {typeof t.match === "number" && (
                         <span className="font-bold text-emerald-400">{t.match}%</span>
                       )}
@@ -257,7 +256,7 @@ function TitleContent({
                     </div>
                     <MyListButton title={t} />
                   </div>
-                  <p className="line-clamp-3 text-[13px] leading-snug text-white/65">
+                  <p className="text-meta line-clamp-3 leading-snug text-white/65">
                     {t.short_synopsis}
                   </p>
                 </div>

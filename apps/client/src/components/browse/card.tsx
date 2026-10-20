@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { TitleCard } from "@/lib/types";
 import { useConfig } from "../providers/config";
+import { IconButton } from "../ui/button";
 import { NetflyImage } from "../ui/netfly-image";
 import { MyListButton } from "./my-list-button";
 import { PreviewVideo, prefetchPlayback } from "./preview-video";
@@ -72,7 +73,7 @@ export function CardArt({
                 />
               </div>
             ) : (
-              <p className="line-clamp-2 text-[clamp(12px,1.05vw,17px)] leading-tight font-extrabold tracking-tight text-white uppercase drop-shadow-[0_2px_6px_rgb(0_0_0/0.8)]">
+              <p className="text-card line-clamp-2 leading-tight font-extrabold tracking-tight text-white uppercase drop-shadow-[0_2px_6px_rgb(0_0_0/0.8)]">
                 {title.title}
               </p>
             )}
@@ -172,14 +173,14 @@ export function Card({
           />
         )}
         {title.context?.other_mode && (
-          <span className="absolute top-2 right-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white/85 uppercase">
+          <span className="text-caption absolute top-2 right-2 rounded bg-black/70 px-1.5 py-0.5 font-semibold tracking-wide text-white/85 uppercase">
             {title.translation_status === "translated" ? "Translated" : "Original"}
           </span>
         )}
         {typeof progress === "number" && (
           <div className="absolute inset-x-0 bottom-0">
             {label && (
-              <span className="absolute right-3 bottom-2.5 rounded bg-black/70 px-1.5 py-0.5 text-[11px] font-semibold text-white">
+              <span className="text-caption absolute right-3 bottom-2.5 rounded bg-black/70 px-1.5 py-0.5 font-semibold text-white">
                 {label}
               </span>
             )}
@@ -252,24 +253,23 @@ function HoverPanel({
       style={{ position: "absolute", top, left, width, transformOrigin: origin }}
       className="bg-surface z-[60] overflow-hidden rounded-lg shadow-[0_24px_70px_-10px_rgb(0_0_0/0.85)] ring-1 ring-white/8"
     >
-      <button
-        type="button"
-        onClick={onOpen}
+      <Link
+        href={titleHref(title)}
+        scroll={false}
+        onClick={onClose}
         className="relative block aspect-video w-full overflow-hidden"
         aria-label={`More info about ${title.title}`}
       >
         <CardArt title={title} sizes="480px" />
         {title.has_preview && <PreviewVideo title={title} />}
-      </button>
+      </Link>
       <div className="space-y-3 p-4">
         <div className="flex items-center gap-2">
-          <Link
-            href={watchHref(title)}
-            aria-label={`Play ${title.title}`}
-            className="grid size-9 place-items-center rounded-full bg-white text-black transition hover:bg-white/85"
-          >
-            <Play className="size-[18px] translate-x-px fill-current" />
-          </Link>
+          <IconButton asChild variant="play" label={`Play ${title.title}`}>
+            <Link href={watchHref(title)}>
+              <Play className="translate-x-px fill-current" />
+            </Link>
+          </IconButton>
           <MyListButton title={title} />
           <RatingButton
             title={title}
@@ -278,33 +278,27 @@ function HoverPanel({
               onClose();
             }}
           />
-          <button
-            type="button"
-            onClick={onOpen}
-            aria-label="More info"
-            title="More info"
-            className="ml-auto grid size-9 place-items-center rounded-full border-2 border-white/45 bg-black/40 hover:border-white"
-          >
-            <ChevronDown className="size-[18px]" />
-          </button>
+          <IconButton label="More info" onClick={onOpen} className="ml-auto">
+            <ChevronDown />
+          </IconButton>
         </div>
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
+        <div className="text-meta flex flex-wrap items-center gap-x-2 gap-y-1">
           {typeof title.match === "number" && (
             <span className="font-bold text-emerald-400">{title.match}% match</span>
           )}
           {title.maturity_rating && (
-            <span className="rounded border border-white/40 px-1.5 text-[11px] leading-5 font-medium text-white/85">
+            <span className="text-caption rounded border border-white/40 px-1.5 leading-5 font-medium text-white/85">
               {title.maturity_rating}
             </span>
           )}
           {meta && <span className="text-white/80">{meta}</span>}
           {title.year && <span className="text-white/60">{title.year}</span>}
-          <span className="rounded border border-white/30 px-1 text-[10px] leading-4 font-semibold text-white/70">
+          <span className="text-caption rounded border border-white/30 px-1 leading-4 font-semibold text-white/70">
             HD
           </span>
         </div>
         {title.genres.length > 0 && (
-          <p className="flex flex-wrap items-center gap-1.5 text-[13px] text-white/85">
+          <p className="text-meta flex flex-wrap items-center gap-1.5 text-white/85">
             {title.genres.map((g, i) => (
               <span key={g} className="flex items-center gap-1.5">
                 {i > 0 && <span className="size-1 rounded-full bg-white/40" />}
@@ -314,7 +308,7 @@ function HoverPanel({
           </p>
         )}
         {title.translation_status === "translated" && title.translator_name && (
-          <p className="text-[12px] text-white/55">Translated by {title.translator_name}</p>
+          <p className="text-meta text-white/55">Translated by {title.translator_name}</p>
         )}
       </div>
     </m.div>

@@ -38,10 +38,8 @@ export default function CategoriesPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-black/35 to-transparent" />
                 <div className="absolute right-4 bottom-3 left-4">
-                  <p className="text-[clamp(17px,1.7vw,24px)] font-extrabold tracking-tight">
-                    {g.name}
-                  </p>
-                  <p className="text-[13px] text-white/70">
+                  <p className="text-h2 font-extrabold tracking-tight">{g.name}</p>
+                  <p className="text-meta text-white/70">
                     {g.title_count} title{g.title_count === 1 ? "" : "s"}
                   </p>
                 </div>

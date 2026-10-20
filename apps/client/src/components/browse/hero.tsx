@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@netfly/ui";
 import { AnimatePresence, m } from "framer-motion";
 import { Info, Play } from "lucide-react";
 import Link from "next/link";
@@ -8,7 +7,9 @@ import { useEffect, useState } from "react";
 import { useBillboard, useMode } from "@/lib/queries";
 import type { BillboardItem } from "@/lib/types";
 import { useConfig } from "../providers/config";
+import { Button } from "../ui/button";
 import { NetflyImage } from "../ui/netfly-image";
+import { PageDots } from "../ui/page-dots";
 import { titleHref, watchHref } from "./card";
 import { prefetchPlayback, PreviewVideo } from "./preview-video";
 
@@ -61,28 +62,14 @@ export function Hero({ initial }: { initial?: { mode: string; items: BillboardIt
           />
         </m.div>
       </AnimatePresence>
-      {items.length > 1 && (
-        <div
-          className="absolute right-[max(4vw,16px)] bottom-[15%] z-20 hidden gap-1.5 md:flex"
-          role="tablist"
-          aria-label="Featured titles"
-        >
-          {items.map((it, i) => (
-            <button
-              key={it.id}
-              type="button"
-              role="tab"
-              aria-selected={i === index}
-              aria-label={it.title.title}
-              onClick={() => setIndex(i)}
-              className={cn(
-                "h-1 rounded-full transition-all duration-500",
-                i === index ? "w-8 bg-white" : "w-3 bg-white/40 hover:bg-white/70",
-              )}
-            />
-          ))}
-        </div>
-      )}
+      <PageDots
+        className="absolute right-[max(4vw,16px)] bottom-[15%] z-20 hidden md:flex"
+        label="Featured titles"
+        count={items.length}
+        active={index}
+        labels={items.map((it) => it.title.title)}
+        onSelect={setIndex}
+      />
     </section>
   );
 }
@@ -127,7 +114,7 @@ function HeroSlide({
           className="max-w-[min(640px,90vw)]"
         >
           {item.headline && (
-            <p className="text-accent mb-3 text-[13px] font-bold tracking-[0.25em] uppercase">
+            <p className="text-accent text-meta mb-3 font-bold tracking-[0.25em] uppercase">
               {item.headline}
             </p>
           )}
@@ -142,11 +129,11 @@ function HeroSlide({
               />
             </h1>
           ) : (
-            <h1 className="text-shadow mb-4 text-[clamp(40px,7vw,96px)] leading-[0.9] font-black tracking-[-0.03em] uppercase">
+            <h1 className="text-shadow text-display mb-4 leading-[0.9] font-black tracking-[-0.03em] uppercase">
               {title.title}
             </h1>
           )}
-          <div className="mb-3 flex flex-wrap items-center gap-2 text-[14px] text-white/85">
+          <div className="text-body mb-3 flex flex-wrap items-center gap-2 text-white/85">
             {title.match ? (
               <span className="font-bold text-emerald-400">{title.match}% match</span>
             ) : null}
@@ -157,36 +144,36 @@ function HeroSlide({
               </span>
             ) : null}
             {title.translation_status === "translated" && title.translator_name && (
-              <span className="rounded bg-white/10 px-2 py-0.5 text-[12px] font-semibold backdrop-blur">
+              <span className="text-meta rounded bg-white/10 px-2 py-0.5 font-semibold backdrop-blur">
                 Translated · {title.translator_name}
               </span>
             )}
           </div>
           {synopsis && (
-            <p className="text-shadow line-clamp-3 max-w-[560px] text-[15px] leading-relaxed text-white/90 md:text-[18px]">
+            <p className="text-shadow text-body md:text-lead line-clamp-3 max-w-[560px] leading-relaxed text-white/90">
               {synopsis}
             </p>
           )}
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Link
-              href={watchHref(title)}
+            <Button
+              asChild
+              variant="play"
+              size="lg"
+              icon={<Play className="fill-current" />}
               onMouseEnter={() => prefetchPlayback(title)}
-              className="flex h-11 items-center gap-2.5 rounded-md bg-white px-6 text-[16px] font-bold text-black transition hover:bg-white/80 md:h-12 md:px-8 md:text-[18px]"
             >
-              <Play className="size-6 fill-current" /> Play
-            </Link>
-            <Link
-              href={titleHref(title)}
-              scroll={false}
-              className="flex h-11 items-center gap-2.5 rounded-md bg-white/25 px-6 text-[16px] font-bold text-white backdrop-blur-md transition hover:bg-white/35 md:h-12 md:px-7 md:text-[18px]"
-            >
-              <Info className="size-6" /> More Info
-            </Link>
+              <Link href={watchHref(title)}>Play</Link>
+            </Button>
+            <Button asChild variant="secondary" size="lg" icon={<Info />}>
+              <Link href={titleHref(title)} scroll={false}>
+                More Info
+              </Link>
+            </Button>
           </div>
         </m.div>
       </div>
       {title.maturity_rating && (
-        <span className="absolute right-0 bottom-[22%] z-10 hidden border-l-[3px] border-white/70 bg-black/40 py-1.5 pr-[max(4vw,16px)] pl-3 text-[15px] font-medium backdrop-blur md:block">
+        <span className="text-body absolute right-0 bottom-[22%] z-10 hidden border-l-[3px] border-white/70 bg-black/40 py-1.5 pr-[max(4vw,16px)] pl-3 font-medium backdrop-blur md:block">
           {title.maturity_rating}
         </span>
       )}

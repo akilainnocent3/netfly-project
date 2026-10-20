@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { useEpisodes } from "@/lib/queries";
 import { NetflyImage } from "../ui/netfly-image";
+import { IconButton } from "../ui/button";
 
 /** Episode list inside the player (current season), current episode highlighted. */
 export function EpisodeDrawer({
@@ -41,12 +42,11 @@ export function EpisodeDrawer({
             className="fixed inset-y-0 right-0 z-[131] flex w-[min(460px,92vw)] flex-col bg-black/92 shadow-2xl backdrop-blur-xl"
           >
             <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-              <Dialog.Title className="text-[18px] font-bold">Season {season}</Dialog.Title>
-              <Dialog.Close
-                aria-label="Close episodes"
-                className="grid size-9 place-items-center rounded-full hover:bg-white/10"
-              >
-                <X className="size-5" />
+              <Dialog.Title className="text-lead font-bold">Season {season}</Dialog.Title>
+              <Dialog.Close asChild>
+                <IconButton variant="ghost" label="Close episodes">
+                  <X />
+                </IconButton>
               </Dialog.Close>
             </div>
             <ol className="flex-1 overflow-y-auto p-2">
@@ -79,14 +79,14 @@ export function EpisodeDrawer({
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-[15px] font-semibold">
+                      <p className="text-body truncate font-semibold">
                         {ep.number}. {ep.name}
                       </p>
-                      <p className="text-[12px] text-white/50">
+                      <p className="text-meta text-white/50">
                         {formatRuntime(ep.runtime_minutes)}
                         {ep.watched ? " · Watched" : ""}
                       </p>
-                      <p className="mt-1 line-clamp-2 text-[12px] text-white/60">{ep.synopsis}</p>
+                      <p className="text-meta mt-1 line-clamp-2 text-white/60">{ep.synopsis}</p>
                     </div>
                   </Link>
                 </li>

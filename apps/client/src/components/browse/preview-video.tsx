@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { getPlayback, warmManifest } from "@/lib/playback";
 import type { TitleCard } from "@/lib/types";
 import { useAuth } from "../providers/auth";
+import { IconButton } from "../ui/button";
 
 export function prefetchPlayback(title: TitleCard): void {
   if (!title.has_preview) return;
@@ -87,21 +88,24 @@ export function PreviewVideo({
       />
       <AnimatePresence>
         {showMute && playing && (
-          <m.button
-            type="button"
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              setMuted((m) => !m);
-            }}
-            aria-label={muted ? "Unmute preview" : "Mute preview"}
-            className="absolute right-[4vw] bottom-[18%] z-10 grid size-10 place-items-center rounded-full border border-white/50 bg-black/30 text-white backdrop-blur hover:bg-white/10"
+            className="absolute right-[4vw] bottom-[18%] z-10"
           >
-            {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
-          </m.button>
+            <IconButton
+              size="lg"
+              label={muted ? "Unmute preview" : "Mute preview"}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setMuted((value) => !value);
+              }}
+            >
+              {muted ? <VolumeX /> : <Volume2 />}
+            </IconButton>
+          </m.div>
         )}
       </AnimatePresence>
     </>

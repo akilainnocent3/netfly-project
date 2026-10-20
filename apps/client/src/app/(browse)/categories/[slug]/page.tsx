@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@netfly/ui";
 import { use, useState } from "react";
 import { GridSkeleton, PageShell, TitleGrid } from "@/components/browse/title-grid";
+import { SegmentedControl } from "@/components/ui/segmented";
 import { StateMessage } from "@/components/ui/state-message";
 import { useGenreTitles } from "@/lib/queries";
 
@@ -23,27 +23,14 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
     <PageShell
       title={name || " "}
       actions={
-        <div
-          role="radiogroup"
-          aria-label="Sort"
-          className="flex rounded-full bg-white/6 p-1 ring-1 ring-white/10"
-        >
-          {SORTS.map((s) => (
-            <button
-              key={s.value}
-              type="button"
-              role="radio"
-              aria-checked={sort === s.value}
-              onClick={() => setSort(s.value)}
-              className={cn(
-                "rounded-full px-4 py-1.5 text-[13px] font-semibold transition-colors",
-                sort === s.value ? "bg-white text-black" : "text-white/70 hover:text-white",
-              )}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          label="Sort"
+          options={[...SORTS]}
+          value={sort}
+          onChange={setSort}
+          size="sm"
+          tone="light"
+        />
       }
     >
       {titles.isPending ? (

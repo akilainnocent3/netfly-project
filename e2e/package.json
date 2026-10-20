@@ -1,6 +1,15 @@
 {
   "name": "@netfly/e2e",
   "private": true,
-  "scripts": { "test": "playwright test", "lint": "tsc --noEmit", "typecheck": "tsc --noEmit" },
-  "devDependencies": { "@playwright/test": "1.56.0", "@types/node": "22.18.8", "typescript": "5.9.3" }
+  "scripts": {
+    "test": "playwright test",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.0",
+    "@types/node": "22.18.8",
+    "typescript": "5.9.3",
+    "@axe-core/playwright": "4.10.2"
+  }
 }

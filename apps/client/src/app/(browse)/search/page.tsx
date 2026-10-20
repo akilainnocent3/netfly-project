@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { GridSkeleton, TitleGrid } from "@/components/browse/title-grid";
+import { Button, IconButton } from "@/components/ui/button";
 import { StateMessage } from "@/components/ui/state-message";
 import { useSearch, useSearchSuggestions } from "@/lib/queries";
 
@@ -41,12 +42,12 @@ function SearchScreen() {
           onChange={(e) => setValue(e.target.value)}
           placeholder="Titles, people, genres"
           aria-label="Search"
-          className="flex-1 bg-transparent text-[16px] outline-none placeholder:text-white/40"
+          className="text-body flex-1 bg-transparent outline-none placeholder:text-white/40"
         />
         {value && (
-          <button type="button" aria-label="Clear" onClick={() => setValue("")}>
-            <X className="size-5 text-white/60" />
-          </button>
+          <IconButton variant="ghost" size="sm" label="Clear search" onClick={() => setValue("")}>
+            <X />
+          </IconButton>
         )}
       </label>
       {!query ? (
@@ -69,7 +70,7 @@ function SearchScreen() {
         <GridSkeleton />
       ) : results.data?.length ? (
         <>
-          <p className="text-muted mb-5 text-[15px]">
+          <p className="text-muted text-body mb-5">
             Results for <span className="font-semibold text-white">“{query}”</span>
           </p>
           <TitleGrid items={results.data} dimmed={results.isPlaceholderData} />
@@ -102,25 +103,26 @@ function SuggestionList({
 }) {
   return (
     <section>
-      <h2 className="mb-3 flex items-center gap-2 text-[15px] font-bold tracking-wider text-white/60 uppercase">
+      <h2 className="text-body mb-3 flex items-center gap-2 font-bold tracking-wider text-white/60 uppercase">
         {icon} {title}
       </h2>
       {items.length ? (
         <ul className="flex flex-wrap gap-2">
           {items.map((q) => (
             <li key={q}>
-              <button
-                type="button"
+              <Button
+                size="sm"
+                variant="secondary"
+                className="rounded-full font-semibold"
                 onClick={() => onPick(q)}
-                className="rounded-full bg-white/8 px-4 py-2 text-[14px] font-medium ring-1 ring-white/10 transition hover:bg-white/15"
               >
                 {q}
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-muted text-[14px]">{empty ?? "Nothing yet."}</p>
+        <p className="text-muted text-body">{empty ?? "Nothing yet."}</p>
       )}
     </section>
   );

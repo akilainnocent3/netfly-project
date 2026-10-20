@@ -1,14 +1,14 @@
 "use client";
 
 import { ApiError, unwrap } from "@netfly/api-client";
-import { cn, passwordStrength, useAutoSubmit } from "@netfly/ui";
+import { cn, passwordStrength } from "@netfly/ui";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { SubmitRow } from "@/components/auth/submit-row";
 import { useAuth } from "@/components/providers/auth";
 import { useConfig } from "@/components/providers/config";
+import { Button } from "@/components/ui/button";
 import { Field, type FieldIndicator } from "@/components/ui/field";
 import { api } from "@/lib/api";
 import { safeNext } from "@/lib/safe-next";
@@ -23,13 +23,13 @@ const STRENGTH_COLORS = [
 ];
 
 function localUsernameError(value: string): string {
-  if (!value) return "";
-  if (value.length < 3) return "";
+  if (!value || value.length < 3) return "";
   if (value.length > 30) return "Usernames can be at most 30 characters.";
   if (!USERNAME_RE.test(value)) return "Use only letters, numbers and underscores.";
   return "";
 }
 
+/** Live validation + availability check while typing; submits only on the button or Enter. */
 export function SignupForm() {
   const config = useConfig();
   const router = useRouter();
@@ -46,7 +46,8 @@ export function SignupForm() {
     message: string;
   } | null>(null);
   const [checking, setChecking] = useState(false);
-  const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   const trimmed = username.trim();
   const formatError = localUsernameError(trimmed);
@@ -80,8 +81,7 @@ export function SignupForm() {
 
   const known = availability?.name.toLowerCase() === trimmed.toLowerCase() ? availability : null;
   const usernameOk = USERNAME_RE.test(trimmed) && known?.ok === true;
-  const usernameError =
-    serverErrors.username || formatError || (known && !known.ok ? known.message : "");
+  const usernameError = errors.username || formatError || (known && !known.ok ? known.message : "");
   const indicator: FieldIndicator =
     !trimmed || trimmed.length < 3
       ? "none"
@@ -93,50 +93,49 @@ export function SignupForm() {
             ? "bad"
             : "none";
   const strength = passwordStrength(password);
-  const isValid = usernameOk && fullName.trim().length > 0 && password.length >= minLength;
 
-  const { status, submitNow } = useAutoSubmit({
-    values: { username: trimmed, fullName: fullName.trim(), password },
-    isValid,
-    delay: config.num("ux.autosubmit_delay_ms", 600),
-    onSubmit: async (values) => {
-      setServerErrors({});
-      try {
-        const session = await unwrap(
+  const submit = async () => {
+    if (submitting) return;
+    const problems: Record<string, string> = {};
+    if (!USERNAME_RE.test(trimmed))
+      problems.username =
+        formatError || "Choose a username of 3–30 letters, numbers or underscores.";
+    else if (known && !known.ok) problems.username = known.message;
+    if (!fullName.trim()) problems.full_name = "Please tell us your name.";
+    if (password.length < minLength) problems.password = `Use at least ${minLength} characters.`;
+    setErrors(problems);
+    if (Object.keys(problems).length) return;
+    setSubmitting(true);
+    try {
+      signIn(
+        await unwrap(
           api.POST("/api/v1/auth/signup", {
-            body: {
-              username: values.username,
-              full_name: values.fullName,
-              password: values.password,
-              app: "client",
-            },
+            body: { username: trimmed, full_name: fullName.trim(), password, app: "client" },
           }),
-        );
-        signIn(session);
-        router.replace(next);
-        return true;
-      } catch (error) {
-        const e = error instanceof ApiError ? error : new ApiError(0, undefined);
-        setServerErrors(Object.keys(e.fields).length ? e.fields : { form: e.message });
-        return false;
-      }
-    },
-  });
+        ),
+      );
+      router.replace(next);
+    } catch (error) {
+      const e = error instanceof ApiError ? error : new ApiError(0, undefined);
+      setErrors(Object.keys(e.fields).length ? e.fields : { form: e.message });
+      setSubmitting(false);
+    }
+  };
 
   return (
     <AuthShell
       title={config.str("branding.signup_headline", "Unlimited movies and series.")}
       subtitle={config.str("branding.signup_subtext")}
-      busy={status === "submitting"}
       footer={
         <>
           Already have an account?{" "}
           <Link
             href={`/login${next !== "/browse" ? `?next=${encodeURIComponent(next)}` : ""}`}
-            className="text-fg font-semibold hover:underline"
+            className="font-semibold text-white hover:underline"
           >
             Sign in
           </Link>
+          .
         </>
       }
     >
@@ -144,9 +143,9 @@ export function SignupForm() {
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          submitNow();
+          void submit();
         }}
-        className="space-y-3"
+        className="space-y-4"
       >
         <Field
           label="Username"
@@ -161,12 +160,12 @@ export function SignupForm() {
           error={usernameError}
           hint={
             usernameOk ? (
-              <span className="text-emerald-300/90">Nice — it’s yours if you want it.</span>
+              <span className="text-[#46d369]">Nice — it’s yours if you want it.</span>
             ) : undefined
           }
           onChange={(e) => {
             setUsername(e.target.value.replace(/\s/g, ""));
-            setServerErrors((s) => ({ ...s, username: "" }));
+            setErrors((s) => ({ ...s, username: "" }));
           }}
         />
         <Field
@@ -174,8 +173,11 @@ export function SignupForm() {
           name="name"
           autoComplete="name"
           value={fullName}
-          error={serverErrors.full_name}
-          onChange={(e) => setFullName(e.target.value)}
+          error={errors.full_name}
+          onChange={(e) => {
+            setFullName(e.target.value);
+            setErrors((s) => ({ ...s, full_name: "" }));
+          }}
         />
         <div>
           <Field
@@ -184,13 +186,16 @@ export function SignupForm() {
             type="password"
             autoComplete="new-password"
             value={password}
-            error={serverErrors.password}
+            error={errors.password}
             hint={
               password && password.length < minLength
                 ? `At least ${minLength} characters`
                 : undefined
             }
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setErrors((s) => ({ ...s, password: "" }));
+            }}
           />
           <div
             className={cn(
@@ -219,15 +224,24 @@ export function SignupForm() {
                 </div>
               ))}
             </div>
-            <span className="text-muted w-20 text-right text-xs">{strength.label}</span>
+            <span className="text-caption text-muted w-20 text-right">{strength.label}</span>
           </div>
         </div>
-        {serverErrors.form && (
-          <p role="alert" className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            {serverErrors.form}
+        {errors.form && (
+          <p role="alert" className="text-body rounded-md bg-[#e87c03] px-4 py-3 text-white">
+            {errors.form}
           </p>
         )}
-        <SubmitRow status={status} ready={isValid} label="Create account" />
+        <Button
+          type="submit"
+          variant="accent"
+          size="lg"
+          fullWidth
+          loading={submitting}
+          className="mt-2"
+        >
+          {submitting ? "Creating your account…" : "Get started"}
+        </Button>
       </form>
     </AuthShell>
   );

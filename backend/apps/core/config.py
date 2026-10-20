@@ -100,7 +100,7 @@ def validate(value_type: str, value: Any, rules: dict) -> None:
     if value is None:
         return
     if value_type == "color" and not re.fullmatch(r"#[0-9a-fA-F]{6}", value or ""):
-        raise ConfigValidationError("Use a hex color like #FF2E4D")
+        raise ConfigValidationError("Use a hex color like #E50914")
     if value_type == "url" and value and not re.match(r"^https?://", value):
         raise ConfigValidationError("Must start with http:// or https://")
     if value_type == "enum" and rules.get("choices") and value not in rules["choices"]:

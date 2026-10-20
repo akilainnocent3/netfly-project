@@ -1,7 +1,6 @@
 "use client";
 
 import { ApiError, unwrap } from "@netfly/api-client";
-import { useAutoSubmit } from "@netfly/ui";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -22,22 +21,30 @@ function LoginForm() {
   const minLength = config.num("auth.password_min_length", 8);
   const isValid = /^[A-Za-z0-9_]{3,30}$/.test(username) && password.length >= minLength;
 
-  const { status, submitNow } = useAutoSubmit({
-    values: { username, password },
-    isValid,
-    delay: config.num("ux.autosubmit_delay_ms", 600),
-    onSubmit: async (values) => {
-      setError("");
-      try {
-        signIn(await unwrap(api.POST("/api/v1/auth/login", { body: { ...values, app: "admin" } })));
-        router.replace(next);
-        return true;
-      } catch (e) {
-        setError(e instanceof ApiError ? e.message : "Something went wrong.");
-        return false;
-      }
-    },
-  });
+  const [submitting, setSubmitting] = useState(false);
+  const status = submitting ? "submitting" : "idle";
+
+  // Submits only on the button or Enter.
+  const submitNow = async () => {
+    if (submitting) return;
+    if (!isValid) {
+      setError(`Enter your username and password (at least ${minLength} characters).`);
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    try {
+      signIn(
+        await unwrap(
+          api.POST("/api/v1/auth/login", { body: { username, password, app: "admin" } }),
+        ),
+      );
+      router.replace(next);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Something went wrong.");
+      setSubmitting(false);
+    }
+  };
 
   const name = config.str("branding.site_name", "NETFLY");
   return (
@@ -64,7 +71,7 @@ function LoginForm() {
             className="mt-5 space-y-3.5"
             onSubmit={(e) => {
               e.preventDefault();
-              submitNow();
+              void submitNow();
             }}
           >
             <div>
@@ -100,11 +107,7 @@ function LoginForm() {
             </div>
             <div className="flex items-center justify-between pt-1">
               <span className="text-subtle text-[12px]" aria-live="polite">
-                {status === "submitting"
-                  ? "Signing in…"
-                  : status === "waiting"
-                    ? "Continuing…"
-                    : ""}
+                {status === "submitting" ? "Signing in…" : ""}
               </span>
               <Button
                 type="submit"

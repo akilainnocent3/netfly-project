@@ -1,12 +1,13 @@
 "use client";
 
 import { cn } from "@netfly/ui";
+import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, m } from "framer-motion";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { removeFromHome, useRate, useRatings } from "@/lib/queries";
+import { removeFromHome, usePendingFor, useRate, useRatings } from "@/lib/queries";
 import type { TitleCard } from "@/lib/types";
-import { useQueryClient } from "@tanstack/react-query";
+import { IconButton } from "../ui/button";
 import { useToast } from "../ui/toast";
 
 type Value = -1 | 1 | 2;
@@ -16,42 +17,42 @@ const CHOICES: Array<{ value: Value; label: string }> = [
   { value: 2, label: "Love this!" },
 ];
 
-function DoubleThumb({ className }: { className?: string }) {
+function DoubleThumb() {
   return (
-    <span className={cn("relative inline-flex", className)} aria-hidden>
+    <span className="relative inline-flex size-[1em]" aria-hidden>
       <ThumbsUp className="size-full" />
       <ThumbsUp className="absolute -top-[20%] -right-[35%] size-full opacity-90" />
     </span>
   );
 }
 
-function Icon({ value, className }: { value: Value | null; className?: string }) {
-  if (value === -1) return <ThumbsDown className={className} />;
-  if (value === 2) return <DoubleThumb className={className} />;
-  return <ThumbsUp className={className} />;
+function Icon({ value }: { value: Value | null }) {
+  if (value === -1) return <ThumbsDown />;
+  if (value === 2) return <DoubleThumb />;
+  return <ThumbsUp />;
 }
 
-/** One thumb that blooms into 👎 · 👍 · 👍👍. Optimistic, with a tiny celebration. */
+/** One thumb that blooms into 👎 · 👍 · 👍👍. Optimistic, single-flight per title, rolls back on error. */
 export function RatingButton({
   title,
   size = "md",
   onDisliked,
 }: {
-  title: TitleCard;
-  size?: "md" | "lg";
+  title: Pick<TitleCard, "id" | "slug" | "title" | "rating">;
+  size?: "sm" | "md" | "lg";
   onDisliked?: () => void;
 }) {
   const ratings = useRatings();
-  const rate = useRate();
+  const rate = useRate(title);
+  const pending = usePendingFor("rate", title.id);
   const toast = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [burst, setBurst] = useState(0);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const root = useRef<HTMLDivElement>(null);
   const raw = ratings.data && title.id in ratings.data ? ratings.data[title.id] : title.rating;
   const current: Value | null = raw === -1 || raw === 1 || raw === 2 ? raw : null;
-  const dim = size === "lg" ? "size-11" : "size-9";
-  const icon = size === "lg" ? "size-5" : "size-[18px]";
 
   useEffect(
     () => () => {
@@ -60,7 +61,6 @@ export function RatingButton({
     [],
   );
   // Close on Escape or a tap elsewhere (touch has no mouseleave).
-  const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
     const onDown = (e: PointerEvent) =>
@@ -75,8 +75,9 @@ export function RatingButton({
   }, [open]);
 
   const choose = (value: Value) => {
+    if (pending) return;
     const next = current === value ? null : value;
-    rate.mutate({ title, value: next });
+    rate.rateNow({ value: next, previous: current });
     setOpen(false);
     if (next && next > 0) setBurst((b) => b + 1);
     if (next === -1) {
@@ -87,7 +88,7 @@ export function RatingButton({
         action: {
           label: "Undo",
           onClick: () => {
-            rate.mutate({ title, value: current });
+            rate.rateNow({ value: current, previous: -1 });
             void queryClient.invalidateQueries({ queryKey: ["home"] });
           },
         },
@@ -101,58 +102,49 @@ export function RatingButton({
       className="relative"
       onMouseEnter={() => {
         if (closeTimer.current) clearTimeout(closeTimer.current);
-        setOpen(true);
+        if (!pending) setOpen(true);
       }}
       onMouseLeave={() => {
         closeTimer.current = setTimeout(() => setOpen(false), 250);
       }}
     >
-      <button
-        type="button"
-        aria-label={
+      <IconButton
+        size={size}
+        loading={pending}
+        label={
           current
             ? `Rated: ${CHOICES.find((c) => c.value === current)?.label}. Change rating`
             : "Rate this title"
         }
         aria-expanded={open}
         onClick={() => setOpen(true)}
-        className={cn(
-          "grid place-items-center rounded-full border-2 transition-colors",
-          dim,
-          current
-            ? "border-white bg-white/15 text-white"
-            : "border-white/45 bg-black/40 text-white hover:border-white",
-        )}
+        className={current ? "border-white bg-white/15" : undefined}
       >
-        <Icon value={current} className={icon} />
-      </button>
+        <Icon value={current} />
+      </IconButton>
       <AnimatePresence>
         {open && (
           <m.div
             role="menu"
-            initial={{ opacity: 0, scale: 0.6, y: 0 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.7 }}
             transition={{ type: "spring", stiffness: 520, damping: 30 }}
-            className="bg-elevated/98 absolute top-1/2 left-1/2 z-30 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full p-1.5 shadow-[0_10px_40px_rgb(0_0_0/0.7)] ring-1 ring-white/10"
+            className="bg-elevated absolute top-1/2 left-1/2 z-30 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full p-1.5 shadow-[0_10px_40px_rgb(0_0_0/0.7)] ring-1 ring-white/10"
           >
             {CHOICES.map((choice) => (
-              <button
+              <IconButton
                 key={choice.value}
-                type="button"
+                variant="ghost"
+                size={size}
                 role="menuitemradio"
                 aria-checked={current === choice.value}
-                aria-label={choice.label}
-                title={choice.label}
+                label={choice.label}
                 onClick={() => choose(choice.value)}
-                className={cn(
-                  "group/choice grid place-items-center rounded-full transition-all hover:scale-110 hover:bg-white/15",
-                  dim,
-                  current === choice.value && "bg-white/20",
-                )}
+                className={cn("hover:scale-110", current === choice.value && "bg-white/20")}
               >
-                <Icon value={choice.value} className={icon} />
-              </button>
+                <Icon value={choice.value} />
+              </IconButton>
             ))}
           </m.div>
         )}

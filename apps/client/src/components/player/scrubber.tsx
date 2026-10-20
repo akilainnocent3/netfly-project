@@ -65,7 +65,7 @@ export function Scrubber({
               }}
             />
           )}
-          <p className="text-center text-[13px] font-semibold text-white tabular-nums drop-shadow">
+          <p className="text-meta text-center font-semibold text-white tabular-nums drop-shadow">
             {formatDuration(preview)}
           </p>
         </div>

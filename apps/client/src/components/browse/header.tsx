@@ -8,6 +8,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Logo } from "../brand/logo";
+import { IconButton } from "../ui/button";
 import { TranslationSwitcher } from "./translation-switcher";
 
 // The account menu (Radix) isn't needed for first paint: load it after hydration.
@@ -51,7 +52,7 @@ export function Header() {
               href={item.href}
               prefetch
               className={cn(
-                "text-[14px] transition-colors",
+                "text-body transition-colors",
                 pathname.startsWith(item.href)
                   ? "font-semibold text-white"
                   : "text-white/70 hover:text-white",
@@ -121,29 +122,25 @@ function SearchBox() {
               onKeyDown={(e) => e.key === "Escape" && (setValue(""), setOpen(false))}
               placeholder="Titles, people, genres"
               aria-label="Search"
-              className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-white/45"
+              className="text-body min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-white/45"
             />
             {value && (
-              <button
-                type="button"
-                aria-label="Clear search"
+              <IconButton
+                variant="ghost"
+                size="sm"
+                label="Clear search"
                 onClick={() => setValue("")}
-                className="text-white/60 hover:text-white"
               >
-                <X className="size-4" />
-              </button>
+                <X />
+              </IconButton>
             )}
           </m.div>
         ) : (
-          <m.button
-            key="closed"
-            type="button"
-            aria-label="Search"
-            onClick={() => setOpen(true)}
-            className="grid size-9 place-items-center rounded-full text-white/90 hover:bg-white/10"
-          >
-            <Search className="size-5" />
-          </m.button>
+          <m.div key="closed">
+            <IconButton variant="ghost" label="Search" onClick={() => setOpen(true)}>
+              <Search />
+            </IconButton>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

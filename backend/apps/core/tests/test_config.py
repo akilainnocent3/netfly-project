@@ -19,11 +19,11 @@ def test_typed_getters_return_seeded_defaults():
 
 
 def test_set_invalidates_cache_and_audits(staff):
-    assert config.get_str("branding.accent_color") == "#FF2E4D"
+    assert config.get_str("branding.accent_color") == "#E50914"
     config.set("branding.accent_color", "#00AAFF", actor=staff)
     assert config.get_str("branding.accent_color") == "#00AAFF"
     log = AuditLog.objects.get(action="config.update")
-    assert log.changes["branding.accent_color"] == {"old": "#FF2E4D", "new": "#00AAFF"}
+    assert log.changes["branding.accent_color"] == {"old": "#E50914", "new": "#00AAFF"}
 
 
 def test_change_visible_to_other_process_snapshot():

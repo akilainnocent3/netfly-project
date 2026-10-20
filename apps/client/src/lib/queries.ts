@@ -3,6 +3,7 @@
 import { unwrap } from "@netfly/api-client";
 import {
   keepPreviousData,
+  useIsMutating,
   useInfiniteQuery,
   useMutation,
   useQuery,
@@ -10,6 +11,7 @@ import {
   type InfiniteData,
 } from "@tanstack/react-query";
 import { useInitialMode } from "@/components/providers/initial-mode";
+import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/stores/translation";
 import { api } from "./api";
 import type { BillboardItem, HomePage, TitleCard, TranslationMode } from "./types";
@@ -160,10 +162,35 @@ export function removeFromHome(queryClient: ReturnType<typeof useQueryClient>, t
   );
 }
 
-export function useRate() {
+type RatingValue = -1 | 1 | 2 | null;
+type TitleRef = Pick<TitleCard, "id" | "slug" | "title">;
+
+/** Per-title pending flag (for rendering the spinner). */
+export function usePendingFor(kind: "rate" | "mylist", titleId: number): boolean {
+  return useIsMutating({ mutationKey: [kind, titleId] }) > 0;
+}
+
+// Synchronous single-flight guard: React state lags a fast double-click, this set doesn't.
+const inflight = new Set<string>();
+function claim(key: string): boolean {
+  if (inflight.has(key)) return false;
+  inflight.add(key);
+  return true;
+}
+function release(key: string): void {
+  inflight.delete(key);
+}
+
+/**
+ * Optimistic rating. Keyed per title: callers check usePendingFor("rate", id)
+ * and ignore taps while a request is in flight. Errors roll back and offer Retry.
+ */
+export function useRate(title: TitleRef) {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ title, value }: { title: TitleCard; value: -1 | 1 | 2 | null }) =>
+  const toast = useToast();
+  const mutation = useMutation({
+    mutationKey: ["rate", title.id],
+    mutationFn: ({ value }: { value: RatingValue; previous: RatingValue }) =>
       value === null
         ? unwrap(
             api.DELETE("/api/v1/ratings/{title_id}", { params: { path: { title_id: title.id } } }),
@@ -174,7 +201,7 @@ export function useRate() {
               body: { value },
             }),
           ),
-    onMutate: async ({ title, value }) => {
+    onMutate: ({ value }) => {
       queryClient.setQueriesData<{ viewer: { rating: number | null } | null }>(
         { queryKey: ["title", title.slug] },
         (d) => (d?.viewer ? { ...d, viewer: { ...d.viewer, rating: value } } : d),
@@ -184,11 +211,37 @@ export function useRate() {
         [title.id]: value,
       }));
     },
+    onError: (_error, variables) => {
+      const { previous } = variables;
+      queryClient.setQueriesData<{ viewer: { rating: number | null } | null }>(
+        { queryKey: ["title", title.slug] },
+        (d) => (d?.viewer ? { ...d, viewer: { ...d.viewer, rating: previous } } : d),
+      );
+      queryClient.setQueryData<Record<number, number | null>>(["ratings"], (r) => ({
+        ...(r ?? {}),
+        [title.id]: previous,
+      }));
+      toast({
+        message: `Couldn't save your rating for ${title.title}.`,
+        tone: "error",
+        action: {
+          label: "Retry",
+          onClick: () => claim(`rate:${title.id}`) && mutation.mutate(variables),
+        },
+      });
+    },
     onSettled: () => {
+      release(`rate:${title.id}`);
       // Recommendations changed server-side: refetch the feed in the background.
       void queryClient.invalidateQueries({ queryKey: ["home"], refetchType: "active" });
+      void queryClient.invalidateQueries({ queryKey: ["billboard"], refetchType: "active" });
     },
   });
+  /** Ignored while this title's previous rating request is in flight. */
+  const rateNow = (vars: { value: RatingValue; previous: RatingValue }) => {
+    if (claim(`rate:${title.id}`)) mutation.mutate(vars);
+  };
+  return { ...mutation, rateNow };
 }
 
 export function useRatings() {
@@ -200,10 +253,13 @@ export function useRatings() {
   });
 }
 
-export function useMyListToggle() {
+/** Optimistic My List toggle with the same per-title single-flight + rollback rules. */
+export function useMyListToggle(title: TitleRef) {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ title, add }: { title: TitleCard; add: boolean }) =>
+  const toast = useToast();
+  const mutation = useMutation({
+    mutationKey: ["mylist", title.id],
+    mutationFn: ({ add }: { add: boolean }) =>
       add
         ? unwrap(
             api.PUT("/api/v1/my-list/{title_id}", { params: { path: { title_id: title.id } } }),
@@ -211,7 +267,7 @@ export function useMyListToggle() {
         : unwrap(
             api.DELETE("/api/v1/my-list/{title_id}", { params: { path: { title_id: title.id } } }),
           ),
-    onMutate: ({ title, add }) => {
+    onMutate: ({ add }) => {
       queryClient.setQueryData<Record<number, boolean>>(["in-list"], (m) => ({
         ...(m ?? {}),
         [title.id]: add,
@@ -221,11 +277,44 @@ export function useMyListToggle() {
         (d) => (d?.viewer ? { ...d, viewer: { ...d.viewer, in_my_list: add } } : d),
       );
     },
+    onSuccess: (_d, { add }) =>
+      toast(
+        {
+          message: add ? `Added ${title.title} to My List` : `Removed ${title.title} from My List`,
+          tone: "success",
+        },
+        2200,
+      ),
+    onError: (_e, variables) => {
+      const before = !variables.add;
+      queryClient.setQueryData<Record<number, boolean>>(["in-list"], (m) => ({
+        ...(m ?? {}),
+        [title.id]: before,
+      }));
+      queryClient.setQueriesData<{ viewer: { in_my_list: boolean } | null }>(
+        { queryKey: ["title", title.slug] },
+        (d) => (d?.viewer ? { ...d, viewer: { ...d.viewer, in_my_list: before } } : d),
+      );
+      toast({
+        message: `Couldn't update My List.`,
+        tone: "error",
+        action: {
+          label: "Retry",
+          onClick: () => claim(`mylist:${title.id}`) && mutation.mutate(variables),
+        },
+      });
+    },
     onSettled: () => {
+      release(`mylist:${title.id}`);
       void queryClient.invalidateQueries({ queryKey: ["my-list"] });
       void queryClient.invalidateQueries({ queryKey: ["home"], refetchType: "active" });
     },
   });
+  /** Ignored while this title's previous My List request is in flight. */
+  const toggleNow = (add: boolean) => {
+    if (claim(`mylist:${title.id}`)) mutation.mutate({ add });
+  };
+  return { ...mutation, toggleNow };
 }
 
 export function useInList() {

@@ -1,19 +1,49 @@
 @import "tailwindcss";
 
-/* Runtime brand tokens are set on <html> from DB config (see layout.tsx). */
+/* Runtime brand tokens are set on <html> from DB config (see layout.tsx); the
+   values in :root are the defaults (and the fallback when config is unreachable). */
 @theme inline {
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
   --color-bg: var(--bg);
   --color-surface: var(--surface);
-  --color-elevated: color-mix(in oklab, var(--surface) 82%, white 6%);
+  --color-elevated: var(--elevated);
   --color-fg: var(--text);
-  --color-muted: color-mix(in oklab, var(--text) 62%, transparent);
-  --color-subtle: color-mix(in oklab, var(--text) 38%, transparent);
-  --color-line: color-mix(in oklab, var(--text) 12%, transparent);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-line: var(--line);
+  --color-match: var(--match);
+  --color-secondary-btn: rgb(109 109 110 / 0.7);
   --font-sans: var(--brand-font), ui-sans-serif, system-ui, sans-serif;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --animate-shimmer: shimmer 1.6s linear infinite;
+}
+
+/* Type scale (use these instead of ad-hoc text-[Npx]). */
+@theme {
+  --text-display: clamp(2.5rem, 6.2vw, 5.75rem);
+  --text-display--line-height: 0.92;
+  --text-display--letter-spacing: -0.03em;
+  --text-title: clamp(1.875rem, 4.6vw, 3.5rem);
+  --text-title--line-height: 0.98;
+  --text-h1: clamp(1.625rem, 3.2vw, 2.625rem);
+  --text-h1--line-height: 1.1;
+  --text-h2: max(17px, 1.4vw);
+  --text-h2--line-height: 1.25;
+  --text-h3: 1.375rem;
+  --text-h3--line-height: 1.3;
+  --text-lead: 1.125rem;
+  --text-lead--line-height: 1.5;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.5;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.35;
+  --text-caption: 0.6875rem;
+  --text-caption--line-height: 1.3;
+  --text-card: clamp(0.75rem, 1.05vw, 1.0625rem);
+  --text-card--line-height: 1.15;
+  --text-numeral: clamp(5.625rem, 11vw, 11.875rem);
+  --text-numeral--line-height: 0.78;
 }
 
 @keyframes shimmer {
@@ -25,13 +55,36 @@
   }
 }
 
+@keyframes drift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-25%);
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 :root {
-  --accent: #ff2e4d;
-  --accent-rgb: 255 46 77;
+  --accent: #e50914;
+  --accent-rgb: 229 9 20;
   --accent-fg: #ffffff;
-  --bg: #0b0b0f;
-  --surface: #16161d;
-  --text: #f4f4f6;
+  --bg: #141414;
+  --surface: #181818;
+  --elevated: #232323;
+  --text: #ffffff;
+  --muted: #b3b3b3;
+  --subtle: #808080;
+  --line: rgb(255 255 255 / 0.1);
+  --match: #46d369;
   --header-h: 68px;
   color-scheme: dark;
 }
@@ -54,7 +107,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid #fff;
   outline-offset: 2px;
   border-radius: 6px;
 }
@@ -67,18 +120,23 @@ body {
 }
 
 .skeleton {
-  background: linear-gradient(
-    90deg,
-    color-mix(in oklab, var(--surface) 100%, transparent) 0%,
-    color-mix(in oklab, var(--surface) 70%, white 8%) 50%,
-    color-mix(in oklab, var(--surface) 100%, transparent) 100%
-  );
+  background: linear-gradient(90deg, var(--surface) 0%, var(--elevated) 50%, var(--surface) 100%);
   background-size: 200% 100%;
   animation: var(--animate-shimmer);
 }
 
 .text-shadow {
   text-shadow: 0 2px 18px rgb(0 0 0 / 0.55);
+}
+
+/* Offscreen rows skip layout/paint until they approach the viewport (60 fps scrolling). */
+.row-lazy {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 260px;
+}
+
+.page-fade {
+  animation: page-in 220ms var(--ease-out-expo) both;
 }
 
 .grain::after {
@@ -90,6 +148,11 @@ body {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
+::cue {
+  background: rgb(0 0 0 / 0.65);
+  color: #fff;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -98,14 +161,5 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-}
-
-@keyframes drift {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(-25%);
   }
 }

@@ -6,64 +6,54 @@ import { Logo } from "../brand/logo";
 import { useConfig } from "../providers/config";
 import { PosterWall } from "./poster-wall";
 
+/** Sign-in / sign-up layout: poster wall under a dark vignette, logo top-left, centred black card. */
 export function AuthShell({
   title,
   subtitle,
   children,
   footer,
-  busy,
 }: {
   title: string;
   subtitle?: string;
   children: React.ReactNode;
   footer: React.ReactNode;
-  busy?: boolean;
 }) {
   const config = useConfig();
   return (
-    <main className="relative isolate flex min-h-dvh flex-col overflow-hidden">
+    <main className="relative isolate flex min-h-dvh flex-col overflow-hidden bg-black">
       <PosterWall />
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgb(var(--accent-rgb)/0.22),transparent_60%)]"
+        className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,rgb(0_0_0/0.35)_0%,rgb(0_0_0/0.85)_75%)]"
       />
-      <div aria-hidden className="grain absolute inset-0 -z-10" />
-      <header className="flex items-center justify-between px-6 py-6 md:px-12">
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10 bg-gradient-to-b from-black/80 via-transparent to-black/90"
+      />
+      <header className="px-6 py-6 md:px-12 md:py-7">
         <Logo href="/" />
       </header>
-      <div className="flex flex-1 items-center justify-center px-4 pb-16">
+      <div className="flex flex-1 items-center justify-center px-4 pb-16 sm:px-6">
         <m.section
-          initial={{ opacity: 0, y: 18 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-          className="relative w-full max-w-[420px] overflow-hidden rounded-3xl border border-white/10 bg-black/55 p-7 shadow-[0_40px_120px_-20px_rgb(0_0_0/0.8)] backdrop-blur-2xl md:p-9"
+          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-[450px] rounded-md bg-black/75 px-6 py-10 sm:px-14 sm:py-12"
         >
-          <div aria-hidden className="absolute inset-x-0 top-0 h-[2px] overflow-hidden">
-            <m.div
-              className="bg-accent h-full w-1/3"
-              initial={false}
-              animate={busy ? { x: ["-100%", "300%"], opacity: 1 } : { opacity: 0 }}
-              transition={
-                busy ? { repeat: Infinity, duration: 1.1, ease: "easeInOut" } : { duration: 0.2 }
-              }
-            />
-          </div>
-          <h1 className="text-[28px] leading-tight font-bold tracking-tight md:text-[32px]">
-            {title}
-          </h1>
-          {subtitle && <p className="text-muted mt-2 text-[15px]">{subtitle}</p>}
+          <h1 className="text-h1 font-bold">{title}</h1>
+          {subtitle && <p className="text-body text-muted mt-2">{subtitle}</p>}
           <div className="mt-7">{children}</div>
-          <div className="text-muted mt-7 text-sm">{footer}</div>
+          <div className="text-body text-muted mt-8">{footer}</div>
         </m.section>
       </div>
-      <footer className="text-subtle px-6 pb-6 text-center text-xs md:px-12">
+      <footer className="text-meta text-muted bg-black/60 px-6 py-6 text-center md:px-12">
         <span>{config.str("branding.footer_text")}</span>
         <span className="mx-2">·</span>
-        <Link href="/legal/terms" className="hover:text-fg">
+        <Link href="/legal/terms" className="hover:text-white hover:underline">
           Terms
         </Link>
         <span className="mx-2">·</span>
-        <Link href="/legal/privacy" className="hover:text-fg">
+        <Link href="/legal/privacy" className="hover:text-white hover:underline">
           Privacy
         </Link>
       </footer>

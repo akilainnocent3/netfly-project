@@ -87,7 +87,7 @@ KEYS: list[Key] = [
     Key(
         "branding.accent_color",
         "color",
-        "#FF2E4D",
+        "#E50914",
         "Primary brand accent (buttons, progress bars, focus).",
         public=True,
         validation=COLOR_RE,
@@ -95,7 +95,7 @@ KEYS: list[Key] = [
     Key(
         "branding.background_color",
         "color",
-        "#0B0B0F",
+        "#141414",
         "Page background.",
         public=True,
         validation=COLOR_RE,
@@ -103,7 +103,7 @@ KEYS: list[Key] = [
     Key(
         "branding.surface_color",
         "color",
-        "#16161D",
+        "#181818",
         "Cards, menus and modals.",
         public=True,
         validation=COLOR_RE,
@@ -111,7 +111,7 @@ KEYS: list[Key] = [
     Key(
         "branding.text_color",
         "color",
-        "#F4F4F6",
+        "#FFFFFF",
         "Primary text color.",
         public=True,
         validation=COLOR_RE,
@@ -119,10 +119,20 @@ KEYS: list[Key] = [
     Key(
         "branding.font_family",
         "enum",
-        "Inter",
+        "Inter Tight",
         "Interface typeface.",
         public=True,
-        validation={"choices": ["Inter", "Manrope", "Outfit", "Plus Jakarta Sans", "DM Sans"]},
+        validation={
+            "choices": [
+                "Inter Tight",
+                "Inter",
+                "Roboto",
+                "Manrope",
+                "Outfit",
+                "Plus Jakarta Sans",
+                "DM Sans",
+            ]
+        },
     ),
     Key(
         "branding.tagline",
@@ -424,14 +434,6 @@ KEYS: list[Key] = [
         "Seconds between hero billboard rotations.",
         public=True,
         unit="s",
-    ),
-    Key(
-        "ux.autosubmit_delay_ms",
-        "int",
-        600,
-        "Idle time before valid forms auto-submit.",
-        public=True,
-        unit="ms",
     ),
     Key(
         "ux.username_check_debounce_ms",

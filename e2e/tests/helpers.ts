@@ -6,13 +6,14 @@ export function uniqueName(prefix = "e2e"): string {
   return `${prefix}_${Date.now().toString(36)}${Math.floor(Math.random() * 1e4)}`.slice(0, 30);
 }
 
-/** Sign up purely by typing — the form must submit itself. */
+/** Sign up: live checks while typing, then an explicit press of the primary button. */
 export async function signUp(page: Page, username = uniqueName()): Promise<string> {
   await page.goto("/signup");
-  await page.locator("input[name=username]").pressSequentially(username, { delay: 15 });
+  await page.locator("input[name=username]").pressSequentially(username, { delay: 10 });
   await expect(page.getByText("Nice — it’s yours if you want it.")).toBeVisible();
   await page.locator("input[name=name]").fill("E2E Viewer");
-  await page.locator("input[name=password]").pressSequentially(PASSWORD, { delay: 15 });
+  await page.locator("input[name=password]").fill(PASSWORD);
+  await page.getByRole("button", { name: "Get started" }).click();
   await page.waitForURL("**/browse**");
   return username;
 }

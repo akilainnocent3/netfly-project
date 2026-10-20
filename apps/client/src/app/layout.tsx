@@ -24,7 +24,7 @@ export async function generateViewport(): Promise<Viewport> {
   const bg =
     typeof config["branding.background_color"] === "string"
       ? config["branding.background_color"]
-      : "#0B0B0F";
+      : "#141414";
   return {
     themeColor: bg,
     colorScheme: "dark",
@@ -39,7 +39,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // (set by middleware) onto its inline scripts.
   const [config] = await Promise.all([getPublicConfig(), headers()]);
   const font =
-    typeof config["branding.font_family"] === "string" ? config["branding.font_family"] : "Inter";
+    typeof config["branding.font_family"] === "string"
+      ? config["branding.font_family"]
+      : "Inter Tight";
   const style = { ...themeVariables(config), "--brand-font": fontFor(font) } as React.CSSProperties;
   return (
     <html lang="en" className={fontVariables} style={style} suppressHydrationWarning>

@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useEpisodes } from "@/lib/queries";
 import type { Episode, TitleDetail } from "@/lib/types";
+import { Button } from "../ui/button";
 import { NetflyImage } from "../ui/netfly-image";
 
 const SEASON_KEY = (slug: string) => `netfly-season:${slug}`;
@@ -51,13 +52,15 @@ export function Episodes({
   return (
     <section aria-labelledby="episodes-heading" className="mt-10">
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h3 id="episodes-heading" className="text-[22px] font-bold">
+        <h3 id="episodes-heading" className="text-h3 font-bold">
           Episodes
         </h3>
         {seasons.length > 1 ? (
           <DropdownMenu.Root>
-            <DropdownMenu.Trigger className="flex h-10 items-center gap-3 rounded-md border border-white/20 bg-white/5 px-4 text-[15px] font-semibold hover:bg-white/10">
-              {current?.display_name} <ChevronDown className="size-4" />
+            <DropdownMenu.Trigger asChild>
+              <Button variant="secondary" className="border border-white/20 bg-[#242424]">
+                {current?.display_name} <ChevronDown className="size-4" />
+              </Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
               <DropdownMenu.Content
@@ -69,17 +72,17 @@ export function Episodes({
                   <DropdownMenu.Item
                     key={s.id}
                     onSelect={() => choose(s.number)}
-                    className="flex h-10 cursor-pointer items-center justify-between gap-6 rounded-md px-3 text-[15px] outline-none data-[highlighted]:bg-white/10"
+                    className="text-body flex h-10 cursor-pointer items-center justify-between gap-6 rounded-md px-3 outline-none data-[highlighted]:bg-white/10"
                   >
                     <span className={cn(s.number === season && "font-bold")}>{s.display_name}</span>
-                    <span className="text-muted text-[13px]">{s.episode_count} episodes</span>
+                    <span className="text-muted text-meta">{s.episode_count} episodes</span>
                   </DropdownMenu.Item>
                 ))}
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
         ) : (
-          <span className="text-muted text-[15px] font-semibold">{current?.display_name}</span>
+          <span className="text-muted text-body font-semibold">{current?.display_name}</span>
         )}
       </div>
       {episodes.isPending ? (
@@ -103,13 +106,15 @@ export function Episodes({
         </ol>
       )}
       {episodes.hasNextPage && items.length <= 30 && (
-        <button
-          type="button"
-          onClick={() => void episodes.fetchNextPage()}
-          className="mx-auto mt-4 block rounded-full border border-white/20 px-5 py-2 text-[14px] font-semibold hover:bg-white/10"
-        >
-          {episodes.isFetchingNextPage ? "Loading…" : "More episodes"}
-        </button>
+        <div className="mt-4 flex justify-center">
+          <Button
+            variant="secondary"
+            loading={episodes.isFetchingNextPage}
+            onClick={() => void episodes.fetchNextPage()}
+          >
+            More episodes
+          </Button>
+        </div>
       )}
     </section>
   );
@@ -164,7 +169,7 @@ function EpisodeRow({ episode, slug }: { episode: Episode; slug: string }) {
   const href = `/watch/${slug}?episode=${episode.id}`;
   const content = (
     <>
-      <span className="w-6 shrink-0 text-center text-[22px] font-semibold text-white/60">
+      <span className="text-h3 w-6 shrink-0 text-center font-semibold text-white/60">
         {episode.number}
       </span>
       <div className="bg-surface relative aspect-video w-[132px] shrink-0 overflow-hidden rounded-md md:w-[168px]">
@@ -184,16 +189,14 @@ function EpisodeRow({ episode, slug }: { episode: Episode; slug: string }) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-3">
-          <p className="truncate text-[16px] font-semibold">{episode.name}</p>
-          <span className="shrink-0 text-[14px] text-white/70">
+          <p className="text-body truncate font-semibold">{episode.name}</p>
+          <span className="text-body shrink-0 text-white/70">
             {formatRuntime(episode.runtime_minutes)}
           </span>
         </div>
-        <p className="mt-1 line-clamp-2 text-[14px] leading-snug text-white/65">
-          {episode.synopsis}
-        </p>
+        <p className="text-body mt-1 line-clamp-2 leading-snug text-white/65">{episode.synopsis}</p>
         {episode.watched && (
-          <p className="mt-1.5 flex items-center gap-1 text-[12px] font-semibold text-emerald-400">
+          <p className="text-meta mt-1.5 flex items-center gap-1 font-semibold text-emerald-400">
             <Check className="size-3.5" /> Watched
           </p>
         )}

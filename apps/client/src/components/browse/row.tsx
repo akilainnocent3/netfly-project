@@ -1,10 +1,10 @@
 "use client";
 
 import { cn } from "@netfly/ui";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Row as RowData } from "@/lib/types";
+import { RowArrow } from "../ui/row-arrow";
 import { Card } from "./card";
 
 // The scroller's content box is the viewport minus both gutters; cards fill it plus the right
@@ -73,16 +73,13 @@ export function Row({
       style={{ zIndex: 40 - index }}
     >
       <div className="mb-2 flex items-baseline gap-3 px-[max(4vw,16px)] md:mb-3">
-        <h2
-          id={headingId}
-          className="text-[17px] font-bold tracking-tight text-white/95 md:text-[21px]"
-        >
+        <h2 id={headingId} className="text-lead md:text-h3 font-bold tracking-tight text-white/95">
           {row.title}
         </h2>
         {seeAllHref && (
           <Link
             href={seeAllHref}
-            className="text-accent text-[13px] font-semibold opacity-0 transition-opacity group-hover/row:opacity-100 focus:opacity-100"
+            className="text-accent text-meta font-semibold opacity-0 transition-opacity group-hover/row:opacity-100 focus:opacity-100"
           >
             Explore all ›
           </Link>
@@ -111,7 +108,7 @@ export function Row({
                 <div className="flex items-end">
                   <span
                     aria-hidden
-                    className="text-bg -mr-[6%] text-[clamp(90px,11vw,190px)] leading-[0.78] font-black tracking-[-0.08em] select-none [-webkit-text-stroke:3px_rgb(255_255_255/0.55)]"
+                    className="text-bg text-numeral -mr-[6%] leading-[0.78] font-black tracking-[-0.08em] select-none [-webkit-text-stroke:3px_rgb(255_255_255/0.55)]"
                   >
                     {i + 1}
                   </span>
@@ -130,41 +127,10 @@ export function Row({
             </div>
           ))}
         </div>
-        <ArrowButton side="left" hidden={edges.start} onClick={() => page(-1)} />
-        <ArrowButton side="right" hidden={edges.end} onClick={() => page(1)} />
+        <RowArrow side="left" hidden={edges.start} onClick={() => page(-1)} />
+        <RowArrow side="right" hidden={edges.end} onClick={() => page(1)} />
       </div>
     </section>
-  );
-}
-
-function ArrowButton({
-  side,
-  hidden,
-  onClick,
-}: {
-  side: "left" | "right";
-  hidden: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      tabIndex={-1}
-      aria-label={side === "left" ? "Scroll left" : "Scroll right"}
-      onClick={onClick}
-      className={cn(
-        "absolute top-1 bottom-6 z-20 hidden w-[max(4vw,16px)] items-center justify-center bg-black/55 text-white opacity-0 transition-opacity duration-200 hover:bg-black/75 md:flex",
-        side === "left" ? "left-0 rounded-r-md" : "right-0 rounded-l-md",
-        !hidden && "group-hover/row:opacity-100",
-        hidden && "pointer-events-none",
-      )}
-    >
-      {side === "left" ? (
-        <ChevronLeft className="size-8 transition-transform hover:scale-125" />
-      ) : (
-        <ChevronRight className="size-8 transition-transform hover:scale-125" />
-      )}
-    </button>
   );
 }
 

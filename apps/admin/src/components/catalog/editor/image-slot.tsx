@@ -259,7 +259,7 @@ function PlacementPreview({
   if (kind === "poster") {
     return (
       <div
-        className="mt-2 flex items-end gap-1.5 rounded-md bg-[#0b0b0f] p-2"
+        className="mt-2 flex items-end gap-1.5 rounded-md bg-[#141414] p-2"
         role="img"
         aria-label="Card preview"
       >
@@ -280,8 +280,8 @@ function PlacementPreview({
   }
   return (
     <CropPreview image={image} className="mt-2 aspect-[21/9] rounded-md" label="Hero preview">
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0b0b0f] via-[#0b0b0f]/40 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#0b0b0f] to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#141414] via-[#141414]/40 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#141414] to-transparent" />
       <div className="absolute bottom-3 left-3 max-w-[55%]">
         <p className="truncate text-[15px] font-black text-white">{titleText || "Title"}</p>
         <div className="mt-1.5 flex gap-1">

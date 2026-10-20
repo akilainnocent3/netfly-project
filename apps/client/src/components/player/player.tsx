@@ -36,6 +36,7 @@ import { PlaybackTracker } from "@/lib/player/tracker";
 import { getPlayback, warmManifest, type PlaybackInfo } from "@/lib/playback";
 import { useAuth } from "../providers/auth";
 import { useConfig } from "../providers/config";
+import { Button, IconButton as UiIconButton } from "../ui/button";
 import { NetflyImage } from "../ui/netfly-image";
 import { EpisodeDrawer } from "./episode-drawer";
 import { EndScreen, NextEpisodeCard, StillWatching } from "./overlays";
@@ -533,7 +534,7 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
             ) : (
               <RotateCw className="size-8" />
             )}
-            <span className="absolute bottom-5 text-[12px] font-bold">{seekStep}s</span>
+            <span className="text-meta absolute bottom-5 font-bold">{seekStep}s</span>
           </m.div>
         )}
       </AnimatePresence>
@@ -554,18 +555,13 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
           className="absolute top-0 right-0 left-0 flex items-center gap-4 px-[3vw] pt-[max(env(safe-area-inset-top),20px)]"
           onPointerUp={(e) => e.stopPropagation()}
         >
-          <button
-            type="button"
-            onClick={() => router.push(exitHref)}
-            aria-label="Back"
-            className="grid size-11 place-items-center rounded-full hover:bg-white/10"
-          >
-            <ArrowLeft className="size-7" />
-          </button>
+          <PlayerButton label="Back" onClick={() => router.push(exitHref)}>
+            <ArrowLeft />
+          </PlayerButton>
           <div className="min-w-0">
-            <p className="truncate text-[16px] font-bold md:text-[18px]">{info.title.title}</p>
+            <p className="text-body md:text-lead truncate font-bold">{info.title.title}</p>
             {ep && (
-              <p className="truncate text-[13px] text-white/70 md:text-[14px]">
+              <p className="text-meta md:text-body truncate text-white/70">
                 S{ep.season_number}:E{ep.number} · {ep.name}
               </p>
             )}
@@ -592,41 +588,44 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
                 onScrubbing={setScrubbing}
               />
             </div>
-            <span className="w-24 text-right text-[13px] font-semibold text-white/85 tabular-nums md:text-[14px]">
+            <span className="text-meta md:text-body w-24 text-right font-semibold text-white/85 tabular-nums">
               -{formatDuration(Math.max(0, duration - current))}
             </span>
           </div>
           <div className="mt-2 flex items-center gap-1 md:gap-3">
-            <IconButton label={playing ? "Pause (k)" : "Play (k)"} onClick={togglePlay} big>
+            <PlayerButton label={playing ? "Pause (k)" : "Play (k)"} onClick={togglePlay} big>
               {playing ? (
                 <Pause className="size-8 fill-current" />
               ) : (
                 <Play className="size-8 fill-current" />
               )}
-            </IconButton>
-            <IconButton label={`Back ${seekStep} seconds (j)`} onClick={() => seekBy(-seekStep)}>
+            </PlayerButton>
+            <PlayerButton label={`Back ${seekStep} seconds (j)`} onClick={() => seekBy(-seekStep)}>
               <span className="relative">
                 <RotateCcw className="size-7" />
-                <span className="absolute inset-0 grid place-items-center pt-0.5 text-[9px] font-bold">
+                <span className="text-caption absolute inset-0 grid place-items-center pt-0.5 font-bold">
                   {seekStep}
                 </span>
               </span>
-            </IconButton>
-            <IconButton label={`Forward ${seekStep} seconds (l)`} onClick={() => seekBy(seekStep)}>
+            </PlayerButton>
+            <PlayerButton
+              label={`Forward ${seekStep} seconds (l)`}
+              onClick={() => seekBy(seekStep)}
+            >
               <span className="relative">
                 <RotateCw className="size-7" />
-                <span className="absolute inset-0 grid place-items-center pt-0.5 text-[9px] font-bold">
+                <span className="text-caption absolute inset-0 grid place-items-center pt-0.5 font-bold">
                   {seekStep}
                 </span>
               </span>
-            </IconButton>
+            </PlayerButton>
             <div className="group/vol hidden items-center md:flex">
-              <IconButton
+              <PlayerButton
                 label={muted ? "Unmute (m)" : "Mute (m)"}
                 onClick={() => video.current && (video.current.muted = !video.current.muted)}
               >
                 <VolumeIcon className="size-7" />
-              </IconButton>
+              </PlayerButton>
               <input
                 type="range"
                 min={0}
@@ -640,14 +639,14 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
             </div>
             <div className="ml-auto flex items-center gap-1 md:gap-2">
               {info.next && (
-                <IconButton label="Next episode" onClick={() => playNext(false)}>
+                <PlayerButton label="Next episode" onClick={() => playNext(false)}>
                   <SkipForward className="size-7" />
-                </IconButton>
+                </PlayerButton>
               )}
               {ep && (
-                <IconButton label="Episodes" onClick={() => setDrawer(true)}>
+                <PlayerButton label="Episodes" onClick={() => setDrawer(true)}>
                   <ListVideo className="size-7" />
-                </IconButton>
+                </PlayerButton>
               )}
               <Menu label="Subtitles and audio (c)" icon={<Captions className="size-7" />}>
                 <MenuLabel>Subtitles</MenuLabel>
@@ -731,16 +730,16 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
                 </Menu>
               )}
               {typeof document !== "undefined" && document.pictureInPictureEnabled && (
-                <IconButton label="Picture in picture" onClick={() => void togglePip()}>
+                <PlayerButton label="Picture in picture" onClick={() => void togglePip()}>
                   <PictureInPicture2 className="size-7" />
-                </IconButton>
+                </PlayerButton>
               )}
-              <IconButton
+              <PlayerButton
                 label={fullscreen ? "Exit full screen (f)" : "Full screen (f)"}
                 onClick={() => void toggleFullscreen()}
               >
                 {fullscreen ? <Minimize className="size-7" /> : <Maximize className="size-7" />}
-              </IconButton>
+              </PlayerButton>
             </div>
           </div>
         </div>
@@ -749,17 +748,23 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
       {/* Skip Intro */}
       <AnimatePresence>
         {inIntro && (
-          <m.button
-            type="button"
+          <m.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.2 }}
+            className="absolute right-[3vw] bottom-[22%]"
             onPointerUp={(e) => e.stopPropagation()}
-            onClick={() => ep?.intro_end != null && seekTo(ep.intro_end)}
-            className="absolute right-[3vw] bottom-[22%] flex items-center gap-2 rounded-md border border-white/60 bg-black/60 px-5 py-3 text-[16px] font-bold backdrop-blur hover:bg-white hover:text-black"
           >
-            Skip Intro <ChevronsRight className="size-5" />
-          </m.button>
+            <Button
+              variant="secondary"
+              size="lg"
+              className="border border-white/60 bg-black/60 hover:bg-white hover:text-black"
+              onClick={() => ep?.intro_end != null && seekTo(ep.intro_end)}
+            >
+              Skip Intro <ChevronsRight className="size-5" />
+            </Button>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -800,14 +805,10 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
       {fatal && (
         <div className="absolute inset-0 grid place-items-center bg-black/80 p-6 text-center">
           <div>
-            <p className="text-[20px] font-bold">{fatal}</p>
-            <button
-              type="button"
-              onClick={() => location.reload()}
-              className="mt-5 rounded-md bg-white px-6 py-2.5 font-semibold text-black"
-            >
+            <p className="text-h3 font-bold">{fatal}</p>
+            <Button variant="play" className="mt-5" onClick={() => location.reload()}>
               Try again
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -834,7 +835,8 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
   );
 }
 
-function IconButton({
+/** Player chrome button: the shared round ghost IconButton, sized for the player. */
+function PlayerButton({
   label,
   onClick,
   children,
@@ -846,18 +848,15 @@ function IconButton({
   big?: boolean;
 }) {
   return (
-    <button
-      type="button"
+    <UiIconButton
+      variant="ghost"
+      size="lg"
+      label={label}
       onClick={onClick}
-      aria-label={label}
-      title={label}
-      className={cn(
-        "grid place-items-center rounded-full text-white transition hover:scale-110 hover:bg-white/10",
-        big ? "size-14" : "size-12",
-      )}
+      className={cn("hover:scale-110 [&_svg]:size-7", big && "size-14 [&_svg]:size-8")}
     >
       {children}
-    </button>
+    </UiIconButton>
   );
 }
 
@@ -874,24 +873,27 @@ function Menu({
 }) {
   return (
     <DropdownMenu.Root modal={false}>
-      <DropdownMenu.Trigger
-        aria-label={label}
-        title={label}
-        className="relative grid size-12 place-items-center rounded-full text-white transition hover:scale-110 hover:bg-white/10 data-[state=open]:bg-white/10"
-      >
-        {icon}
-        {badge && (
-          <span className="bg-accent text-accent-fg absolute top-1.5 right-1 rounded px-1 text-[9px] leading-[14px] font-black">
-            {badge}
-          </span>
-        )}
+      <DropdownMenu.Trigger asChild>
+        <UiIconButton
+          variant="ghost"
+          size="lg"
+          label={label}
+          className="relative hover:scale-110 data-[state=open]:bg-white/10 [&_svg]:size-7"
+        >
+          {icon}
+          {badge && (
+            <span className="bg-accent text-accent-fg text-caption absolute top-1.5 right-1 rounded px-1 leading-[14px] font-black">
+              {badge}
+            </span>
+          )}
+        </UiIconButton>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           side="top"
           align="end"
           sideOffset={10}
-          className="z-[120] min-w-56 rounded-xl border border-white/10 bg-black/90 p-1.5 text-[15px] text-white shadow-2xl backdrop-blur-xl"
+          className="text-body z-[120] min-w-56 rounded-xl border border-white/10 bg-black/90 p-1.5 text-white shadow-2xl backdrop-blur-xl"
         >
           {children}
         </DropdownMenu.Content>
@@ -902,7 +904,7 @@ function Menu({
 
 function MenuLabel({ children }: { children: React.ReactNode }) {
   return (
-    <DropdownMenu.Label className="px-3 pt-2 pb-1 text-[12px] font-bold tracking-wider text-white/50 uppercase">
+    <DropdownMenu.Label className="text-meta px-3 pt-2 pb-1 font-bold tracking-wider text-white/50 uppercase">
       {children}
     </DropdownMenu.Label>
   );
