@@ -100,8 +100,8 @@ class ProgressView(APIView):
                 progress.position_seconds = 0 if done else position
                 progress.duration_seconds = duration
                 progress.watch_seconds += update["watched"]
-                # Rewatching from the start reopens a finished item.
-                progress.completed = done or (was_completed and position < duration * 0.05)
+                # Completion follows the latest position: rewatching a finished title reopens it.
+                progress.completed = done
                 progress.save()
             saved += 1
             if done and not was_completed:
