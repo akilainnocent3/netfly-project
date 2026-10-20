@@ -13,6 +13,9 @@ ignore = ["S101", "S311", "E501", "S603", "S607", "DJ001"]
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["S105", "S106", "S107"]
 "**/migrations/**" = ["E501"]
+# CloudFront URL signing mandates SHA-1 RSA; the CDN probe only opens https:// URLs.
+"apps/adminapi/config_views.py" = ["S303", "S310"]
+"apps/core/storage.py" = ["S303"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "netfly.settings"

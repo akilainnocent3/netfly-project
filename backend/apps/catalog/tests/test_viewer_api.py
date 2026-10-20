@@ -110,9 +110,10 @@ def test_smart_play_button_for_series(auth_api):
     s2 = SeasonFactory(title=series, number=2)
     e11, e12 = EpisodeFactory(season=s1, number=1), EpisodeFactory(season=s1, number=2)
     e21 = EpisodeFactory(season=s2, number=1)
-    play = lambda: auth_api.get(f"/api/v1/titles/{series.slug}").json()["viewer"][
-        "play"
-    ]  # noqa: E731
+
+    def play():
+        return auth_api.get(f"/api/v1/titles/{series.slug}").json()["viewer"]["play"]
+
     assert play()["label"] == "Play S1:E1"
     WatchProgress.objects.create(
         user=auth_api.user, title=series, episode=e12, position_seconds=300, duration_seconds=600

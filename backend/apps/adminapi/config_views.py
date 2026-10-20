@@ -208,10 +208,13 @@ class CdnTestView(APIView):
         key_id = request.data.get("key_pair_id") or config.get_str("storage.cdn.key_pair_id")
         pem = request.data.get("private_key") or config.get_secret("storage.cdn.private_key")
         url = _cdn_url(domain, probe_key, key_id, pem)
+        if not url.startswith("https://"):
+            return Response({"ok": False, "message": "The CDN domain must use HTTPS."})
         try:
-            with urllib.request.urlopen(
-                url, timeout=8
-            ) as response:  # noqa: S310 - operator-provided https URL
+            request_ = urllib.request.Request(
+                url, method="GET"
+            )  # noqa: S310 - https enforced above
+            with urllib.request.urlopen(request_, timeout=8) as response:  # noqa: S310
                 ok = response.status == 200
             return Response(
                 {
@@ -245,9 +248,13 @@ def _cdn_url(domain: str, key: str, key_id: str, pem: str) -> str:
     if not (key_id and pem):
         return url
     private_key = serialization.load_pem_private_key(pem.encode(), password=None)
-    signer = CloudFrontSigner(
-        key_id, lambda m: private_key.sign(m, padding.PKCS1v15(), hashes.SHA1())
-    )  # noqa: S303
+
+    def rsa_signer(message: bytes) -> bytes:
+        return private_key.sign(
+            message, padding.PKCS1v15(), hashes.SHA1()
+        )  # noqa: S303 - CloudFront requires SHA1
+
+    signer = CloudFrontSigner(key_id, rsa_signer)
     return signer.generate_presigned_url(
         url, date_less_than=dt.datetime.now(dt.UTC) + dt.timedelta(minutes=5)
     )
