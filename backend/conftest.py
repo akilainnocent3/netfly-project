@@ -61,3 +61,41 @@ def staff_api(staff):
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {issue_access_token(staff)[0]}")
     client.user = staff
     return client
+
+
+def _staff_client(role):
+    from apps.accounts.models import User
+    from apps.accounts.tokens import issue_access_token
+
+    user = User.objects.create_user(f"staff_{role}", "correct-horse", full_name=role, is_staff=True, role=role)
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {issue_access_token(user)[0]}")
+    client.user = user
+    return client
+
+
+@pytest.fixture
+def content_manager_api(db):
+    return _staff_client("content_manager")
+
+
+@pytest.fixture
+def analyst_api(db):
+    return _staff_client("analyst")
+
+
+@pytest.fixture
+def s3(db):
+    """Mocked Amazon S3 with storage configured in DB config."""
+    from moto import mock_aws
+
+    from apps.core.config import config
+
+    with mock_aws():
+        import boto3
+
+        boto3.client("s3", region_name="us-east-1").create_bucket(Bucket="netfly-test")
+        config.set("storage.s3.bucket", "netfly-test")
+        config.set("storage.s3.access_key_id", "testing")
+        config.set("storage.s3.secret_access_key", "testing")
+        yield boto3.client("s3", region_name="us-east-1")

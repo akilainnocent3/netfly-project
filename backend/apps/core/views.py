@@ -52,7 +52,7 @@ class PublicConfigView(APIView):
     )
     def get(self, request):
         values = config.public()
-        values["storage.media_origins"] = media_origins()
+        values["media_origins"] = media_origins()
         response = Response({"values": values})
         patch_cache_control(response, public=True, max_age=15, stale_while_revalidate=60)
         return response

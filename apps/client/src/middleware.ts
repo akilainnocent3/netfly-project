@@ -11,7 +11,7 @@ async function getMediaOrigins(): Promise<string> {
   try {
     const res = await fetch(`${API}/api/public/config`, { cache: "no-store" });
     const body = (await res.json()) as { values: Record<string, unknown> };
-    const origins = body.values["storage.media_origins"];
+    const origins = body.values["media_origins"];
     mediaOrigins = { value: Array.isArray(origins) ? origins.join(" ") : "", at: Date.now() };
   } catch {
     mediaOrigins = { value: mediaOrigins.value, at: Date.now() - 50_000 };

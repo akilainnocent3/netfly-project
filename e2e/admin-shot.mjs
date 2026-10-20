@@ -1,0 +1,18 @@
+import { chromium } from "@playwright/test";
+const [,, path, out, w="1440", h="900", actions=""] = process.argv;
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: +w, height: +h }, colorScheme: process.env.SCHEME || "light" });
+const page = await ctx.newPage();
+const errors = [];
+page.on("console", (m) => m.type() === "error" && errors.push(m.text().slice(0, 300)));
+page.on("pageerror", (e) => errors.push(String(e).slice(0, 300)));
+await page.goto("http://localhost:3001/login");
+await page.fill("#username", "admin");
+await page.locator("#password").pressSequentially("netfly-dev-admin", { delay: 10 });
+await page.waitForURL("http://localhost:3001/", { timeout: 15000 });
+await page.goto("http://localhost:3001" + path, { waitUntil: "networkidle" });
+if (actions) for (const step of actions.split(";;")) await eval(`(async()=>{${step}})()`);
+await page.waitForTimeout(1200);
+await page.screenshot({ path: out });
+console.log("URL", page.url(), "ERRORS", JSON.stringify(errors));
+await browser.close();

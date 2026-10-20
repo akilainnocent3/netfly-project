@@ -144,7 +144,16 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
-    "ENUM_NAME_OVERRIDES": {},
+    "ENUM_NAME_OVERRIDES": {
+        "ImageKindEnum": "apps.media.models.ImageAsset.Kind",
+        "ImageStatusEnum": "apps.media.models.ImageAsset.Status",
+        "VideoKindEnum": "apps.media.models.VideoAsset.Kind",
+        "VideoStatusEnum": "apps.media.models.VideoAsset.Status",
+        "HomeRowKindEnum": "apps.catalog.models.HomeRow.Kind",
+        "TitleStatusEnum": "apps.catalog.models.Title.Status",
+        "TitleTypeEnum": "apps.catalog.models.Title.Type",
+        "TranslationStatusEnum": "apps.catalog.models.TranslationStatus",
+    },
     "SCHEMA_PATH_PREFIX": r"/api/(v1|public)",
 }
 
@@ -155,7 +164,7 @@ CELERY_TASK_ACKS_LATE = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_TASK_DEFAULT_QUEUE = "default"
 CELERY_TASK_ROUTES = {"apps.media.tasks.transcode_asset": {"queue": "transcode"}}
-CELERY_TASK_ALWAYS_EAGER = False
+CELERY_TASK_ALWAYS_EAGER = TESTING
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 LOGGING = {

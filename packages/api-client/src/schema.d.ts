@@ -37,6 +37,640 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/billboards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description CRUD + drag reorder for home rows and billboards. */
+        get: operations["admin_billboards_list"];
+        put?: never;
+        /** @description CRUD + drag reorder for home rows and billboards. */
+        post: operations["admin_billboards_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/billboards/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description CRUD + drag reorder for home rows and billboards. */
+        get: operations["admin_billboards_retrieve"];
+        /** @description CRUD + drag reorder for home rows and billboards. */
+        put: operations["admin_billboards_update"];
+        post?: never;
+        /** @description CRUD + drag reorder for home rows and billboards. */
+        delete: operations["admin_billboards_destroy"];
+        options?: never;
+        head?: never;
+        /** @description CRUD + drag reorder for home rows and billboards. */
+        patch: operations["admin_billboards_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/billboards/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description CRUD + drag reorder for home rows and billboards. */
+        post: operations["admin_billboards_reorder_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cdn/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["admin_cdn_test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_collections_list"];
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_collections_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/collections/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_collections_retrieve"];
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        put: operations["admin_collections_update"];
+        post?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        delete: operations["admin_collections_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        patch: operations["admin_collections_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin_config_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/config/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["admin_config_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/config/{key}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin_config_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/episodes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_episodes_retrieve"];
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        put: operations["admin_episodes_update"];
+        post?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        delete: operations["admin_episodes_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        patch: operations["admin_episodes_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/genres": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_genres_list"];
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_genres_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/genres/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_genres_retrieve"];
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        put: operations["admin_genres_update"];
+        post?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        delete: operations["admin_genres_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        patch: operations["admin_genres_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/genres/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_genres_reorder_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/home-rows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description CRUD + drag reorder for home rows and billboards. */
+        get: operations["admin_home_rows_list"];
+        put?: never;
+        /** @description CRUD + drag reorder for home rows and billboards. */
+        post: operations["admin_home_rows_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/home-rows/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description CRUD + drag reorder for home rows and billboards. */
+        get: operations["admin_home_rows_retrieve"];
+        /** @description CRUD + drag reorder for home rows and billboards. */
+        put: operations["admin_home_rows_update"];
+        post?: never;
+        /** @description CRUD + drag reorder for home rows and billboards. */
+        delete: operations["admin_home_rows_destroy"];
+        options?: never;
+        head?: never;
+        /** @description CRUD + drag reorder for home rows and billboards. */
+        patch: operations["admin_home_rows_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/home-rows/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description CRUD + drag reorder for home rows and billboards. */
+        post: operations["admin_home_rows_reorder_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_images_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/images/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_images_retrieve"];
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        put: operations["admin_images_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        patch: operations["admin_images_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/legal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin_legal_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/legal/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["admin_legal_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/related/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        delete: operations["admin_related_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        patch: operations["admin_related_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/seasons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_seasons_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/seasons/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        put: operations["admin_seasons_update"];
+        post?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        delete: operations["admin_seasons_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        patch: operations["admin_seasons_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/seasons/{id}/episodes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_seasons_episodes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/seasons/{id}/reorder-episodes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_seasons_reorder_episodes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/seasons/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_seasons_reorder_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/storage/apply-cors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["admin_storage_apply_cors"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/storage/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Verify S3 credentials *before* saving: unsaved form values override stored ones. */
+        post: operations["admin_storage_test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/title-picker": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lightweight title search for pickers (related titles, billboards, collections). */
+        get: operations["admin_title_picker_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/titles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_titles_list"];
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_titles_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/titles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_titles_retrieve"];
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        put: operations["admin_titles_update"];
+        post?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        delete: operations["admin_titles_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        patch: operations["admin_titles_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/titles/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_titles_publish_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/titles/{id}/related": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_titles_related_list"];
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_titles_related_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/titles/{id}/seasons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_titles_seasons_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/titles/{id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_titles_unpublish_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/titles/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_titles_bulk_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -170,6 +804,71 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * @description * `publish` - publish
+         *     * `archive` - archive
+         *     * `draft` - draft
+         *     * `feature` - feature
+         *     * `unfeature` - unfeature
+         * @enum {string}
+         */
+        ActionEnum: "publish" | "archive" | "draft" | "feature" | "unfeature";
+        AdminImage: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly kind: components["schemas"]["ImageKindEnum"];
+            readonly status: components["schemas"]["ImageStatusEnum"];
+            readonly key: string;
+            readonly width: number;
+            readonly height: number;
+            readonly blur_data_url: string;
+            readonly dominant_color: string;
+            readonly original_width: number;
+            readonly original_height: number;
+            crop?: unknown;
+            readonly widths: unknown;
+            readonly formats: unknown;
+            readonly error: string;
+            readonly original_url: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        AdminImageRequest: {
+            crop?: unknown;
+        };
+        AdminVideo: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly kind: components["schemas"]["VideoKindEnum"];
+            readonly status: components["schemas"]["VideoStatusEnum"];
+            /** Format: double */
+            readonly progress: number;
+            readonly stage: string;
+            readonly original_filename: string;
+            readonly source_size: number;
+            /** Format: double */
+            readonly duration: number;
+            readonly source_width: number;
+            readonly source_height: number;
+            /** Format: double */
+            readonly source_fps: number;
+            readonly source_codec: string;
+            readonly renditions: unknown;
+            readonly audio_tracks: unknown;
+            readonly sprite: unknown;
+            readonly attempts: number;
+            readonly error: string;
+            readonly log: string;
+            /** Format: date-time */
+            readonly queued_at: string | null;
+            /** Format: date-time */
+            readonly started_at: string | null;
+            /** Format: date-time */
+            readonly finished_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly subtitles: components["schemas"]["Subtitle"][];
+        };
+        /**
          * @description * `client` - client
          *     * `admin` - admin
          * @enum {string}
@@ -179,17 +878,255 @@ export interface components {
             /** @default client */
             app: components["schemas"]["AppEnum"];
         };
+        AuditLog: {
+            readonly id: number;
+            readonly actor: string;
+            action: string;
+            target_type: string;
+            target_id?: string;
+            target_repr?: string;
+            changes?: unknown;
+            ip_address?: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        BillboardAdmin: {
+            readonly id: number;
+            title: number;
+            readonly title_detail: components["schemas"]["RelatedBrief"];
+            headline?: string;
+            tagline?: string;
+            use_trailer?: boolean;
+            readonly order: number;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            ends_at?: string | null;
+            is_active?: boolean;
+        };
+        BillboardAdminRequest: {
+            title: number;
+            headline?: string;
+            tagline?: string;
+            use_trailer?: boolean;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            ends_at?: string | null;
+            is_active?: boolean;
+        };
         /** @enum {unknown} */
         BlankEnum: "";
+        BulkActionRequest: {
+            ids: number[];
+            action: components["schemas"]["ActionEnum"];
+        };
+        BulkResult: {
+            updated: number[];
+            skipped: {
+                [key: string]: string[];
+            };
+        };
+        CdnTestRequestRequest: {
+            domain?: string;
+            key_pair_id?: string;
+            private_key?: string;
+        };
         ChangePasswordRequest: {
             current_password: string;
             new_password: string;
         };
+        CollectionAdmin: {
+            readonly id: number;
+            name: string;
+            slug?: string;
+            description?: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            ends_at?: string | null;
+            is_active?: boolean;
+            readonly items: components["schemas"]["CollectionItem"][];
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        CollectionAdminRequest: {
+            name: string;
+            slug?: string;
+            description?: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            ends_at?: string | null;
+            is_active?: boolean;
+            title_ids?: number[];
+        };
+        CollectionItem: {
+            readonly id: number;
+            readonly title: components["schemas"]["RelatedBrief"];
+            order?: number;
+        };
+        CollectionItemRequest: {
+            order?: number;
+        };
+        ConfigEntry: {
+            key: string;
+            label?: string;
+            value_type: components["schemas"]["ValueTypeEnum"];
+            readonly value: unknown;
+            is_secret?: boolean;
+            readonly has_value: boolean;
+            is_public?: boolean;
+            description?: string;
+            unit?: string;
+            validation?: unknown;
+            requires_restart?: boolean;
+            readonly updated_by: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        ConfigGroup: {
+            key: string;
+            name: string;
+            description?: string;
+            readonly entries: components["schemas"]["ConfigEntry"][];
+        };
+        EpisodeAdmin: {
+            readonly id: number;
+            readonly season: number;
+            number?: number;
+            name: string;
+            synopsis?: string;
+            runtime_minutes?: number | null;
+            readonly thumbnail: components["schemas"]["AdminImage"];
+            /** Format: uuid */
+            thumbnail_id?: string | null;
+            readonly video: components["schemas"]["AdminVideo"];
+            /** Format: uuid */
+            video_id?: string | null;
+            /** Format: double */
+            intro_start?: number | null;
+            /** Format: double */
+            intro_end?: number | null;
+            /** Format: double */
+            credits_start?: number | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        EpisodeAdminRequest: {
+            number?: number;
+            name: string;
+            synopsis?: string;
+            runtime_minutes?: number | null;
+            /** Format: uuid */
+            thumbnail_id?: string | null;
+            /** Format: uuid */
+            video_id?: string | null;
+            /** Format: double */
+            intro_start?: number | null;
+            /** Format: double */
+            intro_end?: number | null;
+            /** Format: double */
+            credits_start?: number | null;
+        };
+        GenreAdmin: {
+            readonly id: number;
+            name: string;
+            slug?: string;
+            description?: string;
+            readonly order: number;
+            show_on_home?: boolean;
+            is_active?: boolean;
+            readonly artwork: components["schemas"]["AdminImage"];
+            /** Format: uuid */
+            artwork_id?: string | null;
+            readonly title_count: number;
+        };
+        GenreAdminRequest: {
+            name: string;
+            slug?: string;
+            description?: string;
+            show_on_home?: boolean;
+            is_active?: boolean;
+            /** Format: uuid */
+            artwork_id?: string | null;
+        };
+        GenreBrief: {
+            readonly id: number;
+            name: string;
+            slug: string;
+        };
+        GenreBriefRequest: {
+            name: string;
+            slug: string;
+        };
         Health: {
             ok: boolean;
         };
+        HomeRowAdmin: {
+            readonly id: number;
+            kind: components["schemas"]["HomeRowKindEnum"];
+            /** @description Override the row heading. */
+            title?: string;
+            collection?: number | null;
+            readonly collection_name: string;
+            genre?: number | null;
+            readonly genre_name: string;
+            readonly order: number;
+            is_active?: boolean;
+        };
+        HomeRowAdminRequest: {
+            kind: components["schemas"]["HomeRowKindEnum"];
+            /** @description Override the row heading. */
+            title?: string;
+            collection?: number | null;
+            genre?: number | null;
+            is_active?: boolean;
+        };
+        /**
+         * @description * `continue_watching` - Continue Watching
+         *     * `because_you_liked` - Because you liked…
+         *     * `top_picks` - Top picks for you
+         *     * `trending` - Trending now
+         *     * `top10` - Top 10
+         *     * `new_releases` - New releases
+         *     * `my_list` - My List
+         *     * `collection` - Curated collection
+         *     * `genre` - Genre
+         *     * `home_genres` - All 'show on home' genres
+         * @enum {string}
+         */
+        HomeRowKindEnum: "continue_watching" | "because_you_liked" | "top_picks" | "trending" | "top10" | "new_releases" | "my_list" | "collection" | "genre" | "home_genres";
+        /**
+         * @description * `poster` - Poster
+         *     * `backdrop` - Backdrop
+         *     * `logo` - Logo
+         *     * `thumbnail` - Thumbnail
+         *     * `artwork` - Artwork
+         * @enum {string}
+         */
+        ImageKindEnum: "poster" | "backdrop" | "logo" | "thumbnail" | "artwork";
+        /**
+         * @description * `processing` - Processing
+         *     * `ready` - Ready
+         *     * `failed` - Failed
+         * @enum {string}
+         */
+        ImageStatusEnum: "processing" | "ready" | "failed";
+        ImageUploadRequest: {
+            /** Format: binary */
+            file: string;
+            kind: components["schemas"]["ImageKindEnum"];
+        };
         LegalPage: {
             slug: string;
+            title: string;
+            body_markdown?: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        LegalPageAdmin: {
+            readonly slug: string;
             title: string;
             body_markdown?: string;
             /** Format: date-time */
@@ -200,6 +1137,131 @@ export interface components {
             password: string;
             /** @default client */
             app: components["schemas"]["AppEnum"];
+        };
+        PaginatedTitleAdminListList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["TitleAdminList"][];
+        };
+        PatchedAdminImageRequest: {
+            crop?: unknown;
+        };
+        PatchedBillboardAdminRequest: {
+            title?: number;
+            headline?: string;
+            tagline?: string;
+            use_trailer?: boolean;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            ends_at?: string | null;
+            is_active?: boolean;
+        };
+        PatchedCollectionAdminRequest: {
+            name?: string;
+            slug?: string;
+            description?: string;
+            /** Format: date-time */
+            starts_at?: string | null;
+            /** Format: date-time */
+            ends_at?: string | null;
+            is_active?: boolean;
+            title_ids?: number[];
+        };
+        PatchedConfigUpdateRequest: {
+            value?: unknown;
+        };
+        PatchedEpisodeAdminRequest: {
+            number?: number;
+            name?: string;
+            synopsis?: string;
+            runtime_minutes?: number | null;
+            /** Format: uuid */
+            thumbnail_id?: string | null;
+            /** Format: uuid */
+            video_id?: string | null;
+            /** Format: double */
+            intro_start?: number | null;
+            /** Format: double */
+            intro_end?: number | null;
+            /** Format: double */
+            credits_start?: number | null;
+        };
+        PatchedGenreAdminRequest: {
+            name?: string;
+            slug?: string;
+            description?: string;
+            show_on_home?: boolean;
+            is_active?: boolean;
+            /** Format: uuid */
+            artwork_id?: string | null;
+        };
+        PatchedHomeRowAdminRequest: {
+            kind?: components["schemas"]["HomeRowKindEnum"];
+            /** @description Override the row heading. */
+            title?: string;
+            collection?: number | null;
+            genre?: number | null;
+            is_active?: boolean;
+        };
+        PatchedLegalPageAdminRequest: {
+            title?: string;
+            body_markdown?: string;
+        };
+        PatchedRelatedWeightRequest: {
+            weight?: number;
+        };
+        PatchedSeasonAdminRequest: {
+            number?: number;
+            name?: string;
+            synopsis?: string;
+            /** Format: uuid */
+            poster_id?: string | null;
+        };
+        PatchedTitleAdminRequest: {
+            type?: components["schemas"]["TitleTypeEnum"];
+            slug?: string;
+            title?: string;
+            original_title?: string;
+            synopsis?: string;
+            short_synopsis?: string;
+            year?: number | null;
+            maturity_rating?: string;
+            runtime_minutes?: number | null;
+            language?: string;
+            translation_status?: components["schemas"]["TranslationStatusEnum"];
+            translator_name?: string;
+            cast?: string[];
+            directors?: string[];
+            genre_ids?: number[];
+            /** Format: uuid */
+            poster_id?: string | null;
+            /** Format: uuid */
+            backdrop_id?: string | null;
+            /** Format: uuid */
+            logo_id?: string | null;
+            /** Format: uuid */
+            video_id?: string | null;
+            /** Format: uuid */
+            trailer_id?: string | null;
+            /** Format: date-time */
+            publish_at?: string | null;
+            is_featured?: boolean;
+            rights_holder?: string;
+            /** Format: date-time */
+            license_start?: string | null;
+            /** Format: date-time */
+            license_end?: string | null;
         };
         PatchedUserRequest: {
             full_name?: string;
@@ -214,6 +1276,39 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        RelatedAdmin: {
+            readonly id: number;
+            readonly related: components["schemas"]["RelatedBrief"];
+            weight?: number;
+            readonly is_two_way: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        RelatedAdminRequest: {
+            related_id: number;
+            weight?: number;
+            /** @default true */
+            two_way: boolean;
+        };
+        RelatedBrief: {
+            readonly id: number;
+            title: string;
+            type: components["schemas"]["TitleTypeEnum"];
+            year?: number | null;
+            readonly poster: components["schemas"]["AdminImage"];
+            status?: components["schemas"]["TitleStatusEnum"];
+            translation_status: components["schemas"]["TranslationStatusEnum"];
+        };
+        RelatedBriefRequest: {
+            title: string;
+            type: components["schemas"]["TitleTypeEnum"];
+            year?: number | null;
+            status?: components["schemas"]["TitleStatusEnum"];
+            translation_status: components["schemas"]["TranslationStatusEnum"];
+        };
+        ReorderRequest: {
+            ids: number[];
+        };
         /**
          * @description * `superadmin` - Super admin
          *     * `content_manager` - Content manager
@@ -221,6 +1316,26 @@ export interface components {
          * @enum {string}
          */
         RoleEnum: "superadmin" | "content_manager" | "analyst";
+        SeasonAdmin: {
+            readonly id: number;
+            readonly title: number;
+            number?: number;
+            name?: string;
+            synopsis?: string;
+            readonly poster: components["schemas"]["AdminImage"];
+            /** Format: uuid */
+            poster_id?: string | null;
+            readonly episodes: components["schemas"]["EpisodeAdmin"][];
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        SeasonAdminRequest: {
+            number?: number;
+            name?: string;
+            synopsis?: string;
+            /** Format: uuid */
+            poster_id?: string | null;
+        };
         Session: {
             access: string;
             expires_in: number;
@@ -234,6 +1349,160 @@ export interface components {
             /** @default client */
             app: components["schemas"]["AppEnum"];
         };
+        StorageTestRequestRequest: {
+            bucket?: string;
+            region?: string;
+            access_key_id?: string;
+            secret_access_key?: string;
+            endpoint_url?: string;
+            prefix?: string;
+        };
+        StorageTestResult: {
+            ok: boolean;
+            message: string;
+            steps?: string[];
+        };
+        Subtitle: {
+            readonly id: number;
+            language: string;
+            label: string;
+            is_default?: boolean;
+            is_forced?: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        SubtitleRequest: {
+            language: string;
+            label: string;
+            is_default?: boolean;
+            is_forced?: boolean;
+        };
+        TitleAdmin: {
+            readonly id: number;
+            type: components["schemas"]["TitleTypeEnum"];
+            slug?: string;
+            title: string;
+            original_title?: string;
+            synopsis?: string;
+            short_synopsis?: string;
+            year?: number | null;
+            maturity_rating?: string;
+            runtime_minutes?: number | null;
+            language?: string;
+            translation_status: components["schemas"]["TranslationStatusEnum"];
+            translator_name?: string;
+            cast?: string[];
+            directors?: string[];
+            readonly genres: components["schemas"]["GenreBrief"][];
+            genre_ids?: number[];
+            readonly poster: components["schemas"]["AdminImage"];
+            /** Format: uuid */
+            poster_id?: string | null;
+            readonly backdrop: components["schemas"]["AdminImage"];
+            /** Format: uuid */
+            backdrop_id?: string | null;
+            readonly logo: components["schemas"]["AdminImage"];
+            /** Format: uuid */
+            logo_id?: string | null;
+            readonly video: components["schemas"]["AdminVideo"];
+            /** Format: uuid */
+            video_id?: string | null;
+            readonly trailer: components["schemas"]["AdminVideo"];
+            /** Format: uuid */
+            trailer_id?: string | null;
+            readonly status: components["schemas"]["TitleStatusEnum"];
+            /** Format: date-time */
+            publish_at?: string | null;
+            /** Format: date-time */
+            readonly published_at: string | null;
+            is_featured?: boolean;
+            rights_holder?: string;
+            /** Format: date-time */
+            license_start?: string | null;
+            /** Format: date-time */
+            license_end?: string | null;
+            /** Format: double */
+            readonly popularity: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+            readonly publish_blockers: string[];
+            readonly is_billboard: boolean;
+        };
+        TitleAdminList: {
+            readonly id: number;
+            slug: string;
+            title: string;
+            type: components["schemas"]["TitleTypeEnum"];
+            status?: components["schemas"]["TitleStatusEnum"];
+            translation_status: components["schemas"]["TranslationStatusEnum"];
+            year?: number | null;
+            maturity_rating?: string;
+            is_featured?: boolean;
+            readonly poster: components["schemas"]["AdminImage"];
+            readonly genres: components["schemas"]["GenreBrief"][];
+            readonly video_status: string;
+            readonly season_count: number;
+            readonly episode_count: number;
+            /** Format: date-time */
+            publish_at?: string | null;
+            /** Format: date-time */
+            published_at?: string | null;
+            /** Format: date-time */
+            license_end?: string | null;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        TitleAdminRequest: {
+            type: components["schemas"]["TitleTypeEnum"];
+            slug?: string;
+            title: string;
+            original_title?: string;
+            synopsis?: string;
+            short_synopsis?: string;
+            year?: number | null;
+            maturity_rating?: string;
+            runtime_minutes?: number | null;
+            language?: string;
+            translation_status: components["schemas"]["TranslationStatusEnum"];
+            translator_name?: string;
+            cast?: string[];
+            directors?: string[];
+            genre_ids?: number[];
+            /** Format: uuid */
+            poster_id?: string | null;
+            /** Format: uuid */
+            backdrop_id?: string | null;
+            /** Format: uuid */
+            logo_id?: string | null;
+            /** Format: uuid */
+            video_id?: string | null;
+            /** Format: uuid */
+            trailer_id?: string | null;
+            /** Format: date-time */
+            publish_at?: string | null;
+            is_featured?: boolean;
+            rights_holder?: string;
+            /** Format: date-time */
+            license_start?: string | null;
+            /** Format: date-time */
+            license_end?: string | null;
+        };
+        /**
+         * @description * `draft` - Draft
+         *     * `processing` - Processing
+         *     * `published` - Published
+         *     * `archived` - Archived
+         * @enum {string}
+         */
+        TitleStatusEnum: "draft" | "processing" | "published" | "archived";
+        /**
+         * @description * `movie` - Movie
+         *     * `series` - Series
+         * @enum {string}
+         */
+        TitleTypeEnum: "movie" | "series";
         /**
          * @description * `translated` - Translated
          *     * `not_translated` - Not Translated
@@ -241,6 +1510,12 @@ export interface components {
          * @enum {string}
          */
         TranslationModeEnum: "translated" | "not_translated" | "all";
+        /**
+         * @description * `translated` - Translated
+         *     * `not_translated` - Not translated
+         * @enum {string}
+         */
+        TranslationStatusEnum: "translated" | "not_translated";
         User: {
             readonly id: number;
             readonly username: string;
@@ -260,6 +1535,37 @@ export interface components {
             available: boolean;
             message: string;
         };
+        /**
+         * @description * `string` - String
+         *     * `text` - Text
+         *     * `int` - Int
+         *     * `float` - Float
+         *     * `bool` - Bool
+         *     * `json` - Json
+         *     * `secret` - Secret
+         *     * `color` - Color
+         *     * `url` - Url
+         *     * `enum` - Enum
+         * @enum {string}
+         */
+        ValueTypeEnum: "string" | "text" | "int" | "float" | "bool" | "json" | "secret" | "color" | "url" | "enum";
+        /**
+         * @description * `feature` - Feature
+         *     * `episode` - Episode
+         *     * `trailer` - Trailer
+         * @enum {string}
+         */
+        VideoKindEnum: "feature" | "episode" | "trailer";
+        /**
+         * @description * `uploading` - Uploading
+         *     * `uploaded` - Uploaded
+         *     * `queued` - Queued
+         *     * `transcoding` - Transcoding
+         *     * `ready` - Ready
+         *     * `failed` - Failed
+         * @enum {string}
+         */
+        VideoStatusEnum: "uploading" | "uploaded" | "queued" | "transcoding" | "ready" | "failed";
     };
     responses: never;
     parameters: never;
@@ -303,6 +1609,1551 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicConfig"];
+                };
+            };
+        };
+    };
+    admin_billboards_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillboardAdmin"][];
+                };
+            };
+        };
+    };
+    admin_billboards_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillboardAdminRequest"];
+                "multipart/form-data": components["schemas"]["BillboardAdminRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillboardAdmin"];
+                };
+            };
+        };
+    };
+    admin_billboards_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this billboard. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillboardAdmin"];
+                };
+            };
+        };
+    };
+    admin_billboards_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this billboard. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillboardAdminRequest"];
+                "multipart/form-data": components["schemas"]["BillboardAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillboardAdmin"];
+                };
+            };
+        };
+    };
+    admin_billboards_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this billboard. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_billboards_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this billboard. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedBillboardAdminRequest"];
+                "multipart/form-data": components["schemas"]["PatchedBillboardAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillboardAdmin"];
+                };
+            };
+        };
+    };
+    admin_billboards_reorder_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+                "multipart/form-data": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_cdn_test: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CdnTestRequestRequest"];
+                "multipart/form-data": components["schemas"]["CdnTestRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageTestResult"];
+                };
+            };
+        };
+    };
+    admin_collections_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionAdmin"][];
+                };
+            };
+        };
+    };
+    admin_collections_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CollectionAdminRequest"];
+                "multipart/form-data": components["schemas"]["CollectionAdminRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionAdmin"];
+                };
+            };
+        };
+    };
+    admin_collections_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this collection. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionAdmin"];
+                };
+            };
+        };
+    };
+    admin_collections_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this collection. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CollectionAdminRequest"];
+                "multipart/form-data": components["schemas"]["CollectionAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionAdmin"];
+                };
+            };
+        };
+    };
+    admin_collections_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this collection. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_collections_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this collection. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCollectionAdminRequest"];
+                "multipart/form-data": components["schemas"]["PatchedCollectionAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionAdmin"];
+                };
+            };
+        };
+    };
+    admin_config_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigGroup"][];
+                };
+            };
+        };
+    };
+    admin_config_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedConfigUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedConfigUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigEntry"];
+                };
+            };
+        };
+    };
+    admin_config_history: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditLog"][];
+                };
+            };
+        };
+    };
+    admin_episodes_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this episode. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EpisodeAdmin"];
+                };
+            };
+        };
+    };
+    admin_episodes_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this episode. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EpisodeAdminRequest"];
+                "multipart/form-data": components["schemas"]["EpisodeAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EpisodeAdmin"];
+                };
+            };
+        };
+    };
+    admin_episodes_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this episode. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_episodes_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this episode. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedEpisodeAdminRequest"];
+                "multipart/form-data": components["schemas"]["PatchedEpisodeAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EpisodeAdmin"];
+                };
+            };
+        };
+    };
+    admin_genres_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreAdmin"][];
+                };
+            };
+        };
+    };
+    admin_genres_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenreAdminRequest"];
+                "multipart/form-data": components["schemas"]["GenreAdminRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreAdmin"];
+                };
+            };
+        };
+    };
+    admin_genres_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this genre. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreAdmin"];
+                };
+            };
+        };
+    };
+    admin_genres_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this genre. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenreAdminRequest"];
+                "multipart/form-data": components["schemas"]["GenreAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreAdmin"];
+                };
+            };
+        };
+    };
+    admin_genres_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this genre. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_genres_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this genre. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedGenreAdminRequest"];
+                "multipart/form-data": components["schemas"]["PatchedGenreAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreAdmin"];
+                };
+            };
+        };
+    };
+    admin_genres_reorder_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+                "multipart/form-data": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_home_rows_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeRowAdmin"][];
+                };
+            };
+        };
+    };
+    admin_home_rows_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeRowAdminRequest"];
+                "multipart/form-data": components["schemas"]["HomeRowAdminRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeRowAdmin"];
+                };
+            };
+        };
+    };
+    admin_home_rows_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this home row. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeRowAdmin"];
+                };
+            };
+        };
+    };
+    admin_home_rows_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this home row. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeRowAdminRequest"];
+                "multipart/form-data": components["schemas"]["HomeRowAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeRowAdmin"];
+                };
+            };
+        };
+    };
+    admin_home_rows_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this home row. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_home_rows_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this home row. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedHomeRowAdminRequest"];
+                "multipart/form-data": components["schemas"]["PatchedHomeRowAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeRowAdmin"];
+                };
+            };
+        };
+    };
+    admin_home_rows_reorder_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+                "multipart/form-data": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_images_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["ImageUploadRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminImage"];
+                };
+            };
+        };
+    };
+    admin_images_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this image asset. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminImage"];
+                };
+            };
+        };
+    };
+    admin_images_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this image asset. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AdminImageRequest"];
+                "multipart/form-data": components["schemas"]["AdminImageRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminImage"];
+                };
+            };
+        };
+    };
+    admin_images_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this image asset. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAdminImageRequest"];
+                "multipart/form-data": components["schemas"]["PatchedAdminImageRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminImage"];
+                };
+            };
+        };
+    };
+    admin_legal_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LegalPageAdmin"][];
+                };
+            };
+        };
+    };
+    admin_legal_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedLegalPageAdminRequest"];
+                "multipart/form-data": components["schemas"]["PatchedLegalPageAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LegalPageAdmin"];
+                };
+            };
+        };
+    };
+    admin_related_destroy: {
+        parameters: {
+            query?: {
+                two_way?: boolean;
+            };
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this related title. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_related_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this related title. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedRelatedWeightRequest"];
+                "multipart/form-data": components["schemas"]["PatchedRelatedWeightRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelatedAdmin"];
+                };
+            };
+        };
+    };
+    admin_seasons_create: {
+        parameters: {
+            query: {
+                title: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SeasonAdminRequest"];
+                "multipart/form-data": components["schemas"]["SeasonAdminRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeasonAdmin"];
+                };
+            };
+        };
+    };
+    admin_seasons_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this season. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SeasonAdminRequest"];
+                "multipart/form-data": components["schemas"]["SeasonAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeasonAdmin"];
+                };
+            };
+        };
+    };
+    admin_seasons_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this season. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_seasons_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this season. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedSeasonAdminRequest"];
+                "multipart/form-data": components["schemas"]["PatchedSeasonAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeasonAdmin"];
+                };
+            };
+        };
+    };
+    admin_seasons_episodes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this season. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EpisodeAdminRequest"];
+                "multipart/form-data": components["schemas"]["EpisodeAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EpisodeAdmin"];
+                };
+            };
+        };
+    };
+    admin_seasons_reorder_episodes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this season. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+                "multipart/form-data": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_seasons_reorder_create: {
+        parameters: {
+            query: {
+                title: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderRequest"];
+                "multipart/form-data": components["schemas"]["ReorderRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_storage_apply_cors: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageTestResult"];
+                };
+            };
+        };
+    };
+    admin_storage_test: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StorageTestRequestRequest"];
+                "multipart/form-data": components["schemas"]["StorageTestRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageTestResult"];
+                };
+            };
+        };
+    };
+    admin_title_picker_list: {
+        parameters: {
+            query?: {
+                exclude?: number;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelatedBrief"][];
+                };
+            };
+        };
+    };
+    admin_titles_list: {
+        parameters: {
+            query?: {
+                featured?: boolean;
+                genre?: number;
+                ordering?: "-popularity" | "-published_at" | "-updated_at" | "title" | "year";
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                search?: string;
+                status?: "archived" | "draft" | "processing" | "published";
+                translation?: "not_translated" | "translated";
+                type?: "movie" | "series";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedTitleAdminListList"];
+                };
+            };
+        };
+    };
+    admin_titles_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TitleAdminRequest"];
+                "multipart/form-data": components["schemas"]["TitleAdminRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TitleAdmin"];
+                };
+            };
+        };
+    };
+    admin_titles_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this title. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TitleAdmin"];
+                };
+            };
+        };
+    };
+    admin_titles_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this title. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TitleAdminRequest"];
+                "multipart/form-data": components["schemas"]["TitleAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TitleAdmin"];
+                };
+            };
+        };
+    };
+    admin_titles_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this title. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_titles_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this title. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedTitleAdminRequest"];
+                "multipart/form-data": components["schemas"]["PatchedTitleAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TitleAdmin"];
+                };
+            };
+        };
+    };
+    admin_titles_publish_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this title. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TitleAdmin"];
+                };
+            };
+        };
+    };
+    admin_titles_related_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this title. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelatedAdmin"][];
+                };
+            };
+        };
+    };
+    admin_titles_related_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this title. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelatedAdminRequest"];
+                "multipart/form-data": components["schemas"]["RelatedAdminRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelatedAdmin"];
+                };
+            };
+        };
+    };
+    admin_titles_seasons_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this title. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeasonAdmin"][];
+                };
+            };
+        };
+    };
+    admin_titles_unpublish_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this title. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TitleAdmin"];
+                };
+            };
+        };
+    };
+    admin_titles_bulk_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkActionRequest"];
+                "multipart/form-data": components["schemas"]["BulkActionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResult"];
                 };
             };
         };

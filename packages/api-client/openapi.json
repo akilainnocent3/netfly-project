@@ -53,6 +53,2684 @@
                 }
             }
         },
+        "/api/v1/admin/billboards": {
+            "get": {
+                "operationId": "admin_billboards_list",
+                "description": "CRUD + drag reorder for home rows and billboards.",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/BillboardAdmin"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "admin_billboards_create",
+                "description": "CRUD + drag reorder for home rows and billboards.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BillboardAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BillboardAdminRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BillboardAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/billboards/{id}": {
+            "get": {
+                "operationId": "admin_billboards_retrieve",
+                "description": "CRUD + drag reorder for home rows and billboards.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this billboard.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BillboardAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "admin_billboards_update",
+                "description": "CRUD + drag reorder for home rows and billboards.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this billboard.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BillboardAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BillboardAdminRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BillboardAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "admin_billboards_partial_update",
+                "description": "CRUD + drag reorder for home rows and billboards.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this billboard.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedBillboardAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedBillboardAdminRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BillboardAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "admin_billboards_destroy",
+                "description": "CRUD + drag reorder for home rows and billboards.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this billboard.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/billboards/reorder": {
+            "post": {
+                "operationId": "admin_billboards_reorder_create",
+                "description": "CRUD + drag reorder for home rows and billboards.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReorderRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReorderRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/cdn/test": {
+            "post": {
+                "operationId": "admin_cdn_test",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CdnTestRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CdnTestRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StorageTestResult"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/collections": {
+            "get": {
+                "operationId": "admin_collections_list",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CollectionAdmin"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "admin_collections_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CollectionAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CollectionAdminRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CollectionAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/collections/{id}": {
+            "get": {
+                "operationId": "admin_collections_retrieve",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this collection.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CollectionAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "admin_collections_update",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this collection.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CollectionAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CollectionAdminRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CollectionAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "admin_collections_partial_update",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this collection.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedCollectionAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedCollectionAdminRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CollectionAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "admin_collections_destroy",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this collection.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/config": {
+            "get": {
+                "operationId": "admin_config_list",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ConfigGroup"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/config/{key}": {
+            "patch": {
+                "operationId": "admin_config_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "key",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedConfigUpdateRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedConfigUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConfigEntry"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/config/{key}/history": {
+            "get": {
+                "operationId": "admin_config_history",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "key",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AuditLog"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/episodes/{id}": {
+            "get": {
+                "operationId": "admin_episodes_retrieve",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this episode.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EpisodeAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "admin_episodes_update",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this episode.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EpisodeAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EpisodeAdminRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EpisodeAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "admin_episodes_partial_update",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this episode.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedEpisodeAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedEpisodeAdminRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EpisodeAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "admin_episodes_destroy",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this episode.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/genres": {
+            "get": {
+                "operationId": "admin_genres_list",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/GenreAdmin"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "admin_genres_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenreAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenreAdminRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GenreAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/genres/{id}": {
+            "get": {
+                "operationId": "admin_genres_retrieve",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this genre.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GenreAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "admin_genres_update",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this genre.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenreAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenreAdminRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GenreAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "admin_genres_partial_update",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this genre.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedGenreAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedGenreAdminRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GenreAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "admin_genres_destroy",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this genre.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/genres/reorder": {
+            "post": {
+                "operationId": "admin_genres_reorder_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReorderRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReorderRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/home-rows": {
+            "get": {
+                "operationId": "admin_home_rows_list",
+                "description": "CRUD + drag reorder for home rows and billboards.",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/HomeRowAdmin"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "admin_home_rows_create",
+                "description": "CRUD + drag reorder for home rows and billboards.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/HomeRowAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/HomeRowAdminRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HomeRowAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/home-rows/{id}": {
+            "get": {
+                "operationId": "admin_home_rows_retrieve",
+                "description": "CRUD + drag reorder for home rows and billboards.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this home row.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HomeRowAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "admin_home_rows_update",
+                "description": "CRUD + drag reorder for home rows and billboards.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this home row.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/HomeRowAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/HomeRowAdminRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HomeRowAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "admin_home_rows_partial_update",
+                "description": "CRUD + drag reorder for home rows and billboards.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this home row.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedHomeRowAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedHomeRowAdminRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HomeRowAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "admin_home_rows_destroy",
+                "description": "CRUD + drag reorder for home rows and billboards.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this home row.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/home-rows/reorder": {
+            "post": {
+                "operationId": "admin_home_rows_reorder_create",
+                "description": "CRUD + drag reorder for home rows and billboards.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReorderRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReorderRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/images": {
+            "post": {
+                "operationId": "admin_images_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImageUploadRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminImage"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/images/{id}": {
+            "get": {
+                "operationId": "admin_images_retrieve",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this image asset.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminImage"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "admin_images_update",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this image asset.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminImageRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminImageRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminImage"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "admin_images_partial_update",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this image asset.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminImageRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminImageRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminImage"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/legal": {
+            "get": {
+                "operationId": "admin_legal_list",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LegalPageAdmin"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/legal/{slug}": {
+            "patch": {
+                "operationId": "admin_legal_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "slug",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedLegalPageAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedLegalPageAdminRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LegalPageAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/related/{id}": {
+            "patch": {
+                "operationId": "admin_related_partial_update",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this related title.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedRelatedWeightRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedRelatedWeightRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelatedAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "admin_related_destroy",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this related title.",
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "two_way",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/seasons": {
+            "post": {
+                "operationId": "admin_seasons_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "title",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SeasonAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SeasonAdminRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SeasonAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/seasons/{id}": {
+            "put": {
+                "operationId": "admin_seasons_update",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this season.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SeasonAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SeasonAdminRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SeasonAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "admin_seasons_partial_update",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this season.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedSeasonAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedSeasonAdminRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SeasonAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "admin_seasons_destroy",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this season.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/seasons/{id}/episodes": {
+            "post": {
+                "operationId": "admin_seasons_episodes_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this season.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EpisodeAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EpisodeAdminRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EpisodeAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/seasons/{id}/reorder-episodes": {
+            "post": {
+                "operationId": "admin_seasons_reorder_episodes_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this season.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReorderRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReorderRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/seasons/reorder": {
+            "post": {
+                "operationId": "admin_seasons_reorder_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "title",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReorderRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReorderRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/storage/apply-cors": {
+            "post": {
+                "operationId": "admin_storage_apply_cors",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StorageTestResult"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/storage/test": {
+            "post": {
+                "operationId": "admin_storage_test",
+                "description": "Verify S3 credentials *before* saving: unsaved form values override stored ones.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StorageTestRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StorageTestRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StorageTestResult"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/title-picker": {
+            "get": {
+                "operationId": "admin_title_picker_list",
+                "description": "Lightweight title search for pickers (related titles, billboards, collections).",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "exclude",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "q",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelatedBrief"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/titles": {
+            "get": {
+                "operationId": "admin_titles_list",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "featured",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "genre",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "ordering",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "-popularity",
+                                "-published_at",
+                                "-updated_at",
+                                "title",
+                                "year"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "search",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "status",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "archived",
+                                "draft",
+                                "processing",
+                                "published"
+                            ]
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "translation",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "not_translated",
+                                "translated"
+                            ]
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "type",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "movie",
+                                "series"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedTitleAdminListList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "admin_titles_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TitleAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TitleAdminRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TitleAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/titles/{id}": {
+            "get": {
+                "operationId": "admin_titles_retrieve",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this title.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TitleAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "admin_titles_update",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this title.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TitleAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TitleAdminRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TitleAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "admin_titles_partial_update",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this title.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedTitleAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedTitleAdminRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TitleAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "admin_titles_destroy",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this title.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/titles/{id}/publish": {
+            "post": {
+                "operationId": "admin_titles_publish_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this title.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TitleAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/titles/{id}/related": {
+            "get": {
+                "operationId": "admin_titles_related_list",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this title.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelatedAdmin"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "admin_titles_related_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this title.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RelatedAdminRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RelatedAdminRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelatedAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/titles/{id}/seasons": {
+            "get": {
+                "operationId": "admin_titles_seasons_list",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this title.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SeasonAdmin"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/titles/{id}/unpublish": {
+            "post": {
+                "operationId": "admin_titles_unpublish_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this title.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TitleAdmin"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/titles/bulk": {
+            "post": {
+                "operationId": "admin_titles_bulk_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkActionRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkActionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BulkResult"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/auth/login": {
             "post": {
                 "operationId": "auth_login",
@@ -367,6 +3045,255 @@
     },
     "components": {
         "schemas": {
+            "ActionEnum": {
+                "enum": [
+                    "publish",
+                    "archive",
+                    "draft",
+                    "feature",
+                    "unfeature"
+                ],
+                "type": "string",
+                "description": "* `publish` - publish\n* `archive` - archive\n* `draft` - draft\n* `feature` - feature\n* `unfeature` - unfeature"
+            },
+            "AdminImage": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "kind": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageKindEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "key": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "width": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "height": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "blur_data_url": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "dominant_color": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "original_width": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "original_height": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "crop": {},
+                    "widths": {
+                        "readOnly": true
+                    },
+                    "formats": {
+                        "readOnly": true
+                    },
+                    "error": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "original_url": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "blur_data_url",
+                    "created_at",
+                    "dominant_color",
+                    "error",
+                    "formats",
+                    "height",
+                    "id",
+                    "key",
+                    "kind",
+                    "original_height",
+                    "original_url",
+                    "original_width",
+                    "status",
+                    "width",
+                    "widths"
+                ]
+            },
+            "AdminImageRequest": {
+                "type": "object",
+                "properties": {
+                    "crop": {}
+                }
+            },
+            "AdminVideo": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "kind": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/VideoKindEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/VideoStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "progress": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true
+                    },
+                    "stage": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "original_filename": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "source_size": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "duration": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true
+                    },
+                    "source_width": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "source_height": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "source_fps": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true
+                    },
+                    "source_codec": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "renditions": {
+                        "readOnly": true
+                    },
+                    "audio_tracks": {
+                        "readOnly": true
+                    },
+                    "sprite": {
+                        "readOnly": true
+                    },
+                    "attempts": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "error": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "log": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "queued_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "started_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "finished_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "subtitles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Subtitle"
+                        },
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "attempts",
+                    "audio_tracks",
+                    "created_at",
+                    "duration",
+                    "error",
+                    "finished_at",
+                    "id",
+                    "kind",
+                    "log",
+                    "original_filename",
+                    "progress",
+                    "queued_at",
+                    "renditions",
+                    "source_codec",
+                    "source_fps",
+                    "source_height",
+                    "source_size",
+                    "source_width",
+                    "sprite",
+                    "stage",
+                    "started_at",
+                    "status",
+                    "subtitles"
+                ]
+            },
             "AppEnum": {
                 "enum": [
                     "client",
@@ -388,10 +3315,206 @@
                     }
                 }
             },
+            "AuditLog": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "actor": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "action": {
+                        "type": "string",
+                        "maxLength": 60
+                    },
+                    "target_type": {
+                        "type": "string",
+                        "maxLength": 60
+                    },
+                    "target_id": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "target_repr": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "changes": {},
+                    "ip_address": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "action",
+                    "actor",
+                    "created_at",
+                    "id",
+                    "target_type"
+                ]
+            },
+            "BillboardAdmin": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "integer"
+                    },
+                    "title_detail": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/RelatedBrief"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "headline": {
+                        "type": "string",
+                        "maxLength": 160
+                    },
+                    "tagline": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "use_trailer": {
+                        "type": "boolean"
+                    },
+                    "order": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "starts_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "ends_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "id",
+                    "order",
+                    "title",
+                    "title_detail"
+                ]
+            },
+            "BillboardAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "integer"
+                    },
+                    "headline": {
+                        "type": "string",
+                        "maxLength": 160
+                    },
+                    "tagline": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "use_trailer": {
+                        "type": "boolean"
+                    },
+                    "starts_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "ends_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "title"
+                ]
+            },
             "BlankEnum": {
                 "enum": [
                     ""
                 ]
+            },
+            "BulkActionRequest": {
+                "type": "object",
+                "properties": {
+                    "ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "maxItems": 500,
+                        "minItems": 1
+                    },
+                    "action": {
+                        "$ref": "#/components/schemas/ActionEnum"
+                    }
+                },
+                "required": [
+                    "action",
+                    "ids"
+                ]
+            },
+            "BulkResult": {
+                "type": "object",
+                "properties": {
+                    "updated": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "skipped": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "skipped",
+                    "updated"
+                ]
+            },
+            "CdnTestRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "domain": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "key_pair_id": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "private_key": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                }
             },
             "ChangePasswordRequest": {
                 "type": "object",
@@ -410,6 +3533,495 @@
                     "new_password"
                 ]
             },
+            "CollectionAdmin": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "slug": {
+                        "type": "string",
+                        "maxLength": 130,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "starts_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "ends_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CollectionItem"
+                        },
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "id",
+                    "items",
+                    "name"
+                ]
+            },
+            "CollectionAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                    },
+                    "slug": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 130,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "starts_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "ends_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "title_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "writeOnly": true
+                    }
+                },
+                "required": [
+                    "name"
+                ]
+            },
+            "CollectionItem": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/RelatedBrief"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "order": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0
+                    }
+                },
+                "required": [
+                    "id",
+                    "title"
+                ]
+            },
+            "CollectionItemRequest": {
+                "type": "object",
+                "properties": {
+                    "order": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0
+                    }
+                }
+            },
+            "ConfigEntry": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "value_type": {
+                        "$ref": "#/components/schemas/ValueTypeEnum"
+                    },
+                    "value": {
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "is_secret": {
+                        "type": "boolean"
+                    },
+                    "has_value": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "is_public": {
+                        "type": "boolean"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "unit": {
+                        "type": "string",
+                        "maxLength": 20
+                    },
+                    "validation": {},
+                    "requires_restart": {
+                        "type": "boolean"
+                    },
+                    "updated_by": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "has_value",
+                    "key",
+                    "updated_at",
+                    "updated_by",
+                    "value",
+                    "value_type"
+                ]
+            },
+            "ConfigGroup": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "maxLength": 50,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "entries": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ConfigEntry"
+                        },
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "entries",
+                    "key",
+                    "name"
+                ]
+            },
+            "EpisodeAdmin": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "season": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "number": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    },
+                    "runtime_minutes": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "thumbnail": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminImage"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "thumbnail_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "video": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminVideo"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "video_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "intro_start": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "intro_end": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "credits_start": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "id",
+                    "name",
+                    "season",
+                    "thumbnail",
+                    "video"
+                ]
+            },
+            "EpisodeAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "number": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    },
+                    "runtime_minutes": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "thumbnail_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "video_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "intro_start": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "intro_end": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "credits_start": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "name"
+                ]
+            },
+            "GenreAdmin": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 80
+                    },
+                    "slug": {
+                        "type": "string",
+                        "maxLength": 90,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "order": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "show_on_home": {
+                        "type": "boolean"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "artwork": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminImage"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "artwork_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "title_count": {
+                        "type": "integer",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "artwork",
+                    "id",
+                    "name",
+                    "order",
+                    "title_count"
+                ]
+            },
+            "GenreAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                    },
+                    "slug": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 90,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "show_on_home": {
+                        "type": "boolean"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "artwork_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "name"
+                ]
+            },
+            "GenreBrief": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 80
+                    },
+                    "slug": {
+                        "type": "string",
+                        "maxLength": 90,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "slug"
+                ]
+            },
+            "GenreBriefRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                    },
+                    "slug": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 90,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    }
+                },
+                "required": [
+                    "name",
+                    "slug"
+                ]
+            },
             "Health": {
                 "type": "object",
                 "properties": {
@@ -421,12 +4033,165 @@
                     "ok"
                 ]
             },
+            "HomeRowAdmin": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/HomeRowKindEnum"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Override the row heading.",
+                        "maxLength": 120
+                    },
+                    "collection": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "collection_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "genre": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "genre_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "order": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "collection_name",
+                    "genre_name",
+                    "id",
+                    "kind",
+                    "order"
+                ]
+            },
+            "HomeRowAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "kind": {
+                        "$ref": "#/components/schemas/HomeRowKindEnum"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Override the row heading.",
+                        "maxLength": 120
+                    },
+                    "collection": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "genre": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "kind"
+                ]
+            },
+            "HomeRowKindEnum": {
+                "enum": [
+                    "continue_watching",
+                    "because_you_liked",
+                    "top_picks",
+                    "trending",
+                    "top10",
+                    "new_releases",
+                    "my_list",
+                    "collection",
+                    "genre",
+                    "home_genres"
+                ],
+                "type": "string",
+                "description": "* `continue_watching` - Continue Watching\n* `because_you_liked` - Because you liked…\n* `top_picks` - Top picks for you\n* `trending` - Trending now\n* `top10` - Top 10\n* `new_releases` - New releases\n* `my_list` - My List\n* `collection` - Curated collection\n* `genre` - Genre\n* `home_genres` - All 'show on home' genres"
+            },
+            "ImageKindEnum": {
+                "enum": [
+                    "poster",
+                    "backdrop",
+                    "logo",
+                    "thumbnail",
+                    "artwork"
+                ],
+                "type": "string",
+                "description": "* `poster` - Poster\n* `backdrop` - Backdrop\n* `logo` - Logo\n* `thumbnail` - Thumbnail\n* `artwork` - Artwork"
+            },
+            "ImageStatusEnum": {
+                "enum": [
+                    "processing",
+                    "ready",
+                    "failed"
+                ],
+                "type": "string",
+                "description": "* `processing` - Processing\n* `ready` - Ready\n* `failed` - Failed"
+            },
+            "ImageUploadRequest": {
+                "type": "object",
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/ImageKindEnum"
+                    }
+                },
+                "required": [
+                    "file",
+                    "kind"
+                ]
+            },
             "LegalPage": {
                 "type": "object",
                 "properties": {
                     "slug": {
                         "type": "string",
                         "maxLength": 50,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "body_markdown": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "slug",
+                    "title",
+                    "updated_at"
+                ]
+            },
+            "LegalPageAdmin": {
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string",
+                        "readOnly": true,
                         "pattern": "^[-a-zA-Z0-9_]+$"
                     },
                     "title": {
@@ -475,6 +4240,398 @@
                     "username"
                 ]
             },
+            "PaginatedTitleAdminListList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TitleAdminList"
+                        }
+                    }
+                }
+            },
+            "PatchedAdminImageRequest": {
+                "type": "object",
+                "properties": {
+                    "crop": {}
+                }
+            },
+            "PatchedBillboardAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "integer"
+                    },
+                    "headline": {
+                        "type": "string",
+                        "maxLength": 160
+                    },
+                    "tagline": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "use_trailer": {
+                        "type": "boolean"
+                    },
+                    "starts_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "ends_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "PatchedCollectionAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                    },
+                    "slug": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 130,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "starts_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "ends_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "title_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "writeOnly": true
+                    }
+                }
+            },
+            "PatchedConfigUpdateRequest": {
+                "type": "object",
+                "properties": {
+                    "value": {
+                        "nullable": true
+                    }
+                }
+            },
+            "PatchedEpisodeAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "number": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    },
+                    "runtime_minutes": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "thumbnail_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "video_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "intro_start": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "intro_end": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "credits_start": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    }
+                }
+            },
+            "PatchedGenreAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                    },
+                    "slug": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 90,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "show_on_home": {
+                        "type": "boolean"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "artwork_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    }
+                }
+            },
+            "PatchedHomeRowAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "kind": {
+                        "$ref": "#/components/schemas/HomeRowKindEnum"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Override the row heading.",
+                        "maxLength": 120
+                    },
+                    "collection": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "genre": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "PatchedLegalPageAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                    },
+                    "body_markdown": {
+                        "type": "string"
+                    }
+                }
+            },
+            "PatchedRelatedWeightRequest": {
+                "type": "object",
+                "properties": {
+                    "weight": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": 1
+                    }
+                }
+            },
+            "PatchedSeasonAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "number": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    },
+                    "poster_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    }
+                }
+            },
+            "PatchedTitleAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "$ref": "#/components/schemas/TitleTypeEnum"
+                    },
+                    "slug": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 140,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                    },
+                    "original_title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    },
+                    "short_synopsis": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "year": {
+                        "type": "integer",
+                        "maximum": 2100,
+                        "minimum": 1888,
+                        "nullable": true
+                    },
+                    "maturity_rating": {
+                        "type": "string",
+                        "maxLength": 12
+                    },
+                    "runtime_minutes": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "language": {
+                        "type": "string",
+                        "maxLength": 12
+                    },
+                    "translation_status": {
+                        "$ref": "#/components/schemas/TranslationStatusEnum"
+                    },
+                    "translator_name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "cast": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                        }
+                    },
+                    "directors": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                        }
+                    },
+                    "genre_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "poster_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "backdrop_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "logo_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "video_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "trailer_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "publish_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "is_featured": {
+                        "type": "boolean"
+                    },
+                    "rights_holder": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "license_start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "license_end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                }
+            },
             "PatchedUserRequest": {
                 "type": "object",
                 "properties": {
@@ -521,6 +4678,153 @@
                     "values"
                 ]
             },
+            "RelatedAdmin": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "related": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/RelatedBrief"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "weight": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": 1
+                    },
+                    "is_two_way": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "id",
+                    "is_two_way",
+                    "related"
+                ]
+            },
+            "RelatedAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "related_id": {
+                        "type": "integer",
+                        "writeOnly": true
+                    },
+                    "weight": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": 1
+                    },
+                    "two_way": {
+                        "type": "boolean",
+                        "writeOnly": true,
+                        "default": true
+                    }
+                },
+                "required": [
+                    "related_id"
+                ]
+            },
+            "RelatedBrief": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/TitleTypeEnum"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "maximum": 2100,
+                        "minimum": 1888,
+                        "nullable": true
+                    },
+                    "poster": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminImage"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/TitleStatusEnum"
+                    },
+                    "translation_status": {
+                        "$ref": "#/components/schemas/TranslationStatusEnum"
+                    }
+                },
+                "required": [
+                    "id",
+                    "poster",
+                    "title",
+                    "translation_status",
+                    "type"
+                ]
+            },
+            "RelatedBriefRequest": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/TitleTypeEnum"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "maximum": 2100,
+                        "minimum": 1888,
+                        "nullable": true
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/TitleStatusEnum"
+                    },
+                    "translation_status": {
+                        "$ref": "#/components/schemas/TranslationStatusEnum"
+                    }
+                },
+                "required": [
+                    "title",
+                    "translation_status",
+                    "type"
+                ]
+            },
+            "ReorderRequest": {
+                "type": "object",
+                "properties": {
+                    "ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "minItems": 1
+                    }
+                },
+                "required": [
+                    "ids"
+                ]
+            },
             "RoleEnum": {
                 "enum": [
                     "superadmin",
@@ -529,6 +4833,85 @@
                 ],
                 "type": "string",
                 "description": "* `superadmin` - Super admin\n* `content_manager` - Content manager\n* `analyst` - Analyst"
+            },
+            "SeasonAdmin": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "number": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    },
+                    "poster": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminImage"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "poster_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "episodes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EpisodeAdmin"
+                        },
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "episodes",
+                    "id",
+                    "poster",
+                    "title"
+                ]
+            },
+            "SeasonAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "number": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    },
+                    "poster_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    }
+                }
             },
             "Session": {
                 "type": "object",
@@ -586,6 +4969,590 @@
                     "username"
                 ]
             },
+            "StorageTestRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "bucket": {
+                        "type": "string"
+                    },
+                    "region": {
+                        "type": "string"
+                    },
+                    "access_key_id": {
+                        "type": "string"
+                    },
+                    "secret_access_key": {
+                        "type": "string"
+                    },
+                    "endpoint_url": {
+                        "type": "string"
+                    },
+                    "prefix": {
+                        "type": "string"
+                    }
+                }
+            },
+            "StorageTestResult": {
+                "type": "object",
+                "properties": {
+                    "ok": {
+                        "type": "boolean"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "steps": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "message",
+                    "ok"
+                ]
+            },
+            "Subtitle": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "language": {
+                        "type": "string",
+                        "maxLength": 12
+                    },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 60
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    },
+                    "is_forced": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "id",
+                    "label",
+                    "language"
+                ]
+            },
+            "SubtitleRequest": {
+                "type": "object",
+                "properties": {
+                    "language": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 12
+                    },
+                    "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    },
+                    "is_forced": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "label",
+                    "language"
+                ]
+            },
+            "TitleAdmin": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/TitleTypeEnum"
+                    },
+                    "slug": {
+                        "type": "string",
+                        "maxLength": 140,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "original_title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    },
+                    "short_synopsis": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "year": {
+                        "type": "integer",
+                        "maximum": 2100,
+                        "minimum": 1888,
+                        "nullable": true
+                    },
+                    "maturity_rating": {
+                        "type": "string",
+                        "maxLength": 12
+                    },
+                    "runtime_minutes": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "language": {
+                        "type": "string",
+                        "maxLength": 12
+                    },
+                    "translation_status": {
+                        "$ref": "#/components/schemas/TranslationStatusEnum"
+                    },
+                    "translator_name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "cast": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 120
+                        }
+                    },
+                    "directors": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 120
+                        }
+                    },
+                    "genres": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/GenreBrief"
+                        },
+                        "readOnly": true
+                    },
+                    "genre_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "poster": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminImage"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "poster_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "backdrop": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminImage"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "backdrop_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "logo": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminImage"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "logo_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "video": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminVideo"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "video_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "trailer": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminVideo"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "trailer_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TitleStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "publish_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "published_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "is_featured": {
+                        "type": "boolean"
+                    },
+                    "rights_holder": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "license_start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "license_end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "popularity": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "publish_blockers": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    },
+                    "is_billboard": {
+                        "type": "boolean",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "backdrop",
+                    "created_at",
+                    "genres",
+                    "id",
+                    "is_billboard",
+                    "logo",
+                    "popularity",
+                    "poster",
+                    "publish_blockers",
+                    "published_at",
+                    "status",
+                    "title",
+                    "trailer",
+                    "translation_status",
+                    "type",
+                    "updated_at",
+                    "video"
+                ]
+            },
+            "TitleAdminList": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "slug": {
+                        "type": "string",
+                        "maxLength": 140,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/TitleTypeEnum"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/TitleStatusEnum"
+                    },
+                    "translation_status": {
+                        "$ref": "#/components/schemas/TranslationStatusEnum"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "maximum": 2100,
+                        "minimum": 1888,
+                        "nullable": true
+                    },
+                    "maturity_rating": {
+                        "type": "string",
+                        "maxLength": 12
+                    },
+                    "is_featured": {
+                        "type": "boolean"
+                    },
+                    "poster": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminImage"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "genres": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/GenreBrief"
+                        },
+                        "readOnly": true
+                    },
+                    "video_status": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "season_count": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "episode_count": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "publish_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "published_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "license_end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "episode_count",
+                    "genres",
+                    "id",
+                    "poster",
+                    "season_count",
+                    "slug",
+                    "title",
+                    "translation_status",
+                    "type",
+                    "updated_at",
+                    "video_status"
+                ]
+            },
+            "TitleAdminRequest": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "$ref": "#/components/schemas/TitleTypeEnum"
+                    },
+                    "slug": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 140,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                    },
+                    "original_title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "synopsis": {
+                        "type": "string"
+                    },
+                    "short_synopsis": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "year": {
+                        "type": "integer",
+                        "maximum": 2100,
+                        "minimum": 1888,
+                        "nullable": true
+                    },
+                    "maturity_rating": {
+                        "type": "string",
+                        "maxLength": 12
+                    },
+                    "runtime_minutes": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "language": {
+                        "type": "string",
+                        "maxLength": 12
+                    },
+                    "translation_status": {
+                        "$ref": "#/components/schemas/TranslationStatusEnum"
+                    },
+                    "translator_name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "cast": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                        }
+                    },
+                    "directors": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                        }
+                    },
+                    "genre_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "poster_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "backdrop_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "logo_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "video_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "trailer_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "publish_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "is_featured": {
+                        "type": "boolean"
+                    },
+                    "rights_holder": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "license_start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "license_end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "title",
+                    "translation_status",
+                    "type"
+                ]
+            },
+            "TitleStatusEnum": {
+                "enum": [
+                    "draft",
+                    "processing",
+                    "published",
+                    "archived"
+                ],
+                "type": "string",
+                "description": "* `draft` - Draft\n* `processing` - Processing\n* `published` - Published\n* `archived` - Archived"
+            },
+            "TitleTypeEnum": {
+                "enum": [
+                    "movie",
+                    "series"
+                ],
+                "type": "string",
+                "description": "* `movie` - Movie\n* `series` - Series"
+            },
             "TranslationModeEnum": {
                 "enum": [
                     "translated",
@@ -594,6 +5561,14 @@
                 ],
                 "type": "string",
                 "description": "* `translated` - Translated\n* `not_translated` - Not Translated\n* `all` - All"
+            },
+            "TranslationStatusEnum": {
+                "enum": [
+                    "translated",
+                    "not_translated"
+                ],
+                "type": "string",
+                "description": "* `translated` - Translated\n* `not_translated` - Not translated"
             },
             "User": {
                 "type": "object",
@@ -679,6 +5654,43 @@
                     "message",
                     "username"
                 ]
+            },
+            "ValueTypeEnum": {
+                "enum": [
+                    "string",
+                    "text",
+                    "int",
+                    "float",
+                    "bool",
+                    "json",
+                    "secret",
+                    "color",
+                    "url",
+                    "enum"
+                ],
+                "type": "string",
+                "description": "* `string` - String\n* `text` - Text\n* `int` - Int\n* `float` - Float\n* `bool` - Bool\n* `json` - Json\n* `secret` - Secret\n* `color` - Color\n* `url` - Url\n* `enum` - Enum"
+            },
+            "VideoKindEnum": {
+                "enum": [
+                    "feature",
+                    "episode",
+                    "trailer"
+                ],
+                "type": "string",
+                "description": "* `feature` - Feature\n* `episode` - Episode\n* `trailer` - Trailer"
+            },
+            "VideoStatusEnum": {
+                "enum": [
+                    "uploading",
+                    "uploaded",
+                    "queued",
+                    "transcoding",
+                    "ready",
+                    "failed"
+                ],
+                "type": "string",
+                "description": "* `uploading` - Uploading\n* `uploaded` - Uploaded\n* `queued` - Queued\n* `transcoding` - Transcoding\n* `ready` - Ready\n* `failed` - Failed"
             }
         },
         "securitySchemes": {
