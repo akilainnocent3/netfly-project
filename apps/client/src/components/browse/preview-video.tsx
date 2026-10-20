@@ -1,7 +1,7 @@
 "use client";
 
 import type Hls from "hls.js";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { getPlayback, warmManifest } from "@/lib/playback";
@@ -23,7 +23,17 @@ function previewsAllowed(autoplayPreviews: boolean | undefined): boolean {
 }
 
 /** Muted, looping preview (trailer, or a slice of the title) that fades in over the artwork. */
-export function PreviewVideo({ title, loop = true, className, showMute }: { title: TitleCard; loop?: boolean; className?: string; showMute?: boolean }) {
+export function PreviewVideo({
+  title,
+  loop = true,
+  className,
+  showMute,
+}: {
+  title: TitleCard;
+  loop?: boolean;
+  className?: string;
+  showMute?: boolean;
+}) {
   const { user } = useAuth();
   const ref = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -47,7 +57,12 @@ export function PreviewVideo({ title, loop = true, className, showMute }: { titl
       }
       const { default: HlsCtor } = await import("hls.js");
       if (cancelled || !HlsCtor.isSupported()) return;
-      hls = new HlsCtor({ startPosition: info.start_at, capLevelToPlayerSize: true, maxBufferLength: 12, abrEwmaDefaultEstimate: 3_000_000 });
+      hls = new HlsCtor({
+        startPosition: info.start_at,
+        capLevelToPlayerSize: true,
+        maxBufferLength: 12,
+        abrEwmaDefaultEstimate: 3_000_000,
+      });
       hls.loadSource(info.master_url);
       hls.attachMedia(video);
       hls.on(HlsCtor.Events.MANIFEST_PARSED, () => void video.play().catch(() => undefined));
@@ -72,7 +87,7 @@ export function PreviewVideo({ title, loop = true, className, showMute }: { titl
       />
       <AnimatePresence>
         {showMute && playing && (
-          <motion.button
+          <m.button
             type="button"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -83,10 +98,10 @@ export function PreviewVideo({ title, loop = true, className, showMute }: { titl
               setMuted((m) => !m);
             }}
             aria-label={muted ? "Unmute preview" : "Mute preview"}
-            className="absolute bottom-[18%] right-[4vw] z-10 grid size-10 place-items-center rounded-full border border-white/50 bg-black/30 text-white backdrop-blur hover:bg-white/10"
+            className="absolute right-[4vw] bottom-[18%] z-10 grid size-10 place-items-center rounded-full border border-white/50 bg-black/30 text-white backdrop-blur hover:bg-white/10"
           >
             {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
-          </motion.button>
+          </m.button>
         )}
       </AnimatePresence>
     </>

@@ -7,13 +7,19 @@ const cache = new Map<string, Promise<PlaybackInfo | null>>();
 const warmed = new Set<string>();
 
 /** Playback info, memoised briefly so hover → click starts instantly. */
-export function getPlayback(slug: string, opts: { episode?: number | null; preview?: boolean } = {}): Promise<PlaybackInfo | null> {
+export function getPlayback(
+  slug: string,
+  opts: { episode?: number | null; preview?: boolean } = {},
+): Promise<PlaybackInfo | null> {
   const key = `${slug}:${opts.episode ?? ""}:${opts.preview ? "p" : "f"}`;
   let entry = cache.get(key);
   if (!entry) {
     entry = unwrap(
       api.GET("/api/v1/playback/{slug}", {
-        params: { path: { slug }, query: { episode: opts.episode ?? undefined, preview: opts.preview || undefined } },
+        params: {
+          path: { slug },
+          query: { episode: opts.episode ?? undefined, preview: opts.preview || undefined },
+        },
       }),
     ).catch(() => null);
     cache.set(key, entry);

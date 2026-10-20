@@ -4,7 +4,16 @@ import { unwrap } from "@netfly/api-client";
 import { cn } from "@netfly/ui";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { Archive, ChevronLeft, ChevronRight, Clapperboard, Plus, Search, Star, Upload } from "lucide-react";
+import {
+  Archive,
+  ChevronLeft,
+  ChevronRight,
+  Clapperboard,
+  Plus,
+  Search,
+  Star,
+  Upload,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
@@ -12,11 +21,26 @@ import { StatusChip, TranslationChip, VideoChip } from "@/components/catalog/sta
 import { Thumb } from "@/components/catalog/thumb";
 import { useAuth } from "@/components/providers/auth";
 import { useToast } from "@/components/providers/toast";
-import { Button, Card, Empty, Input, PageHeader, Select, Skeleton } from "@/components/ui/primitives";
+import {
+  Button,
+  Card,
+  Empty,
+  Input,
+  PageHeader,
+  Select,
+  Skeleton,
+} from "@/components/ui/primitives";
 import { api } from "@/lib/api";
 import { useDebounced } from "@/lib/use-debounced";
 
-type Filters = { search: string; type: string; status: string; translation: string; genre: string; page: number };
+type Filters = {
+  search: string;
+  type: string;
+  status: string;
+  translation: string;
+  genre: string;
+  page: number;
+};
 type BulkAction = "publish" | "archive" | "draft" | "feature" | "unfeature";
 
 function TitlesTable() {
@@ -39,11 +63,15 @@ function TitlesTable() {
   // Filters apply instantly and live in the URL so views are shareable.
   useEffect(() => {
     const q = new URLSearchParams();
-    for (const [k, v] of Object.entries({ ...filters, search })) if (v && !(k === "page" && v === 1)) q.set(k, String(v));
+    for (const [k, v] of Object.entries({ ...filters, search }))
+      if (v && !(k === "page" && v === 1)) q.set(k, String(v));
     router.replace(`/titles${q.size ? `?${q}` : ""}`, { scroll: false });
   }, [filters, search, router]);
 
-  const genres = useQuery({ queryKey: ["genres"], queryFn: () => unwrap(api.GET("/api/v1/admin/genres")) });
+  const genres = useQuery({
+    queryKey: ["genres"],
+    queryFn: () => unwrap(api.GET("/api/v1/admin/genres")),
+  });
   const list = useQuery({
     queryKey: ["titles", { ...filters, search }],
     placeholderData: keepPreviousData,
@@ -66,10 +94,14 @@ function TitlesTable() {
   });
 
   const bulk = useMutation({
-    mutationFn: (action: BulkAction) => unwrap(api.POST("/api/v1/admin/titles/bulk", { body: { ids: [...selected], action } })),
+    mutationFn: (action: BulkAction) =>
+      unwrap(api.POST("/api/v1/admin/titles/bulk", { body: { ids: [...selected], action } })),
     onSuccess: (result, action) => {
       const skipped = Object.keys(result.skipped).length;
-      toast(`${result.updated.length} updated${skipped ? `, ${skipped} skipped (not ready to ${action})` : ""}`, skipped ? "error" : "success");
+      toast(
+        `${result.updated.length} updated${skipped ? `, ${skipped} skipped (not ready to ${action})` : ""}`,
+        skipped ? "error" : "success",
+      );
       setSelected(new Set());
       void queryClient.invalidateQueries({ queryKey: ["titles"] });
     },
@@ -82,46 +114,91 @@ function TitlesTable() {
   const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
   const set = (patch: Partial<Filters>) => setFilters((f) => ({ ...f, page: 1, ...patch }));
   const writable = can("content_manager");
-  const hasFilters = useMemo(() => Object.entries(filters).some(([k, v]) => k !== "page" && v), [filters]);
+  const hasFilters = useMemo(
+    () => Object.entries(filters).some(([k, v]) => k !== "page" && v),
+    [filters],
+  );
 
   return (
     <>
       <PageHeader
         title="Titles"
-        description={list.data ? `${total} title${total === 1 ? "" : "s"}` : "Movies and series in the catalog."}
+        description={
+          list.data
+            ? `${total} title${total === 1 ? "" : "s"}`
+            : "Movies and series in the catalog."
+        }
         actions={
           writable && (
             <Link href="/titles/new">
-              <Button variant="primary"><Plus className="size-4" /> New title</Button>
+              <Button variant="primary">
+                <Plus className="size-4" /> New title
+              </Button>
             </Link>
           )
         }
       />
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <div className="relative w-full max-w-xs">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-subtle" />
-          <Input value={filters.search} onChange={(e) => set({ search: e.target.value })} placeholder="Search titles…" className="pl-8" aria-label="Search titles" />
+          <Search className="text-subtle pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
+          <Input
+            value={filters.search}
+            onChange={(e) => set({ search: e.target.value })}
+            placeholder="Search titles…"
+            className="pl-8"
+            aria-label="Search titles"
+          />
         </div>
-        <Select value={filters.type} onChange={(e) => set({ type: e.target.value })} aria-label="Type">
+        <Select
+          value={filters.type}
+          onChange={(e) => set({ type: e.target.value })}
+          aria-label="Type"
+        >
           <option value="">All types</option>
           <option value="movie">Movies</option>
           <option value="series">Series</option>
         </Select>
-        <Select value={filters.status} onChange={(e) => set({ status: e.target.value })} aria-label="Status">
+        <Select
+          value={filters.status}
+          onChange={(e) => set({ status: e.target.value })}
+          aria-label="Status"
+        >
           <option value="">Any status</option>
-          {["draft", "processing", "published", "archived"].map((s) => <option key={s} value={s}>{s}</option>)}
+          {["draft", "processing", "published", "archived"].map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
         </Select>
-        <Select value={filters.translation} onChange={(e) => set({ translation: e.target.value })} aria-label="Translation">
+        <Select
+          value={filters.translation}
+          onChange={(e) => set({ translation: e.target.value })}
+          aria-label="Translation"
+        >
           <option value="">Translated & not</option>
           <option value="translated">Translated</option>
           <option value="not_translated">Not translated</option>
         </Select>
-        <Select value={filters.genre} onChange={(e) => set({ genre: e.target.value })} aria-label="Genre">
+        <Select
+          value={filters.genre}
+          onChange={(e) => set({ genre: e.target.value })}
+          aria-label="Genre"
+        >
           <option value="">All genres</option>
-          {genres.data?.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+          {genres.data?.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.name}
+            </option>
+          ))}
         </Select>
         {hasFilters && (
-          <Button variant="ghost" size="sm" onClick={() => setFilters({ search: "", type: "", status: "", translation: "", genre: "", page: 1 })}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              setFilters({ search: "", type: "", status: "", translation: "", genre: "", page: 1 })
+            }
+          >
             Clear
           </Button>
         )}
@@ -130,7 +207,7 @@ function TitlesTable() {
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-left">
-            <thead className="border-b border-line bg-raised/50 text-[12px] text-muted">
+            <thead className="border-line bg-raised/50 text-muted border-b text-[12px]">
               <tr>
                 <th className="w-10 px-3 py-2">
                   {writable && (
@@ -138,7 +215,9 @@ function TitlesTable() {
                       type="checkbox"
                       aria-label="Select all"
                       checked={allSelected}
-                      onChange={() => setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)))}
+                      onChange={() =>
+                        setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)))
+                      }
                       className="accent-[var(--accent)]"
                     />
                   )}
@@ -151,18 +230,28 @@ function TitlesTable() {
                 <th className="px-3 py-2 text-right font-medium">Updated</th>
               </tr>
             </thead>
-            <tbody className={cn("divide-y divide-line transition-opacity", list.isPlaceholderData && "opacity-60")}>
+            <tbody
+              className={cn(
+                "divide-line divide-y transition-opacity",
+                list.isPlaceholderData && "opacity-60",
+              )}
+            >
               {list.isPending &&
                 Array.from({ length: 8 }, (_, i) => (
                   <tr key={i}>
-                    <td className="px-3 py-2.5" colSpan={7}><Skeleton className="h-9 w-full" /></td>
+                    <td className="px-3 py-2.5" colSpan={7}>
+                      <Skeleton className="h-9 w-full" />
+                    </td>
                   </tr>
                 ))}
               {rows.map((row) => (
                 <tr
                   key={row.id}
                   onClick={() => router.push(`/titles/${row.id}`)}
-                  className={cn("cursor-pointer hover:bg-hover", selected.has(row.id) && "bg-accent/5")}
+                  className={cn(
+                    "hover:bg-hover cursor-pointer",
+                    selected.has(row.id) && "bg-accent/5",
+                  )}
                 >
                   <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
                     {writable && (
@@ -188,39 +277,79 @@ function TitlesTable() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 font-medium">
                           <span className="truncate">{row.title}</span>
-                          {row.is_featured && <Star className="size-3 fill-amber-400 text-amber-400" aria-label="Featured" />}
+                          {row.is_featured && (
+                            <Star
+                              className="size-3 fill-amber-400 text-amber-400"
+                              aria-label="Featured"
+                            />
+                          )}
                         </div>
-                        <div className="text-[12px] text-muted">
-                          {row.type === "series" ? `Series · ${row.season_count} season${row.season_count === 1 ? "" : "s"} · ${row.episode_count} ep` : "Movie"}
+                        <div className="text-muted text-[12px]">
+                          {row.type === "series"
+                            ? `Series · ${row.season_count} season${row.season_count === 1 ? "" : "s"} · ${row.episode_count} ep`
+                            : "Movie"}
                           {row.year ? ` · ${row.year}` : ""}
                           {row.maturity_rating ? ` · ${row.maturity_rating}` : ""}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-2 py-2"><StatusChip status={row.status} /></td>
-                  <td className="px-2 py-2"><TranslationChip value={row.translation_status} /></td>
-                  <td className="px-2 py-2">{row.type === "movie" ? <VideoChip status={row.video_status} /> : <span className="text-subtle">episodes</span>}</td>
-                  <td className="max-w-48 truncate px-2 py-2 text-muted">{row.genres.map((g) => g.name).join(", ") || "—"}</td>
-                  <td className="tabular px-3 py-2 text-right text-[12px] text-muted">{new Date(row.updated_at).toLocaleDateString()}</td>
+                  <td className="px-2 py-2">
+                    <StatusChip status={row.status} />
+                  </td>
+                  <td className="px-2 py-2">
+                    <TranslationChip value={row.translation_status} />
+                  </td>
+                  <td className="px-2 py-2">
+                    {row.type === "movie" ? (
+                      <VideoChip status={row.video_status} />
+                    ) : (
+                      <span className="text-subtle">episodes</span>
+                    )}
+                  </td>
+                  <td className="text-muted max-w-48 truncate px-2 py-2">
+                    {row.genres.map((g) => g.name).join(", ") || "—"}
+                  </td>
+                  <td className="tabular text-muted px-3 py-2 text-right text-[12px]">
+                    {new Date(row.updated_at).toLocaleDateString()}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
         {!list.isPending && rows.length === 0 && (
-          <Empty icon={<Clapperboard className="size-8" />} title={hasFilters ? "No titles match these filters" : "No titles yet"}>
-            {hasFilters ? "Try clearing a filter." : "Create your first movie or series to get started."}
+          <Empty
+            icon={<Clapperboard className="size-8" />}
+            title={hasFilters ? "No titles match these filters" : "No titles yet"}
+          >
+            {hasFilters
+              ? "Try clearing a filter."
+              : "Create your first movie or series to get started."}
           </Empty>
         )}
         {pages > 1 && (
-          <div className="flex items-center justify-between border-t border-line px-3 py-2 text-[12.5px] text-muted">
-            <span className="tabular">Page {filters.page} of {pages}</span>
+          <div className="border-line text-muted flex items-center justify-between border-t px-3 py-2 text-[12.5px]">
+            <span className="tabular">
+              Page {filters.page} of {pages}
+            </span>
             <div className="flex gap-1">
-              <Button size="sm" variant="ghost" disabled={filters.page <= 1} onClick={() => setFilters((f) => ({ ...f, page: f.page - 1 }))} aria-label="Previous page">
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={filters.page <= 1}
+                onClick={() => setFilters((f) => ({ ...f, page: f.page - 1 }))}
+                aria-label="Previous page"
+              >
                 <ChevronLeft className="size-4" />
               </Button>
-              <Button size="sm" variant="ghost" disabled={filters.page >= pages} onClick={() => setFilters((f) => ({ ...f, page: f.page + 1 }))} aria-label="Next page">
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={filters.page >= pages}
+                onClick={() => setFilters((f) => ({ ...f, page: f.page + 1 }))}
+                aria-label="Next page"
+              >
                 <ChevronRight className="size-4" />
               </Button>
             </div>
@@ -234,15 +363,32 @@ function TitlesTable() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 20, opacity: 0 }}
-            className="fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-line bg-panel p-1.5 pl-4 shadow-2xl"
+            className="border-line bg-panel fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-xl border p-1.5 pl-4 shadow-2xl"
           >
-            <span className="mr-2 text-[13px] font-medium tabular">{selected.size} selected</span>
-            <Button size="sm" variant="primary" loading={bulk.isPending} onClick={() => bulk.mutate("publish")}><Upload className="size-3.5" /> Publish</Button>
-            <Button size="sm" onClick={() => bulk.mutate("feature")}><Star className="size-3.5" /> Feature</Button>
-            <Button size="sm" onClick={() => bulk.mutate("unfeature")}>Unfeature</Button>
-            <Button size="sm" onClick={() => bulk.mutate("draft")}>Move to draft</Button>
-            <Button size="sm" onClick={() => bulk.mutate("archive")}><Archive className="size-3.5" /> Archive</Button>
-            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Cancel</Button>
+            <span className="tabular mr-2 text-[13px] font-medium">{selected.size} selected</span>
+            <Button
+              size="sm"
+              variant="primary"
+              loading={bulk.isPending}
+              onClick={() => bulk.mutate("publish")}
+            >
+              <Upload className="size-3.5" /> Publish
+            </Button>
+            <Button size="sm" onClick={() => bulk.mutate("feature")}>
+              <Star className="size-3.5" /> Feature
+            </Button>
+            <Button size="sm" onClick={() => bulk.mutate("unfeature")}>
+              Unfeature
+            </Button>
+            <Button size="sm" onClick={() => bulk.mutate("draft")}>
+              Move to draft
+            </Button>
+            <Button size="sm" onClick={() => bulk.mutate("archive")}>
+              <Archive className="size-3.5" /> Archive
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
+              Cancel
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>

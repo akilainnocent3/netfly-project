@@ -48,6 +48,36 @@ Ambiguities in the build brief, the option chosen, and why.
     signed S3/CDN URL. This keeps buckets private (S3 Block Public Access stays on) and needs no
     build-time image domain configuration, because the domain is DB config.
 
+## Product & UX
+
+13. **Admin tables use page numbers; viewer feeds use cursors.** Staff need totals and page jumps; viewers get
+    opaque cursors (`browse/home`, genre grids).
+14. **"Create title" is an explicit action** (Enter/button), not auto-submit — it creates a record. Search,
+    filters and settings fields auto-apply / save on blur as specified; the title editor autosaves every 1.5 s.
+15. **Cards are 16:9 backdrops with logo art**; Top 10 uses 2:3 posters next to the numerals.
+16. **Hover previews and the hero play the trailer, or a 720p-capped slice of the title** starting at 15 % when no
+    trailer exists; disabled by the viewer's "Autoplay previews", `prefers-reduced-motion` and Save-Data.
+17. **Completion follows the latest position** (≥ `playback.completed_ratio`); rewatching reopens a title.
+    Only *finishing* something busts the recommendation cache — routine progress saves don't.
+18. **"Because you liked X" needs ≥ 2 candidates** so small catalogs still get the row.
+19. **Search logs collapse typing**: consecutive prefixes / typo corrections within 30 s update one row.
+20. **The viewer's translation mode is resolved server-side from a cookie** (then URL → local storage →
+    account → default on the client) so the hero renders in the right mode on first paint.
+21. **Upload resume after refresh** works by re-selecting the same file: the fingerprint (name+size+mtime)
+    finds the open multipart upload and only missing parts are sent. Browsers can't reopen a file by
+    themselves, so the UI says "Select <file> again to resume".
+22. **Charts** use one hue per measure and never dual axes (startup time and rebuffers are separate charts).
+
+## Status at hand-off
+
+* **Performance:** Lighthouse mobile (simulated 4G) on the signed-in home page measured **83–87 performance,
+  100 accessibility, 96 best practices, CLS 0**, on a 2-vCPU sandbox shared with the API, both apps and Chrome.
+  Unthrottled LCP is ~0.2 s. The ≥ 90 target is **not yet confirmed**; the remaining cost is JS before first
+  paint (~230 KB). Next steps: measure on dedicated hardware, split TanStack Query/Radix out of the
+  first-paint path further, and server-render the first rows.
+* **Playback end-to-end** is covered by backend tests (real FFmpeg transcode on mocked S3, signed playlists)
+  and Playwright specs that run once media exists; they skip until S3 is configured.
+
 ## Local development (this repository's sandbox)
 
 12. The sandbox used to build this project blocks container-to-container traffic on Docker bridge networks,

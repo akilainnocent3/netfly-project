@@ -4,7 +4,8 @@ import { api } from "../api";
 type ProgressBody = Schemas["ProgressBatchRequest"];
 type EventsBody = Schemas["EventBatchRequest"];
 
-type EventKind = "start" | "play" | "pause" | "seek" | "quality" | "rebuffer" | "complete" | "error" | "heartbeat";
+type EventKind =
+  "start" | "play" | "pause" | "seek" | "quality" | "rebuffer" | "complete" | "error" | "heartbeat";
 
 type PendingEvent = EventsBody["events"][number] & { kind: EventKind };
 
@@ -22,7 +23,13 @@ export class PlaybackTracker {
   private lastSaved = -1;
 
   constructor(
-    private readonly ctx: { sessionId: string; titleId: number; episodeId: number | null; progressEvery: number; flushEvery: number },
+    private readonly ctx: {
+      sessionId: string;
+      titleId: number;
+      episodeId: number | null;
+      progressEvery: number;
+      flushEvery: number;
+    },
     private readonly video: HTMLVideoElement,
     private readonly bitrate: () => number,
   ) {}
@@ -47,7 +54,10 @@ export class PlaybackTracker {
     this.lastTick = now;
   }
 
-  track(kind: EventKind, extra: { value?: number | null; data?: Record<string, unknown> } = {}): void {
+  track(
+    kind: EventKind,
+    extra: { value?: number | null; data?: Record<string, unknown> } = {},
+  ): void {
     this.events.push({
       session_id: this.ctx.sessionId,
       kind,
@@ -68,7 +78,11 @@ export class PlaybackTracker {
     const watched = Math.min(3600, this.watched);
     this.watched = 0;
     this.lastSaved = position;
-    const body: ProgressBody = { updates: [{ title_id: this.ctx.titleId, episode_id: this.ctx.episodeId, position, duration, watched }] };
+    const body: ProgressBody = {
+      updates: [
+        { title_id: this.ctx.titleId, episode_id: this.ctx.episodeId, position, duration, watched },
+      ],
+    };
     try {
       if (keepalive) await this.beacon("/api/v1/playback/progress", body);
       else await api.POST("/api/v1/playback/progress", { body });
@@ -94,7 +108,10 @@ export class PlaybackTracker {
     await fetch(path, {
       method: "POST",
       keepalive: true,
-      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify(body),
     });
   }

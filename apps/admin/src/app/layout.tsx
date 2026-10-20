@@ -11,20 +11,35 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "sw
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getPublicConfig();
-  const name = typeof config["branding.site_name"] === "string" ? config["branding.site_name"] : "NETFLY";
-  return { title: { default: `${name} Studio`, template: `%s · ${name} Studio` }, robots: { index: false } };
+  const name =
+    typeof config["branding.site_name"] === "string" ? config["branding.site_name"] : "NETFLY";
+  return {
+    title: { default: `${name} Studio`, template: `%s · ${name} Studio` },
+    robots: { index: false },
+  };
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [config, nonce] = await Promise.all([getPublicConfig(), headers().then((h) => h.get("x-nonce") ?? undefined)]);
+  const [config, nonce] = await Promise.all([
+    getPublicConfig(),
+    headers().then((h) => h.get("x-nonce") ?? undefined),
+  ]);
   const vars = themeVariables(config, "branding.admin_accent_color");
-  const style = { "--accent": vars["--accent"], "--accent-rgb": vars["--accent-rgb"], "--accent-fg": vars["--accent-fg"] } as React.CSSProperties;
+  const style = {
+    "--accent": vars["--accent"],
+    "--accent-rgb": vars["--accent-rgb"],
+    "--accent-fg": vars["--accent-fg"],
+  } as React.CSSProperties;
   return (
     <html lang="en" className={inter.variable} style={style} suppressHydrationWarning>
       <head>
-        <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script
+          nonce={nonce}
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }}
+        />
       </head>
-      <body className="bg-bg font-sans text-fg">
+      <body className="bg-bg text-fg font-sans">
         <Providers config={config}>{children}</Providers>
       </body>
     </html>

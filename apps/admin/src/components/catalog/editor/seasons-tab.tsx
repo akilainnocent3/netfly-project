@@ -2,8 +2,22 @@
 
 import { ApiError, unwrap } from "@netfly/api-client";
 import { cn } from "@netfly/ui";
-import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
-import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, GripVertical, ListVideo, Plus, Trash2 } from "lucide-react";
@@ -38,16 +52,24 @@ export function SeasonsTab({
   const toast = useToast();
   const queryClient = useQueryClient();
   const key = ["seasons", titleId];
-  const seasons = useQuery({ queryKey: key, queryFn: () => unwrap(api.GET("/api/v1/admin/titles/{id}/seasons", { params: { path: { id: titleId } } })) });
+  const seasons = useQuery({
+    queryKey: key,
+    queryFn: () =>
+      unwrap(api.GET("/api/v1/admin/titles/{id}/seasons", { params: { path: { id: titleId } } })),
+  });
   const [activeId, setActiveId] = useState<number | null>(null);
   const refresh = () => void queryClient.invalidateQueries({ queryKey: key });
 
   useEffect(() => {
-    if (seasons.data?.length && !seasons.data.some((s) => s.id === activeId)) setActiveId(seasons.data[0]!.id);
+    if (seasons.data?.length && !seasons.data.some((s) => s.id === activeId))
+      setActiveId(seasons.data[0]!.id);
   }, [seasons.data, activeId]);
 
   const addSeason = useMutation({
-    mutationFn: () => unwrap(api.POST("/api/v1/admin/seasons", { params: { query: { title: titleId } }, body: {} })),
+    mutationFn: () =>
+      unwrap(
+        api.POST("/api/v1/admin/seasons", { params: { query: { title: titleId } }, body: {} }),
+      ),
     onSuccess: (season) => {
       setActiveId(season.id);
       refresh();
@@ -55,7 +77,8 @@ export function SeasonsTab({
     onError: (e) => toast(e instanceof ApiError ? e.message : "Couldn't add season", "error"),
   });
   const deleteSeason = useMutation({
-    mutationFn: (id: number) => unwrap(api.DELETE("/api/v1/admin/seasons/{id}", { params: { path: { id } } })),
+    mutationFn: (id: number) =>
+      unwrap(api.DELETE("/api/v1/admin/seasons/{id}", { params: { path: { id } } })),
     onSuccess: refresh,
   });
 
@@ -71,16 +94,25 @@ export function SeasonsTab({
               <button
                 type="button"
                 onClick={() => setActiveId(season.id)}
-                className={cn("flex h-9 w-full items-center justify-between rounded-md px-2.5 text-left", season.id === activeId ? "bg-hover font-medium" : "text-muted hover:bg-hover")}
+                className={cn(
+                  "flex h-9 w-full items-center justify-between rounded-md px-2.5 text-left",
+                  season.id === activeId ? "bg-hover font-medium" : "text-muted hover:bg-hover",
+                )}
               >
                 <span>{season.name || `Season ${season.number}`}</span>
-                <span className="tabular text-[12px] text-subtle">{season.episodes.length} ep</span>
+                <span className="tabular text-subtle text-[12px]">{season.episodes.length} ep</span>
               </button>
             </li>
           ))}
         </ul>
         {!readOnly && (
-          <Button className="mt-1 w-full" variant="ghost" size="sm" loading={addSeason.isPending} onClick={() => addSeason.mutate()}>
+          <Button
+            className="mt-1 w-full"
+            variant="ghost"
+            size="sm"
+            loading={addSeason.isPending}
+            onClick={() => addSeason.mutate()}
+          >
             <Plus className="size-3.5" /> Add season
           </Button>
         )}
@@ -92,7 +124,12 @@ export function SeasonsTab({
           readOnly={readOnly}
           refresh={refresh}
           onDelete={() => {
-            if (active.episodes.length === 0 || window.confirm(`Delete ${active.name || `Season ${active.number}`} and its ${active.episodes.length} episodes?`)) {
+            if (
+              active.episodes.length === 0 ||
+              window.confirm(
+                `Delete ${active.name || `Season ${active.number}`} and its ${active.episodes.length} episodes?`,
+              )
+            ) {
               deleteSeason.mutate(active.id);
             }
           }}
@@ -100,7 +137,11 @@ export function SeasonsTab({
           tools={renderSeasonTools?.(active, refresh)}
         />
       ) : (
-        <Card><Empty icon={<ListVideo className="size-7" />} title="No seasons yet">Add the first season to start adding episodes.</Empty></Card>
+        <Card>
+          <Empty icon={<ListVideo className="size-7" />} title="No seasons yet">
+            Add the first season to start adding episodes.
+          </Empty>
+        </Card>
       )}
     </div>
   );
@@ -124,17 +165,28 @@ function SeasonPanel({
   const toast = useToast();
   const [order, setOrder] = useState(season.episodes.map((e) => e.id));
   const [open, setOpen] = useState<number | null>(null);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
   useEffect(() => setOrder(season.episodes.map((e) => e.id)), [season.episodes]);
   const byId = new Map(season.episodes.map((e) => [e.id, e]));
 
   const saveSeason = async (patch: { name?: string; synopsis?: string }) => {
-    await unwrap(api.PATCH("/api/v1/admin/seasons/{id}", { params: { path: { id: season.id } }, body: patch }));
+    await unwrap(
+      api.PATCH("/api/v1/admin/seasons/{id}", { params: { path: { id: season.id } }, body: patch }),
+    );
     toast("Saved");
     refresh();
   };
   const addEpisode = useMutation({
-    mutationFn: () => unwrap(api.POST("/api/v1/admin/seasons/{id}/episodes", { params: { path: { id: season.id } }, body: { name: `Episode ${season.episodes.length + 1}` } })),
+    mutationFn: () =>
+      unwrap(
+        api.POST("/api/v1/admin/seasons/{id}/episodes", {
+          params: { path: { id: season.id } },
+          body: { name: `Episode ${season.episodes.length + 1}` },
+        }),
+      ),
     onSuccess: (ep) => {
       setOpen(ep.id);
       refresh();
@@ -146,7 +198,12 @@ function SeasonPanel({
     const next = arrayMove(order, order.indexOf(Number(active.id)), order.indexOf(Number(over.id)));
     setOrder(next);
     try {
-      await unwrap(api.POST("/api/v1/admin/seasons/{id}/reorder-episodes", { params: { path: { id: season.id } }, body: { ids: next } }));
+      await unwrap(
+        api.POST("/api/v1/admin/seasons/{id}/reorder-episodes", {
+          params: { path: { id: season.id } },
+          body: { ids: next },
+        }),
+      );
       toast("Episodes renumbered");
       refresh();
     } catch (e) {
@@ -159,13 +216,40 @@ function SeasonPanel({
     <div className="space-y-4">
       <Card className="grid gap-4 p-4 sm:grid-cols-[1fr_120px]">
         <div className="space-y-3">
-          <Input defaultValue={season.name ?? ""} placeholder={`Season ${season.number}`} disabled={readOnly} aria-label="Season name" onBlur={(e) => e.target.value !== (season.name ?? "") && void saveSeason({ name: e.target.value })} />
-          <Textarea rows={2} defaultValue={season.synopsis ?? ""} placeholder="Season synopsis (optional)" disabled={readOnly} aria-label="Season synopsis" onBlur={(e) => e.target.value !== (season.synopsis ?? "") && void saveSeason({ synopsis: e.target.value })} />
+          <Input
+            defaultValue={season.name ?? ""}
+            placeholder={`Season ${season.number}`}
+            disabled={readOnly}
+            aria-label="Season name"
+            onBlur={(e) =>
+              e.target.value !== (season.name ?? "") && void saveSeason({ name: e.target.value })
+            }
+          />
+          <Textarea
+            rows={2}
+            defaultValue={season.synopsis ?? ""}
+            placeholder="Season synopsis (optional)"
+            disabled={readOnly}
+            aria-label="Season synopsis"
+            onBlur={(e) =>
+              e.target.value !== (season.synopsis ?? "") &&
+              void saveSeason({ synopsis: e.target.value })
+            }
+          />
           {!readOnly && (
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="primary" loading={addEpisode.isPending} onClick={() => addEpisode.mutate()}><Plus className="size-3.5" /> Add episode</Button>
+              <Button
+                size="sm"
+                variant="primary"
+                loading={addEpisode.isPending}
+                onClick={() => addEpisode.mutate()}
+              >
+                <Plus className="size-3.5" /> Add episode
+              </Button>
               {tools}
-              <Button size="sm" variant="ghost" onClick={onDelete}><Trash2 className="size-3.5" /> Delete season</Button>
+              <Button size="sm" variant="ghost" onClick={onDelete}>
+                <Trash2 className="size-3.5" /> Delete season
+              </Button>
             </div>
           )}
         </div>
@@ -175,18 +259,29 @@ function SeasonPanel({
           image={season.poster}
           disabled={readOnly}
           onAttach={async (id) => {
-            await unwrap(api.PATCH("/api/v1/admin/seasons/{id}", { params: { path: { id: season.id } }, body: { poster_id: id } }));
+            await unwrap(
+              api.PATCH("/api/v1/admin/seasons/{id}", {
+                params: { path: { id: season.id } },
+                body: { poster_id: id },
+              }),
+            );
             refresh();
           }}
         />
       </Card>
       <Card>
         {order.length === 0 ? (
-          <Empty icon={<ListVideo className="size-7" />} title="No episodes in this season">Add episodes one by one, or bulk-upload video files from the Video tab.</Empty>
+          <Empty icon={<ListVideo className="size-7" />} title="No episodes in this season">
+            Add episodes one by one, or bulk-upload video files from the Video tab.
+          </Empty>
         ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => void onDragEnd(e)}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={(e) => void onDragEnd(e)}
+          >
             <SortableContext items={order} strategy={verticalListSortingStrategy}>
-              <ul className="divide-y divide-line">
+              <ul className="divide-line divide-y">
                 {order.map((id, index) => {
                   const episode = byId.get(id);
                   return episode ? (
@@ -229,10 +324,18 @@ function EpisodeRow({
   renderVideo?: EpisodeVideoRenderer;
 }) {
   const toast = useToast();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: episode.id, disabled: readOnly });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: episode.id,
+    disabled: readOnly,
+  });
   const save = async (patch: Record<string, unknown>) => {
     try {
-      await unwrap(api.PATCH("/api/v1/admin/episodes/{id}", { params: { path: { id: episode.id } }, body: patch }));
+      await unwrap(
+        api.PATCH("/api/v1/admin/episodes/{id}", {
+          params: { path: { id: episode.id } },
+          body: patch,
+        }),
+      );
       toast("Saved");
       refresh();
     } catch (e) {
@@ -241,38 +344,94 @@ function EpisodeRow({
   };
   const remove = async () => {
     if (!window.confirm(`Delete episode ${episode.number} “${episode.name}”?`)) return;
-    await unwrap(api.DELETE("/api/v1/admin/episodes/{id}", { params: { path: { id: episode.id } } }));
+    await unwrap(
+      api.DELETE("/api/v1/admin/episodes/{id}", { params: { path: { id: episode.id } } }),
+    );
     refresh();
   };
 
   return (
-    <li ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }} className={cn("bg-panel", isDragging && "relative z-10 shadow-lg")}>
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={cn("bg-panel", isDragging && "relative z-10 shadow-lg")}
+    >
       <div className="flex items-center gap-2 px-2 py-2">
         {!readOnly && (
-          <button type="button" className="cursor-grab touch-none rounded p-1 text-subtle hover:text-fg active:cursor-grabbing" aria-label={`Drag to reorder episode ${displayNumber}`} {...attributes} {...listeners}>
+          <button
+            type="button"
+            className="text-subtle hover:text-fg cursor-grab touch-none rounded p-1 active:cursor-grabbing"
+            aria-label={`Drag to reorder episode ${displayNumber}`}
+            {...attributes}
+            {...listeners}
+          >
             <GripVertical className="size-4" />
           </button>
         )}
-        <span className="w-6 text-center tabular text-[12.5px] text-muted">{displayNumber}</span>
-        <button type="button" onClick={onToggle} className="flex min-w-0 flex-1 items-center gap-2 text-left" aria-expanded={open}>
-          {open ? <ChevronDown className="size-3.5 text-subtle" /> : <ChevronRight className="size-3.5 text-subtle" />}
+        <span className="tabular text-muted w-6 text-center text-[12.5px]">{displayNumber}</span>
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+          aria-expanded={open}
+        >
+          {open ? (
+            <ChevronDown className="text-subtle size-3.5" />
+          ) : (
+            <ChevronRight className="text-subtle size-3.5" />
+          )}
           <span className="truncate font-medium">{episode.name}</span>
-          {episode.runtime_minutes ? <span className="text-[12px] text-subtle">{episode.runtime_minutes}m</span> : null}
+          {episode.runtime_minutes ? (
+            <span className="text-subtle text-[12px]">{episode.runtime_minutes}m</span>
+          ) : null}
         </button>
         <VideoChip status={episode.video?.status} />
       </div>
       {open && (
-        <div className="grid gap-4 border-t border-line bg-raised/40 p-4 md:grid-cols-[1fr_220px]">
+        <div className="border-line bg-raised/40 grid gap-4 border-t p-4 md:grid-cols-[1fr_220px]">
           <fieldset disabled={readOnly} className="space-y-3">
             <div className="grid grid-cols-[1fr_100px] gap-3">
-              <Input defaultValue={episode.name} aria-label="Episode name" onBlur={(e) => e.target.value !== episode.name && void save({ name: e.target.value })} />
-              <Input type="number" defaultValue={episode.runtime_minutes ?? ""} placeholder="min" aria-label="Runtime minutes" onBlur={(e) => void save({ runtime_minutes: e.target.value ? Number(e.target.value) : null })} />
+              <Input
+                defaultValue={episode.name}
+                aria-label="Episode name"
+                onBlur={(e) =>
+                  e.target.value !== episode.name && void save({ name: e.target.value })
+                }
+              />
+              <Input
+                type="number"
+                defaultValue={episode.runtime_minutes ?? ""}
+                placeholder="min"
+                aria-label="Runtime minutes"
+                onBlur={(e) =>
+                  void save({ runtime_minutes: e.target.value ? Number(e.target.value) : null })
+                }
+              />
             </div>
-            <Textarea rows={3} defaultValue={episode.synopsis ?? ""} placeholder="Episode synopsis" aria-label="Episode synopsis" onBlur={(e) => e.target.value !== (episode.synopsis ?? "") && void save({ synopsis: e.target.value })} />
+            <Textarea
+              rows={3}
+              defaultValue={episode.synopsis ?? ""}
+              placeholder="Episode synopsis"
+              aria-label="Episode synopsis"
+              onBlur={(e) =>
+                e.target.value !== (episode.synopsis ?? "") &&
+                void save({ synopsis: e.target.value })
+              }
+            />
             {renderVideo?.({ episode, readOnly, onChanged: refresh })}
-            {!readOnly && <Button size="sm" variant="ghost" onClick={() => void remove()}><Trash2 className="size-3.5" /> Delete episode</Button>}
+            {!readOnly && (
+              <Button size="sm" variant="ghost" onClick={() => void remove()}>
+                <Trash2 className="size-3.5" /> Delete episode
+              </Button>
+            )}
           </fieldset>
-          <ImageSlot kind="thumbnail" label="Thumbnail" image={episode.thumbnail} disabled={readOnly} onAttach={(id) => save({ thumbnail_id: id })} />
+          <ImageSlot
+            kind="thumbnail"
+            label="Thumbnail"
+            image={episode.thumbnail}
+            disabled={readOnly}
+            onAttach={(id) => save({ thumbnail_id: id })}
+          />
         </div>
       )}
     </li>

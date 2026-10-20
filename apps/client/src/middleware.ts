@@ -65,5 +65,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [{ source: "/((?!api|_next/static|_next/image|favicon|icons).*)", missing: [{ type: "header", key: "next-router-prefetch" }] }],
+  matcher: [
+    {
+      source: "/((?!api|_next/static|_next/image|favicon|icons).*)",
+      missing: [{ type: "header", key: "next-router-prefetch" }],
+    },
+  ],
 };

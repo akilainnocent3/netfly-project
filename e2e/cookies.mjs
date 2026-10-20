@@ -1,0 +1,13 @@
+import { chromium } from "@playwright/test";
+const browser = await chromium.launch();
+const page = await browser.newPage();
+const name = `lh_${Date.now().toString(36)}`;
+await page.goto("http://localhost:3000/signup");
+await page.locator("input[name=username]").pressSequentially(name, { delay: 5 });
+await page.locator("input[name=name]").fill("LH");
+await page.waitForTimeout(700);
+await page.locator("input[name=password]").pressSequentially("stream-all-night-42", { delay: 5 });
+await page.waitForURL("**/browse**");
+const cookies = await page.context().cookies();
+console.log(cookies.map((c) => `${c.name}=${c.value}`).join("; "));
+await browser.close();

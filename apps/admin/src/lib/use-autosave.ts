@@ -36,7 +36,12 @@ export function useAutosave<T extends Record<string, unknown>>(
       setState(Object.keys(pending.current).length ? "dirty" : "saved");
     } catch (error) {
       const fields = error instanceof ApiError ? error.fields : {};
-      setErrors((e) => ({ ...e, ...(Object.keys(fields).length ? fields : { form: error instanceof Error ? error.message : "Save failed" }) }));
+      setErrors((e) => ({
+        ...e,
+        ...(Object.keys(fields).length
+          ? fields
+          : { form: error instanceof Error ? error.message : "Save failed" }),
+      }));
       setState("error");
     }
   }, []);

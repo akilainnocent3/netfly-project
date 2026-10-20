@@ -41,16 +41,24 @@ function LoginForm() {
 
   const name = config.str("branding.site_name", "NETFLY");
   return (
-    <main className="grid min-h-dvh place-items-center bg-bg px-4">
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-[360px]">
+    <main className="bg-bg grid min-h-dvh place-items-center px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-[360px]"
+      >
         <div className="mb-6 flex items-center gap-2">
-          <span className="grid size-7 place-items-center rounded-md bg-accent text-[12px] font-black text-accent-fg">{name.slice(0, 1)}</span>
+          <span className="bg-accent text-accent-fg grid size-7 place-items-center rounded-md text-[12px] font-black">
+            {name.slice(0, 1)}
+          </span>
           <span className="text-[15px] font-semibold">{name} Studio</span>
         </div>
-        <div className="relative overflow-hidden rounded-xl border border-line bg-panel p-6 shadow-sm">
-          {status === "submitting" && <div className="absolute inset-x-0 top-0 h-0.5 animate-pulse bg-accent" />}
+        <div className="border-line bg-panel relative overflow-hidden rounded-xl border p-6 shadow-sm">
+          {status === "submitting" && (
+            <div className="bg-accent absolute inset-x-0 top-0 h-0.5 animate-pulse" />
+          )}
           <h1 className="text-[17px] font-semibold">Sign in to the studio</h1>
-          <p className="mt-1 text-[13px] text-muted">Staff accounts only.</p>
+          <p className="text-muted mt-1 text-[13px]">Staff accounts only.</p>
           <form
             noValidate
             className="mt-5 space-y-3.5"
@@ -61,7 +69,14 @@ function LoginForm() {
           >
             <div>
               <Label htmlFor="username">Username</Label>
-              <Input id="username" name="username" autoComplete="username" autoFocus value={username} onChange={(e) => setUsername(e.target.value.trim())} />
+              <Input
+                id="username"
+                name="username"
+                autoComplete="username"
+                autoFocus
+                value={username}
+                onChange={(e) => setUsername(e.target.value.trim())}
+              />
             </div>
             <div>
               <Label htmlFor="password">Password</Label>
@@ -77,13 +92,26 @@ function LoginForm() {
                   setError("");
                 }}
               />
-              {error && <p role="alert" className="mt-1.5 text-[12.5px] text-red-500">{error}</p>}
+              {error && (
+                <p role="alert" className="mt-1.5 text-[12.5px] text-red-500">
+                  {error}
+                </p>
+              )}
             </div>
             <div className="flex items-center justify-between pt-1">
-              <span className="text-[12px] text-subtle" aria-live="polite">
-                {status === "submitting" ? "Signing in…" : status === "waiting" ? "Continuing…" : ""}
+              <span className="text-subtle text-[12px]" aria-live="polite">
+                {status === "submitting"
+                  ? "Signing in…"
+                  : status === "waiting"
+                    ? "Continuing…"
+                    : ""}
               </span>
-              <Button type="submit" size="sm" variant={isValid ? "primary" : "secondary"} loading={status === "submitting"}>
+              <Button
+                type="submit"
+                size="sm"
+                variant={isValid ? "primary" : "secondary"}
+                loading={status === "submitting"}
+              >
                 Sign in
               </Button>
             </div>

@@ -35,7 +35,8 @@ services:
   migrate:
     <<: *backend
     restart: "no"
-    command: sh -c "python manage.py migrate --noinput && python manage.py seed_config && python manage.py seed_demo"
+    # Local only: creates superadmin "admin" (password below) and the demo catalog (media needs S3 configured in Settings).
+    command: sh -c "python manage.py migrate --noinput && python manage.py seed_config && python manage.py seed_demo --admin-password ${NETFLY_DEV_ADMIN_PASSWORD:-netfly-dev-admin}"
 
   backend:
     <<: *backend

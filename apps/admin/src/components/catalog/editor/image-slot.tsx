@@ -13,7 +13,13 @@ import { api } from "@/lib/api";
 import type { AdminImage } from "@/lib/types";
 
 type Kind = "poster" | "backdrop" | "logo" | "thumbnail" | "artwork";
-const ASPECT: Record<Kind, number | undefined> = { poster: 2 / 3, backdrop: 16 / 9, thumbnail: 16 / 9, artwork: 16 / 9, logo: undefined };
+const ASPECT: Record<Kind, number | undefined> = {
+  poster: 2 / 3,
+  backdrop: 16 / 9,
+  thumbnail: 16 / 9,
+  artwork: 16 / 9,
+  logo: undefined,
+};
 
 export async function uploadImage(file: File, kind: Kind): Promise<AdminImage> {
   return unwrap(
@@ -41,8 +47,23 @@ export function useImage(id: string | null | undefined, initial?: AdminImage | n
 }
 
 /** Shows the crop of `image` (from the original) exactly as the variants will render it. */
-export function CropPreview({ image, className, children, label }: { image: AdminImage; className?: string; children?: React.ReactNode; label?: string }) {
-  const c = (image.crop ?? { x: 0, y: 0, w: 1, h: 1 }) as { x: number; y: number; w: number; h: number };
+export function CropPreview({
+  image,
+  className,
+  children,
+  label,
+}: {
+  image: AdminImage;
+  className?: string;
+  children?: React.ReactNode;
+  label?: string;
+}) {
+  const c = (image.crop ?? { x: 0, y: 0, w: 1, h: 1 }) as {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  };
   const style: React.CSSProperties = image.original_url
     ? {
         backgroundImage: `url("${image.original_url}")`,
@@ -52,7 +73,12 @@ export function CropPreview({ image, className, children, label }: { image: Admi
       }
     : {};
   return (
-    <div className={cn("relative overflow-hidden bg-raised bg-no-repeat", className)} style={style} role={label ? "img" : undefined} aria-label={label}>
+    <div
+      className={cn("bg-raised relative overflow-hidden bg-no-repeat", className)}
+      style={style}
+      role={label ? "img" : undefined}
+      aria-label={label}
+    >
       {children}
     </div>
   );
@@ -102,12 +128,13 @@ export function ImageSlot({
     [kind, label, onAttach, queryClient, toast],
   );
 
-  const aspectClass = kind === "poster" ? "aspect-[2/3]" : kind === "logo" ? "aspect-[3/1]" : "aspect-video";
+  const aspectClass =
+    kind === "poster" ? "aspect-[2/3]" : kind === "logo" ? "aspect-[3/1]" : "aspect-video";
   return (
     <div>
       <div className="mb-1.5 flex items-baseline justify-between">
         <span className="text-[12.5px] font-medium">{label}</span>
-        {hint && <span className="text-[11.5px] text-subtle">{hint}</span>}
+        {hint && <span className="text-subtle text-[11.5px]">{hint}</span>}
       </div>
       <div
         onDragOver={(e) => {
@@ -124,7 +151,8 @@ export function ImageSlot({
           "group relative overflow-hidden rounded-lg border border-dashed transition-colors",
           aspectClass,
           dragging ? "border-accent bg-accent/5" : "border-line",
-          kind === "logo" && "bg-[repeating-conic-gradient(var(--a-raised)_0_25%,transparent_0_50%)] bg-[length:16px_16px]",
+          kind === "logo" &&
+            "bg-[repeating-conic-gradient(var(--a-raised)_0_25%,transparent_0_50%)] bg-[length:16px_16px]",
         )}
       >
         {current ? (
@@ -134,7 +162,7 @@ export function ImageSlot({
             type="button"
             disabled={disabled || uploading}
             onClick={() => input.current?.click()}
-            className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-[12.5px] text-muted hover:text-fg"
+            className="text-muted hover:text-fg absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-[12.5px]"
           >
             <ImagePlus className="size-5" />
             Drop or click to upload
@@ -142,49 +170,102 @@ export function ImageSlot({
         )}
         {(uploading || current?.status === "processing") && (
           <div className="absolute inset-0 grid place-items-center bg-black/40 text-[12px] font-medium text-white backdrop-blur-[1px]">
-            <span className="flex items-center gap-1.5"><Loader2 className="size-3.5 animate-spin" /> {uploading ? "Uploading…" : "Rendering sizes…"}</span>
+            <span className="flex items-center gap-1.5">
+              <Loader2 className="size-3.5 animate-spin" />{" "}
+              {uploading ? "Uploading…" : "Rendering sizes…"}
+            </span>
           </div>
         )}
         {current?.status === "failed" && (
-          <div className="absolute inset-x-0 bottom-0 bg-red-600/90 px-2 py-1 text-[11.5px] text-white">Processing failed: {current.error}</div>
-        )}
-        {current && !disabled && (
-          <div className="absolute right-1.5 top-1.5 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-            {ASPECT[kind] && current.status !== "processing" && (
-              <IconButton label="Adjust crop" onClick={() => setCropOpen(true)}><Crop className="size-3.5" /></IconButton>
-            )}
-            <IconButton label="Replace" onClick={() => input.current?.click()}><RefreshCw className="size-3.5" /></IconButton>
-            <IconButton label="Remove" onClick={() => void onAttach(null)}><Trash2 className="size-3.5" /></IconButton>
+          <div className="absolute inset-x-0 bottom-0 bg-red-600/90 px-2 py-1 text-[11.5px] text-white">
+            Processing failed: {current.error}
           </div>
         )}
-        <input ref={input} type="file" accept="image/*" hidden onChange={(e) => void handleFile(e.target.files?.[0])} />
+        {current && !disabled && (
+          <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+            {ASPECT[kind] && current.status !== "processing" && (
+              <IconButton label="Adjust crop" onClick={() => setCropOpen(true)}>
+                <Crop className="size-3.5" />
+              </IconButton>
+            )}
+            <IconButton label="Replace" onClick={() => input.current?.click()}>
+              <RefreshCw className="size-3.5" />
+            </IconButton>
+            <IconButton label="Remove" onClick={() => void onAttach(null)}>
+              <Trash2 className="size-3.5" />
+            </IconButton>
+          </div>
+        )}
+        <input
+          ref={input}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => void handleFile(e.target.files?.[0])}
+        />
       </div>
       {current && (kind === "poster" || kind === "backdrop") && current.status === "ready" && (
         <PlacementPreview kind={kind} image={current} titleText={titleText} />
       )}
       {current && ASPECT[kind] && (
-        <CropDialog open={cropOpen} onOpenChange={setCropOpen} image={current} aspect={ASPECT[kind]!} kind={kind} />
+        <CropDialog
+          open={cropOpen}
+          onOpenChange={setCropOpen}
+          image={current}
+          aspect={ASPECT[kind]!}
+          kind={kind}
+        />
       )}
     </div>
   );
 }
 
-function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
+function IconButton({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
   return (
-    <button type="button" aria-label={label} title={label} onClick={onClick} className="grid size-7 place-items-center rounded-md bg-black/60 text-white backdrop-blur hover:bg-black/80">
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className="grid size-7 place-items-center rounded-md bg-black/60 text-white backdrop-blur hover:bg-black/80"
+    >
       {children}
     </button>
   );
 }
 
 /** How the art will look on a home-row card / in the hero billboard. */
-function PlacementPreview({ kind, image, titleText }: { kind: "poster" | "backdrop"; image: AdminImage; titleText?: string }) {
+function PlacementPreview({
+  kind,
+  image,
+  titleText,
+}: {
+  kind: "poster" | "backdrop";
+  image: AdminImage;
+  titleText?: string;
+}) {
   if (kind === "poster") {
     return (
-      <div className="mt-2 flex items-end gap-1.5 rounded-md bg-[#0b0b0f] p-2" role="img" aria-label="Card preview">
+      <div
+        className="mt-2 flex items-end gap-1.5 rounded-md bg-[#0b0b0f] p-2"
+        role="img"
+        aria-label="Card preview"
+      >
         {[0, 1, 2].map((i) =>
           i === 1 ? (
-            <CropPreview key={i} image={image} className="aspect-[2/3] w-14 rounded ring-1 ring-white/20" />
+            <CropPreview
+              key={i}
+              image={image}
+              className="aspect-[2/3] w-14 rounded ring-1 ring-white/20"
+            />
           ) : (
             <div key={i} className="aspect-[2/3] w-11 rounded bg-white/10" />
           ),
@@ -204,12 +285,26 @@ function PlacementPreview({ kind, image, titleText }: { kind: "poster" | "backdr
           <span className="h-4 w-12 rounded bg-white/30" />
         </div>
       </div>
-      <span className="absolute right-2 top-2 rounded bg-black/50 px-1.5 text-[10px] text-white/70">Hero</span>
+      <span className="absolute top-2 right-2 rounded bg-black/50 px-1.5 text-[10px] text-white/70">
+        Hero
+      </span>
     </CropPreview>
   );
 }
 
-function CropDialog({ open, onOpenChange, image, aspect, kind }: { open: boolean; onOpenChange: (o: boolean) => void; image: AdminImage; aspect: number; kind: Kind }) {
+function CropDialog({
+  open,
+  onOpenChange,
+  image,
+  aspect,
+  kind,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  image: AdminImage;
+  aspect: number;
+  kind: Kind;
+}) {
   const toast = useToast();
   const queryClient = useQueryClient();
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -225,7 +320,9 @@ function CropDialog({ open, onOpenChange, image, aspect, kind }: { open: boolean
       const updated = await unwrap(
         api.PATCH("/api/v1/admin/images/{id}", {
           params: { path: { id: image.id } },
-          body: { crop: { x: area.x / 100, y: area.y / 100, w: area.width / 100, h: area.height / 100 } },
+          body: {
+            crop: { x: area.x / 100, y: area.y / 100, w: area.width / 100, h: area.height / 100 },
+          },
         }),
       );
       queryClient.setQueryData(["image", image.id], updated);
@@ -243,10 +340,12 @@ function CropDialog({ open, onOpenChange, image, aspect, kind }: { open: boolean
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[150] bg-black/60" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-[151] w-[min(900px,94vw)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border border-line bg-panel shadow-2xl">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
+        <Dialog.Content className="border-line bg-panel fixed top-1/2 left-1/2 z-[151] w-[min(900px,94vw)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border shadow-2xl">
+          <div className="border-line flex items-center justify-between border-b px-4 py-3">
             <Dialog.Title className="font-semibold">Adjust {kind} crop</Dialog.Title>
-            <span className="text-[12px] text-muted">{kind === "poster" ? "2:3" : "16:9"} · drag to reposition, scroll to zoom</span>
+            <span className="text-muted text-[12px]">
+              {kind === "poster" ? "2:3" : "16:9"} · drag to reposition, scroll to zoom
+            </span>
           </div>
           <div className="relative h-[60vh] bg-black">
             {image.original_url && (
@@ -258,15 +357,37 @@ function CropDialog({ open, onOpenChange, image, aspect, kind }: { open: boolean
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={(a) => setArea(a)}
-                initialCroppedAreaPercentages={initial ? { x: initial.x * 100, y: initial.y * 100, width: initial.w * 100, height: initial.h * 100 } : undefined}
+                initialCroppedAreaPercentages={
+                  initial
+                    ? {
+                        x: initial.x * 100,
+                        y: initial.y * 100,
+                        width: initial.w * 100,
+                        height: initial.h * 100,
+                      }
+                    : undefined
+                }
                 objectFit="contain"
               />
             )}
           </div>
           <div className="flex items-center gap-3 px-4 py-3">
-            <input type="range" min={1} max={4} step={0.01} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} aria-label="Zoom" className="flex-1 accent-[var(--accent)]" />
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button variant="primary" onClick={() => void save()} loading={saving}>Save crop</Button>
+            <input
+              type="range"
+              min={1}
+              max={4}
+              step={0.01}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              aria-label="Zoom"
+              className="flex-1 accent-[var(--accent)]"
+            />
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={() => void save()} loading={saving}>
+              Save crop
+            </Button>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

@@ -41,18 +41,26 @@ export default function TitleEditorPage({ params }: { params: Promise<{ id: stri
     refetchInterval: (q) => {
       const t = q.state.data;
       const busy = t && [t.poster, t.backdrop, t.logo].some((i) => i?.status === "processing");
-      const video = t && [t.video, t.trailer].some((v) => v && !["ready", "failed"].includes(v.status));
+      const video =
+        t && [t.video, t.trailer].some((v) => v && !["ready", "failed"].includes(v.status));
       return busy || video ? 2000 : false;
     },
   });
 
   // Server data flows into the draft, but local unsaved edits win.
   useEffect(() => {
-    if (title.data) setDraft((d) => (d && d.id === title.data.id ? { ...title.data, ...pendingOverlay(d, title.data) } : title.data));
+    if (title.data)
+      setDraft((d) =>
+        d && d.id === title.data.id
+          ? { ...title.data, ...pendingOverlay(d, title.data) }
+          : title.data,
+      );
   }, [title.data]);
 
   const autosave = useAutosave<Record<string, unknown>>(async (patch) => {
-    const updated = await unwrap(api.PATCH("/api/v1/admin/titles/{id}", { params: { path: { id } }, body: patch }));
+    const updated = await unwrap(
+      api.PATCH("/api/v1/admin/titles/{id}", { params: { path: { id } }, body: patch }),
+    );
     queryClient.setQueryData(["title", id], updated);
     void queryClient.invalidateQueries({ queryKey: ["titles"] });
   });
@@ -61,8 +69,16 @@ export default function TitleEditorPage({ params }: { params: Promise<{ id: stri
     setDraft((d) => (d ? { ...d, ...patch } : d));
     autosave.queue(patch);
   };
-  const attach = async (field: "poster_id" | "backdrop_id" | "logo_id" | "video_id" | "trailer_id", value: string | null) => {
-    const updated = await unwrap(api.PATCH("/api/v1/admin/titles/{id}", { params: { path: { id } }, body: { [field]: value } }));
+  const attach = async (
+    field: "poster_id" | "backdrop_id" | "logo_id" | "video_id" | "trailer_id",
+    value: string | null,
+  ) => {
+    const updated = await unwrap(
+      api.PATCH("/api/v1/admin/titles/{id}", {
+        params: { path: { id } },
+        body: { [field]: value },
+      }),
+    );
     queryClient.setQueryData(["title", id], updated);
   };
 
@@ -77,18 +93,26 @@ export default function TitleEditorPage({ params }: { params: Promise<{ id: stri
   }
   if (title.isError) return <p className="text-red-500">{title.error.message}</p>;
 
-  const clientUrl = config.str("content.client_app_url", "http://localhost:3000").replace(/\/$/, "");
+  const clientUrl = config
+    .str("content.client_app_url", "http://localhost:3000")
+    .replace(/\/$/, "");
   const visibleTabs = TABS.filter((t) => draft.type === "series" || t !== "seasons");
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center gap-4">
-        <Link href="/titles" className="grid size-8 place-items-center rounded-md text-muted hover:bg-hover hover:text-fg" aria-label="Back to titles">
+        <Link
+          href="/titles"
+          className="text-muted hover:bg-hover hover:text-fg grid size-8 place-items-center rounded-md"
+          aria-label="Back to titles"
+        >
           <ArrowLeft className="size-4" />
         </Link>
         <Thumb image={draft.poster} className="w-10" />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[19px] font-semibold tracking-tight">{draft.title || "Untitled"}</h1>
-          <div className="mt-0.5 flex items-center gap-2 text-[12.5px] text-muted">
+          <h1 className="truncate text-[19px] font-semibold tracking-tight">
+            {draft.title || "Untitled"}
+          </h1>
+          <div className="text-muted mt-0.5 flex items-center gap-2 text-[12.5px]">
             <StatusChip status={draft.status ?? "draft"} />
             <TranslationChip value={draft.translation_status} translator={draft.translator_name} />
             <span>{draft.type === "series" ? "Series" : "Movie"}</span>
@@ -96,19 +120,26 @@ export default function TitleEditorPage({ params }: { params: Promise<{ id: stri
         </div>
         <SaveIndicator state={autosave.state} />
         <a href={`${clientUrl}/title/${draft.slug}`} target="_blank" rel="noreferrer">
-          <Button><ExternalLink className="size-3.5" /> Preview as viewer</Button>
+          <Button>
+            <ExternalLink className="size-3.5" /> Preview as viewer
+          </Button>
         </a>
       </div>
 
       <Tabs.Root value={tab} onValueChange={(v) => setTab(v as Tab)}>
-        <Tabs.List className="mb-4 flex gap-1 border-b border-line" aria-label="Title editor sections">
+        <Tabs.List
+          className="border-line mb-4 flex gap-1 border-b"
+          aria-label="Title editor sections"
+        >
           {visibleTabs.map((t) => (
             <Tabs.Trigger
               key={t}
               value={t}
               className={cn(
                 "-mb-px h-9 border-b-2 px-3 text-[13px] capitalize transition-colors",
-                tab === t ? "border-accent font-medium text-fg" : "border-transparent text-muted hover:text-fg",
+                tab === t
+                  ? "border-accent text-fg font-medium"
+                  : "text-muted hover:text-fg border-transparent",
               )}
             >
               {t === "seasons" ? "Seasons & episodes" : t === "related" ? "Related titles" : t}
@@ -120,21 +151,43 @@ export default function TitleEditorPage({ params }: { params: Promise<{ id: stri
             <CircleAlert className="size-4" /> {autosave.errors.form}
           </p>
         )}
-        <Tabs.Content value="details"><DetailsTab draft={draft} onChange={change} errors={autosave.errors} readOnly={readOnly} /></Tabs.Content>
-        <Tabs.Content value="media"><MediaTab title={draft} attach={attach} readOnly={readOnly} /></Tabs.Content>
-        <Tabs.Content value="video"><VideoTab title={draft} attach={attach} readOnly={readOnly} /></Tabs.Content>
+        <Tabs.Content value="details">
+          <DetailsTab
+            draft={draft}
+            onChange={change}
+            errors={autosave.errors}
+            readOnly={readOnly}
+          />
+        </Tabs.Content>
+        <Tabs.Content value="media">
+          <MediaTab title={draft} attach={attach} readOnly={readOnly} />
+        </Tabs.Content>
+        <Tabs.Content value="video">
+          <VideoTab title={draft} attach={attach} readOnly={readOnly} />
+        </Tabs.Content>
         {draft.type === "series" && (
           <Tabs.Content value="seasons">
             <SeasonsTab
               titleId={draft.id}
               readOnly={readOnly}
               renderEpisodeVideo={(props) => <EpisodeVideo {...props} />}
-              renderSeasonTools={(season, refresh) => <BulkEpisodeUpload season={season} onDone={refresh} />}
+              renderSeasonTools={(season, refresh) => (
+                <BulkEpisodeUpload season={season} onDone={refresh} />
+              )}
             />
           </Tabs.Content>
         )}
-        <Tabs.Content value="related"><RelatedTab titleId={draft.id} readOnly={readOnly} /></Tabs.Content>
-        <Tabs.Content value="publishing"><PublishingTab title={draft} onChange={change} errors={autosave.errors} readOnly={readOnly} /></Tabs.Content>
+        <Tabs.Content value="related">
+          <RelatedTab titleId={draft.id} readOnly={readOnly} />
+        </Tabs.Content>
+        <Tabs.Content value="publishing">
+          <PublishingTab
+            title={draft}
+            onChange={change}
+            errors={autosave.errors}
+            readOnly={readOnly}
+          />
+        </Tabs.Content>
       </Tabs.Root>
     </div>
   );
@@ -142,22 +195,38 @@ export default function TitleEditorPage({ params }: { params: Promise<{ id: stri
 
 /** Keep fields the user is editing (typed text) while server refreshes arrive. */
 function pendingOverlay(local: TitleDetail, server: TitleDetail): Partial<TitleDetail> {
-  const keys = ["title", "original_title", "slug", "synopsis", "short_synopsis", "translator_name", "rights_holder"] as const;
+  const keys = [
+    "title",
+    "original_title",
+    "slug",
+    "synopsis",
+    "short_synopsis",
+    "translator_name",
+    "rights_holder",
+  ] as const;
   const overlay: Partial<TitleDetail> = {};
-  for (const key of keys) if (local[key] !== server[key] && document.activeElement?.tagName.match(/INPUT|TEXTAREA/)) Object.assign(overlay, { [key]: local[key] });
+  for (const key of keys)
+    if (local[key] !== server[key] && document.activeElement?.tagName.match(/INPUT|TEXTAREA/))
+      Object.assign(overlay, { [key]: local[key] });
   return overlay;
 }
 
 function SaveIndicator({ state }: { state: SaveState }) {
   if (state === "idle") return null;
   return (
-    <span className="flex items-center gap-1.5 text-[12.5px] text-muted" aria-live="polite">
+    <span className="text-muted flex items-center gap-1.5 text-[12.5px]" aria-live="polite">
       {state === "saving" || state === "dirty" ? (
-        <><Loader2 className="size-3.5 animate-spin" /> Saving…</>
+        <>
+          <Loader2 className="size-3.5 animate-spin" /> Saving…
+        </>
       ) : state === "saved" ? (
-        <><Check className="size-3.5 text-emerald-500" /> Saved</>
+        <>
+          <Check className="size-3.5 text-emerald-500" /> Saved
+        </>
       ) : (
-        <><CircleAlert className="size-3.5 text-red-500" /> Not saved</>
+        <>
+          <CircleAlert className="size-3.5 text-red-500" /> Not saved
+        </>
       )}
     </span>
   );

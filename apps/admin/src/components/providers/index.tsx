@@ -9,9 +9,18 @@ import { ConfigProvider } from "./config";
 import { ThemeProvider } from "./theme";
 import { ToastProvider } from "./toast";
 
-export function Providers({ config, children }: { config: PublicConfig; children: React.ReactNode }) {
+export function Providers({
+  config,
+  children,
+}: {
+  config: PublicConfig;
+  children: React.ReactNode;
+}) {
   const [client] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { staleTime: 15_000, refetchOnWindowFocus: false, retry: 1 } } }),
+    () =>
+      new QueryClient({
+        defaultOptions: { queries: { staleTime: 15_000, refetchOnWindowFocus: false, retry: 1 } },
+      }),
   );
   return (
     <ConfigProvider value={config}>

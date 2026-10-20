@@ -25,7 +25,15 @@ export function parseThumbnails(text: string, base: string): ThumbCue[] {
     const [from, to] = timing.split("-->");
     const [url, frag] = target.split("#xywh=");
     const [x, y, w, h] = (frag ?? "0,0,0,0").split(",").map(Number);
-    cues.push({ start: seconds(from!), end: seconds(to!), url: new URL(url!, base).toString(), x: x!, y: y!, w: w!, h: h! });
+    cues.push({
+      start: seconds(from!),
+      end: seconds(to!),
+      url: new URL(url!, base).toString(),
+      x: x!,
+      y: y!,
+      w: w!,
+      h: h!,
+    });
   }
   return cues;
 }

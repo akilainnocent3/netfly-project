@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 
 interface Toast {
@@ -38,13 +38,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       >
         <AnimatePresence initial={false}>
           {toasts.map((toast) => (
-            <motion.div
+            <m.div
               key={toast.id}
               layout
               initial={{ opacity: 0, y: 16, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.98 }}
-              className="pointer-events-auto flex items-center gap-4 rounded-full border border-line bg-elevated/95 px-5 py-3 text-sm shadow-2xl shadow-black/50 backdrop-blur-xl"
+              className="border-line bg-elevated/95 pointer-events-auto flex items-center gap-4 rounded-full border px-5 py-3 text-sm shadow-2xl shadow-black/50 backdrop-blur-xl"
             >
               {toast.tone === "success" && <span className="text-emerald-400">✓</span>}
               <span>{toast.message}</span>
@@ -55,12 +55,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                     toast.action?.onClick();
                     dismiss(toast.id);
                   }}
-                  className="font-semibold text-accent hover:underline"
+                  className="text-accent font-semibold hover:underline"
                 >
                   {toast.action.label}
                 </button>
               )}
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
       </div>

@@ -4,10 +4,16 @@ import { TitleModal } from "@/components/title/title-modal";
 
 const API = process.env.NETFLY_API_URL ?? "http://localhost:8000";
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { slug } = await params;
   try {
-    const res = await fetch(`${API}/api/v1/titles/${encodeURIComponent(slug)}`, { next: { revalidate: 300 } });
+    const res = await fetch(`${API}/api/v1/titles/${encodeURIComponent(slug)}`, {
+      next: { revalidate: 300 },
+    });
     if (!res.ok) return {};
     const data = (await res.json()) as { title: { title: string; short_synopsis: string } };
     return { title: data.title.title, description: data.title.short_synopsis };

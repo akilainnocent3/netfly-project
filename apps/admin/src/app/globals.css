@@ -44,14 +44,52 @@
   color-scheme: dark;
 }
 
-html { background: var(--a-bg); color: var(--a-fg); -webkit-font-smoothing: antialiased; }
-body { font-size: 13.5px; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 4px; }
-.skeleton { background: linear-gradient(90deg, var(--a-raised), var(--a-hover), var(--a-raised)); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
-@keyframes shimmer { from { background-position: -200% 0 } to { background-position: 200% 0 } }
-.tabular { font-variant-numeric: tabular-nums; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+html {
+  background: var(--a-bg);
+  color: var(--a-fg);
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  font-size: 13.5px;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-radius: 4px;
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--a-raised), var(--a-hover), var(--a-raised));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
 /* Data-viz roles (validated reference palette, slot 1 = blue). */
-:root { --series-1: #2a78d6; --viz-grid: #ececef; --viz-axis: #8a8a94; }
-.dark { --series-1: #3987e5; --viz-grid: #22222a; --viz-axis: #75757f; }
+:root {
+  --series-1: #2a78d6;
+  --viz-grid: #ececef;
+  --viz-axis: #8a8a94;
+}
+.dark {
+  --series-1: #3987e5;
+  --viz-grid: #22222a;
+  --viz-axis: #75757f;
+}

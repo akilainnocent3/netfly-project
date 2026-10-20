@@ -59,7 +59,9 @@ export class MultipartUpload {
     }
     this.report();
 
-    const pending = Array.from({ length: session.part_count }, (_, i) => i + 1).filter((n) => !this.etags.has(n));
+    const pending = Array.from({ length: session.part_count }, (_, i) => i + 1).filter(
+      (n) => !this.etags.has(n),
+    );
     this.cb.onState("uploading");
     const queue = [...pending];
     const worker = async () => {
@@ -75,7 +77,12 @@ export class MultipartUpload {
 
     this.cb.onState("completing");
     const parts = [...this.etags.entries()].map(([number, etag]) => ({ number, etag }));
-    await unwrap(api.POST("/api/v1/admin/uploads/{id}/complete", { params: { path: { id: session.id } }, body: { parts } }));
+    await unwrap(
+      api.POST("/api/v1/admin/uploads/{id}/complete", {
+        params: { path: { id: session.id } },
+        body: { parts },
+      }),
+    );
     this.cb.onState("done");
     return session.asset_id;
   }
@@ -96,7 +103,8 @@ export class MultipartUpload {
     this.aborted = true;
     for (const xhr of this.inflight) xhr.abort();
     this.wake?.();
-    if (this.sessionId) await api.DELETE("/api/v1/admin/uploads/{id}", { params: { path: { id: this.sessionId } } });
+    if (this.sessionId)
+      await api.DELETE("/api/v1/admin/uploads/{id}", { params: { path: { id: this.sessionId } } });
   }
 
   private waitIfPaused(): Promise<void> {
@@ -112,14 +120,24 @@ export class MultipartUpload {
   private async signedUrl(number: number, count: number): Promise<string> {
     const cached = this.urls.get(number);
     if (cached) return cached;
-    const numbers = Array.from({ length: SIGN_BATCH }, (_, i) => number + i).filter((n) => n <= count && !this.etags.has(n));
-    const signed = await unwrap(api.POST("/api/v1/admin/uploads/{id}/sign", { params: { path: { id: this.sessionId! } }, body: { numbers } }));
+    const numbers = Array.from({ length: SIGN_BATCH }, (_, i) => number + i).filter(
+      (n) => n <= count && !this.etags.has(n),
+    );
+    const signed = await unwrap(
+      api.POST("/api/v1/admin/uploads/{id}/sign", {
+        params: { path: { id: this.sessionId! } },
+        body: { numbers },
+      }),
+    );
     for (const s of signed) this.urls.set(s.number, s.url);
     return this.urls.get(number)!;
   }
 
   private async uploadPart(number: number, partSize: number, count: number): Promise<void> {
-    const blob = this.file.slice((number - 1) * partSize, Math.min(number * partSize, this.file.size));
+    const blob = this.file.slice(
+      (number - 1) * partSize,
+      Math.min(number * partSize, this.file.size),
+    );
     for (let attempt = 1; ; attempt++) {
       await this.waitIfPaused();
       if (this.aborted) return;
@@ -155,7 +173,14 @@ export class MultipartUpload {
         this.inflight.delete(xhr);
         const etag = xhr.getResponseHeader("ETag");
         if (xhr.status >= 200 && xhr.status < 300 && etag) resolve(etag);
-        else reject(new Error(etag ? `S3 returned ${xhr.status}` : "S3 didn't return an ETag — apply CORS in Settings → Storage"));
+        else
+          reject(
+            new Error(
+              etag
+                ? `S3 returned ${xhr.status}`
+                : "S3 didn't return an ETag — apply CORS in Settings → Storage",
+            ),
+          );
       };
       xhr.onerror = () => {
         this.inflight.delete(xhr);

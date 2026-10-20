@@ -34,7 +34,9 @@ export function LoginForm() {
     onSubmit: async (values) => {
       setError("");
       try {
-        const session = await unwrap(api.POST("/api/v1/auth/login", { body: { ...values, app: "client" } }));
+        const session = await unwrap(
+          api.POST("/api/v1/auth/login", { body: { ...values, app: "client" } }),
+        );
         signIn(session);
         router.replace(next);
         return true;
@@ -53,7 +55,7 @@ export function LoginForm() {
       footer={
         <>
           New here?{" "}
-          <Link href="/signup" className="font-semibold text-fg hover:underline">
+          <Link href="/signup" className="text-fg font-semibold hover:underline">
             Create an account
           </Link>
         </>

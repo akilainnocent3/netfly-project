@@ -23,9 +23,15 @@ export function TranslationSync() {
 
   useEffect(() => {
     if (mode !== null || status === "loading") return;
-    const ok = (m: string | null | undefined): m is TranslationMode => !!m && VALID.has(m as TranslationMode) && (m !== "all" || allowAll);
+    const ok = (m: string | null | undefined): m is TranslationMode =>
+      !!m && VALID.has(m as TranslationMode) && (m !== "all" || allowAll);
     const fromUrl = params.get("translation");
-    const candidates = [fromUrl, storedMode(), user?.translation_mode, config.str("content.default_translation_mode", "translated")];
+    const candidates = [
+      fromUrl,
+      storedMode(),
+      user?.translation_mode,
+      config.str("content.default_translation_mode", "translated"),
+    ];
     const resolved = candidates.find(ok) ?? "translated";
     lastSaved.current = user?.translation_mode ?? null;
     init(resolved);

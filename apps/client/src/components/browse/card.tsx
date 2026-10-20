@@ -1,7 +1,7 @@
 "use client";
 
 import { cn, formatRuntime } from "@netfly/ui";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { ChevronDown, Play } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,12 +24,25 @@ export function watchHref(title: TitleCard): string {
 }
 
 function metaLine(title: TitleCard): string {
-  if (title.type === "series") return title.season_count ? `${title.season_count} Season${title.season_count === 1 ? "" : "s"}` : "Series";
+  if (title.type === "series")
+    return title.season_count
+      ? `${title.season_count} Season${title.season_count === 1 ? "" : "s"}`
+      : "Series";
   return formatRuntime(title.runtime_minutes);
 }
 
 /** Title art: the backdrop with the logo (or bold title) laid over it. */
-export function CardArt({ title, sizes, priority, showText = true }: { title: TitleCard; sizes: string; priority?: boolean; showText?: boolean }) {
+export function CardArt({
+  title,
+  sizes,
+  priority,
+  showText = true,
+}: {
+  title: TitleCard;
+  sizes: string;
+  priority?: boolean;
+  showText?: boolean;
+}) {
   return (
     <div className="absolute inset-0">
       <NetflyImage
@@ -38,18 +51,30 @@ export function CardArt({ title, sizes, priority, showText = true }: { title: Ti
         sizes={sizes}
         priority={priority}
         className="object-cover"
-        fallback={<div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgb(var(--accent-rgb)/0.35),transparent_60%),linear-gradient(135deg,#1d1d27,#0e0e13)]" />}
+        fallback={
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgb(var(--accent-rgb)/0.35),transparent_60%),linear-gradient(135deg,#1d1d27,#0e0e13)]" />
+        }
       />
       {showText && (
         <>
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
           <div className="absolute inset-x-3 bottom-2.5 flex items-end">
             {title.logo ? (
-              <div className="relative h-[34%] max-h-12 w-[62%]" style={{ aspectRatio: `${title.logo.width}/${title.logo.height}` }}>
-                <NetflyImage image={title.logo} alt={title.title} sizes="200px" className="object-contain object-left-bottom drop-shadow-[0_2px_8px_rgb(0_0_0/0.7)]" />
+              <div
+                className="relative h-[34%] max-h-12 w-[62%]"
+                style={{ aspectRatio: `${title.logo.width}/${title.logo.height}` }}
+              >
+                <NetflyImage
+                  image={title.logo}
+                  alt={title.title}
+                  sizes="200px"
+                  className="object-contain object-left-bottom drop-shadow-[0_2px_8px_rgb(0_0_0/0.7)]"
+                />
               </div>
             ) : (
-              <p className="line-clamp-2 text-[clamp(12px,1.05vw,17px)] font-extrabold uppercase leading-tight tracking-tight text-white drop-shadow-[0_2px_6px_rgb(0_0_0/0.8)]">{title.title}</p>
+              <p className="line-clamp-2 text-[clamp(12px,1.05vw,17px)] leading-tight font-extrabold tracking-tight text-white uppercase drop-shadow-[0_2px_6px_rgb(0_0_0/0.8)]">
+                {title.title}
+              </p>
             )}
           </div>
         </>
@@ -59,7 +84,9 @@ export function CardArt({ title, sizes, priority, showText = true }: { title: Ti
 }
 
 function canHover(): boolean {
-  return typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  return (
+    typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches
+  );
 }
 
 export function Card({
@@ -96,9 +123,12 @@ export function Card({
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [rect, close]);
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
 
   return (
     <>
@@ -111,32 +141,53 @@ export function Card({
         onMouseEnter={() => {
           if (!hoverEnabled || !canHover()) return;
           prefetchPlayback(title);
-          timer.current = setTimeout(() => ref.current && setRect(ref.current.getBoundingClientRect()), delay);
+          timer.current = setTimeout(
+            () => ref.current && setRect(ref.current.getBoundingClientRect()),
+            delay,
+          );
         }}
         onMouseLeave={() => {
           if (timer.current) clearTimeout(timer.current);
         }}
         onFocus={() => prefetchPlayback(title)}
         className={cn(
-          "group/card relative block w-full overflow-hidden rounded-md bg-surface outline-offset-4 transition-transform duration-200",
+          "group/card bg-surface relative block w-full overflow-hidden rounded-md outline-offset-4 transition-transform duration-200",
           variant === "poster" ? "aspect-[2/3]" : "aspect-video",
         )}
       >
         {variant === "poster" ? (
-          <NetflyImage image={title.poster} alt={title.title} sizes="(min-width:1280px) 14vw, (min-width:768px) 20vw, 40vw" priority={priority} className="object-cover" fallback={<CardArt title={title} sizes="20vw" />} />
+          <NetflyImage
+            image={title.poster}
+            alt={title.title}
+            sizes="(min-width:1280px) 14vw, (min-width:768px) 20vw, 40vw"
+            priority={priority}
+            className="object-cover"
+            fallback={<CardArt title={title} sizes="20vw" />}
+          />
         ) : (
-          <CardArt title={title} sizes="(min-width:1536px) 17vw, (min-width:1024px) 20vw, (min-width:640px) 30vw, 45vw" priority={priority} />
+          <CardArt
+            title={title}
+            sizes="(min-width:1536px) 17vw, (min-width:1024px) 20vw, (min-width:640px) 30vw, 45vw"
+            priority={priority}
+          />
         )}
         {title.context?.other_mode && (
-          <span className="absolute right-2 top-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/85">
+          <span className="absolute top-2 right-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white/85 uppercase">
             {title.translation_status === "translated" ? "Translated" : "Original"}
           </span>
         )}
         {typeof progress === "number" && (
           <div className="absolute inset-x-0 bottom-0">
-            {label && <span className="absolute bottom-2.5 right-3 rounded bg-black/70 px-1.5 py-0.5 text-[11px] font-semibold text-white">{label}</span>}
+            {label && (
+              <span className="absolute right-3 bottom-2.5 rounded bg-black/70 px-1.5 py-0.5 text-[11px] font-semibold text-white">
+                {label}
+              </span>
+            )}
             <div className="h-[3px] bg-white/25">
-              <div className="h-full bg-accent" style={{ width: `${Math.max(4, progress * 100)}%` }} />
+              <div
+                className="bg-accent h-full"
+                style={{ width: `${Math.max(4, progress * 100)}%` }}
+              />
             </div>
           </div>
         )}
@@ -166,7 +217,19 @@ export function Card({
   );
 }
 
-function HoverPanel({ title, rect, onClose, onOpen, onDislike }: { title: TitleCard; rect: DOMRect; onClose: () => void; onOpen: () => void; onDislike?: () => void }) {
+function HoverPanel({
+  title,
+  rect,
+  onClose,
+  onOpen,
+  onDislike,
+}: {
+  title: TitleCard;
+  rect: DOMRect;
+  onClose: () => void;
+  onOpen: () => void;
+  onDislike?: () => void;
+}) {
   const scale = 1.5;
   const width = Math.max(rect.width * scale, 300);
   const margin = 16;
@@ -178,7 +241,7 @@ function HoverPanel({ title, rect, onClose, onOpen, onDislike }: { title: TitleC
   const meta = metaLine(title);
 
   return (
-    <motion.div
+    <m.div
       role="dialog"
       aria-label={`${title.title} preview`}
       initial={{ opacity: 0, scale: 1 / scale }}
@@ -187,29 +250,58 @@ function HoverPanel({ title, rect, onClose, onOpen, onDislike }: { title: TitleC
       transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
       onMouseLeave={onClose}
       style={{ position: "absolute", top, left, width, transformOrigin: origin }}
-      className="z-[60] overflow-hidden rounded-lg bg-surface shadow-[0_24px_70px_-10px_rgb(0_0_0/0.85)] ring-1 ring-white/8"
+      className="bg-surface z-[60] overflow-hidden rounded-lg shadow-[0_24px_70px_-10px_rgb(0_0_0/0.85)] ring-1 ring-white/8"
     >
-      <button type="button" onClick={onOpen} className="relative block aspect-video w-full overflow-hidden" aria-label={`More info about ${title.title}`}>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="relative block aspect-video w-full overflow-hidden"
+        aria-label={`More info about ${title.title}`}
+      >
         <CardArt title={title} sizes="480px" />
         {title.has_preview && <PreviewVideo title={title} />}
       </button>
       <div className="space-y-3 p-4">
         <div className="flex items-center gap-2">
-          <Link href={watchHref(title)} aria-label={`Play ${title.title}`} className="grid size-9 place-items-center rounded-full bg-white text-black transition hover:bg-white/85">
+          <Link
+            href={watchHref(title)}
+            aria-label={`Play ${title.title}`}
+            className="grid size-9 place-items-center rounded-full bg-white text-black transition hover:bg-white/85"
+          >
             <Play className="size-[18px] translate-x-px fill-current" />
           </Link>
           <MyListButton title={title} />
-          <RatingButton title={title} onDisliked={() => { onDislike?.(); onClose(); }} />
-          <button type="button" onClick={onOpen} aria-label="More info" title="More info" className="ml-auto grid size-9 place-items-center rounded-full border-2 border-white/45 bg-black/40 hover:border-white">
+          <RatingButton
+            title={title}
+            onDisliked={() => {
+              onDislike?.();
+              onClose();
+            }}
+          />
+          <button
+            type="button"
+            onClick={onOpen}
+            aria-label="More info"
+            title="More info"
+            className="ml-auto grid size-9 place-items-center rounded-full border-2 border-white/45 bg-black/40 hover:border-white"
+          >
             <ChevronDown className="size-[18px]" />
           </button>
         </div>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
-          {typeof title.match === "number" && <span className="font-bold text-emerald-400">{title.match}% match</span>}
-          {title.maturity_rating && <span className="rounded border border-white/40 px-1.5 text-[11px] font-medium leading-5 text-white/85">{title.maturity_rating}</span>}
+          {typeof title.match === "number" && (
+            <span className="font-bold text-emerald-400">{title.match}% match</span>
+          )}
+          {title.maturity_rating && (
+            <span className="rounded border border-white/40 px-1.5 text-[11px] leading-5 font-medium text-white/85">
+              {title.maturity_rating}
+            </span>
+          )}
           {meta && <span className="text-white/80">{meta}</span>}
           {title.year && <span className="text-white/60">{title.year}</span>}
-          <span className="rounded border border-white/30 px-1 text-[10px] font-semibold leading-4 text-white/70">HD</span>
+          <span className="rounded border border-white/30 px-1 text-[10px] leading-4 font-semibold text-white/70">
+            HD
+          </span>
         </div>
         {title.genres.length > 0 && (
           <p className="flex flex-wrap items-center gap-1.5 text-[13px] text-white/85">
@@ -225,6 +317,6 @@ function HoverPanel({ title, rect, onClose, onOpen, onDislike }: { title: TitleC
           <p className="text-[12px] text-white/55">Translated by {title.translator_name}</p>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 }

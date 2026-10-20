@@ -2,14 +2,35 @@
 
 import { cn, formatDuration } from "@netfly/ui";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import {
-  ArrowLeft, Captions, Check, ChevronsRight, Gauge, ListVideo, Maximize, Minimize, Pause, PictureInPicture2, Play,
-  RotateCcw, RotateCw, Settings, SkipForward, Volume1, Volume2, VolumeX,
+  ArrowLeft,
+  Captions,
+  Check,
+  ChevronsRight,
+  Gauge,
+  ListVideo,
+  Maximize,
+  Minimize,
+  Pause,
+  PictureInPicture2,
+  Play,
+  RotateCcw,
+  RotateCw,
+  Settings,
+  SkipForward,
+  Volume1,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PlaybackEngine, type LevelInfo, type QualityPref, type TrackInfo } from "@/lib/player/engine";
+import {
+  PlaybackEngine,
+  type LevelInfo,
+  type QualityPref,
+  type TrackInfo,
+} from "@/lib/player/engine";
 import { parseThumbnails, type ThumbCue } from "@/lib/player/thumbnails";
 import { PlaybackTracker } from "@/lib/player/tracker";
 import { getPlayback, warmManifest, type PlaybackInfo } from "@/lib/playback";
@@ -62,7 +83,9 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
   const [scrubbing, setScrubbing] = useState(false);
   const [levels, setLevels] = useState<LevelInfo[]>([]);
   const [activeLevel, setActiveLevel] = useState<LevelInfo | null>(null);
-  const [quality, setQuality] = useState<QualityPref>(() => storedQuality(user?.preferred_quality || config.str("playback.default_quality", "auto")));
+  const [quality, setQuality] = useState<QualityPref>(() =>
+    storedQuality(user?.preferred_quality || config.str("playback.default_quality", "auto")),
+  );
   const [subtitles, setSubtitles] = useState<TrackOption[]>([]);
   const [subtitle, setSubtitle] = useState(-1);
   const [audioTracks, setAudioTracks] = useState<TrackOption[]>([]);
@@ -78,9 +101,17 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
   const ep = info.episode;
   const seekStep = config.num("playback.seek_step_seconds", 10);
   const hideAfter = config.num("playback.controls_hide_ms", 3000);
-  const creditsAt = ep?.credits_start ?? (info.next ? duration - config.num("playback.credits_fallback_seconds", 30) : null);
-  const inIntro = !!ep && ep.intro_start !== null && ep.intro_end !== null && current >= ep.intro_start && current < ep.intro_end - 1;
-  const showNext = !!info.next && creditsAt !== null && current >= creditsAt && !nextDismissed && !ended;
+  const creditsAt =
+    ep?.credits_start ??
+    (info.next ? duration - config.num("playback.credits_fallback_seconds", 30) : null);
+  const inIntro =
+    !!ep &&
+    ep.intro_start !== null &&
+    ep.intro_end !== null &&
+    current >= ep.intro_start &&
+    current < ep.intro_end - 1;
+  const showNext =
+    !!info.next && creditsAt !== null && current >= creditsAt && !nextDismissed && !ended;
   const exitHref = `/title/${info.title.slug}`;
 
   // -- engine + tracking --------------------------------------------------------
@@ -99,7 +130,13 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
     if (askStill) setStillWatching(true);
 
     const t = new PlaybackTracker(
-      { sessionId: info.session_id, titleId: info.title.id, episodeId: ep?.id ?? null, progressEvery: config.num("playback.progress_save_seconds", 10), flushEvery: config.num("playback.event_flush_seconds", 15) },
+      {
+        sessionId: info.session_id,
+        titleId: info.title.id,
+        episodeId: ep?.id ?? null,
+        progressEvery: config.num("playback.progress_save_seconds", 10),
+        flushEvery: config.num("playback.event_flush_seconds", 15),
+      },
       el,
       () => engine.current?.bandwidth ?? 0,
     );
@@ -117,11 +154,13 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
       backBuffer: config.num("playback.back_buffer_seconds", 30),
       dataSaverMaxHeight: config.num("playback.data_saver_max_height", 480),
       quality,
-      refreshSource: async () => (await getPlayback(info.title.slug, { episode: ep?.id ?? null }))?.master_url ?? null,
+      refreshSource: async () =>
+        (await getPlayback(info.title.slug, { episode: ep?.id ?? null }))?.master_url ?? null,
       onLevels: setLevels,
       onLevelSwitched: (level, auto) => {
         setActiveLevel(level);
-        if (level) t.track("quality", { value: level.bitrate, data: { height: level.height, auto } });
+        if (level)
+          t.track("quality", { value: level.bitrate, data: { height: level.height, auto } });
       },
       onFatal: (message) => {
         setFatal(message);
@@ -171,7 +210,8 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
 
   // Warm the next episode while the credits roll.
   useEffect(() => {
-    if (showNext && info.next) void getPlayback(info.title.slug, { episode: info.next.id }).then(warmManifest);
+    if (showNext && info.next)
+      void getPlayback(info.title.slug, { episode: info.next.id }).then(warmManifest);
   }, [showNext, info.next, info.title.slug]);
 
   // -- controls visibility ---------------------------------------------------------
@@ -199,14 +239,20 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
     if (el.paused) void el.play();
     else el.pause();
   }, []);
-  const seekTo = useCallback((time: number) => {
-    const el = video.current;
-    if (!el) return;
-    seekFrom.current = el.currentTime;
-    el.currentTime = Math.max(0, Math.min(time, (el.duration || duration) - 0.5));
-    setCurrent(el.currentTime);
-  }, [duration]);
-  const seekBy = useCallback((delta: number) => video.current && seekTo(video.current.currentTime + delta), [seekTo]);
+  const seekTo = useCallback(
+    (time: number) => {
+      const el = video.current;
+      if (!el) return;
+      seekFrom.current = el.currentTime;
+      el.currentTime = Math.max(0, Math.min(time, (el.duration || duration) - 0.5));
+      setCurrent(el.currentTime);
+    },
+    [duration],
+  );
+  const seekBy = useCallback(
+    (delta: number) => video.current && seekTo(video.current.currentTime + delta),
+    [seekTo],
+  );
   const setVol = useCallback((v: number) => {
     const el = video.current;
     if (!el) return;
@@ -226,13 +272,16 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
       return;
     }
     await el.requestFullscreen?.().catch(() => undefined);
-    const orientation = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
+    const orientation = screen.orientation as ScreenOrientation & {
+      lock?: (o: string) => Promise<void>;
+    };
     await orientation.lock?.("landscape").catch(() => undefined);
   }, []);
   const togglePip = useCallback(async () => {
     const el = video.current;
     if (!el) return;
-    if (document.pictureInPictureElement) await document.exitPictureInPicture().catch(() => undefined);
+    if (document.pictureInPictureElement)
+      await document.exitPictureInPicture().catch(() => undefined);
     else await el.requestPictureInPicture?.().catch(() => undefined);
   }, []);
   const chooseQuality = (q: QualityPref) => {
@@ -250,14 +299,21 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
       hls.subtitleTrack = id;
       hls.subtitleDisplay = id >= 0;
     } else if (video.current) {
-      Array.from(video.current.textTracks).forEach((track, i) => (track.mode = i === id ? "showing" : "disabled"));
+      Array.from(video.current.textTracks).forEach(
+        (track, i) => (track.mode = i === id ? "showing" : "disabled"),
+      );
     }
     setSubtitle(id);
   }, []);
-  const playNext = useCallback((auto: boolean) => {
-    if (!info.next) return;
-    router.replace(`/watch/${info.title.slug}?episode=${info.next.id}${auto ? "&autoplay=1" : ""}`);
-  }, [info.next, info.title.slug, router]);
+  const playNext = useCallback(
+    (auto: boolean) => {
+      if (!info.next) return;
+      router.replace(
+        `/watch/${info.title.slug}?episode=${info.next.id}${auto ? "&autoplay=1" : ""}`,
+      );
+    },
+    [info.next, info.title.slug, router],
+  );
 
   // -- keyboard ---------------------------------------------------------------------
   useEffect(() => {
@@ -279,7 +335,18 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [togglePlay, seekBy, seekStep, setVol, toggleFullscreen, chooseSubtitle, subtitle, subtitles.length, drawer, poke]);
+  }, [
+    togglePlay,
+    seekBy,
+    seekStep,
+    setVol,
+    toggleFullscreen,
+    chooseSubtitle,
+    subtitle,
+    subtitles.length,
+    drawer,
+    poke,
+  ]);
 
   useEffect(() => {
     const onFs = () => setFullscreen(!!document.fullscreenElement);
@@ -314,7 +381,13 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
     }, 280);
   };
   const onPointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType !== "mouse") swipe.current = { x: e.clientX, y: e.clientY, time: video.current?.currentTime ?? 0, active: false };
+    if (e.pointerType !== "mouse")
+      swipe.current = {
+        x: e.clientX,
+        y: e.clientY,
+        time: video.current?.currentTime ?? 0,
+        active: false,
+      };
   };
   const onPointerMove = (e: React.PointerEvent) => {
     if (e.pointerType === "mouse") {
@@ -334,18 +407,24 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
 
   const markers = useMemo(() => {
     const list: Array<{ start: number; end: number; kind: "intro" | "credits" }> = [];
-    if (ep?.intro_start != null && ep.intro_end != null) list.push({ start: ep.intro_start, end: ep.intro_end, kind: "intro" });
+    if (ep?.intro_start != null && ep.intro_end != null)
+      list.push({ start: ep.intro_start, end: ep.intro_end, kind: "intro" });
     return list;
   }, [ep]);
 
   const VolumeIcon = muted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
-  const qualityLabel = quality === "auto" ? `Auto${activeLevel ? ` · ${activeLevel.height}p` : ""}` : quality === "data_saver" ? "Data saver" : `${quality}p`;
+  const qualityLabel =
+    quality === "auto"
+      ? `Auto${activeLevel ? ` · ${activeLevel.height}p` : ""}`
+      : quality === "data_saver"
+        ? "Data saver"
+        : `${quality}p`;
   const heights = [...new Set(levels.map((l) => l.height))].sort((a, b) => b - a);
 
   return (
     <div
       ref={shell}
-      className={cn("fixed inset-0 select-none bg-black", !controls && playing && "cursor-none")}
+      className={cn("fixed inset-0 bg-black select-none", !controls && playing && "cursor-none")}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -369,18 +448,24 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
         }}
         onPlaying={() => {
           if (loadStarted.current) {
-            tracker.current?.track("start", { value: Math.round(performance.now() - loadStarted.current), data: { height: activeLevel?.height } });
+            tracker.current?.track("start", {
+              value: Math.round(performance.now() - loadStarted.current),
+              data: { height: activeLevel?.height },
+            });
             loadStarted.current = 0;
           }
           if (waitingSince.current) {
-            tracker.current?.track("rebuffer", { value: Math.round(performance.now() - waitingSince.current) });
+            tracker.current?.track("rebuffer", {
+              value: Math.round(performance.now() - waitingSince.current),
+            });
             waitingSince.current = null;
           }
           setWaiting(false);
         }}
         onWaiting={() => {
           setWaiting(true);
-          if (!loadStarted.current && !video.current?.seeking) waitingSince.current = performance.now();
+          if (!loadStarted.current && !video.current?.seeking)
+            waitingSince.current = performance.now();
         }}
         onSeeked={() => {
           if (seekFrom.current !== null) {
@@ -395,7 +480,9 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
           if (!scrubbing) setCurrent(el.currentTime);
           if (el.buffered.length) setBuffered(el.buffered.end(el.buffered.length - 1));
         }}
-        onDurationChange={(e) => Number.isFinite(e.currentTarget.duration) && setDuration(e.currentTarget.duration)}
+        onDurationChange={(e) =>
+          Number.isFinite(e.currentTarget.duration) && setDuration(e.currentTarget.duration)
+        }
         onVolumeChange={(e) => {
           setVolume(e.currentTarget.volume);
           setMuted(e.currentTarget.muted);
@@ -412,71 +499,141 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
       {/* Buffering */}
       <AnimatePresence>
         {waiting && !fatal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ delay: 0.25 }} className="pointer-events-none absolute inset-0 grid place-items-center">
-            <div className="size-16 animate-spin rounded-full border-[3px] border-white/20 border-t-accent" aria-label="Loading" />
-          </motion.div>
+          <m.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ delay: 0.25 }}
+            className="pointer-events-none absolute inset-0 grid place-items-center"
+          >
+            <div
+              className="border-t-accent size-16 animate-spin rounded-full border-[3px] border-white/20"
+              aria-label="Loading"
+            />
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Double-tap seek ripple */}
       <AnimatePresence>
         {ripple && (
-          <motion.div
+          <m.div
             key={ripple.key}
             initial={{ opacity: 0.8, scale: 0.6 }}
             animate={{ opacity: 0, scale: 1.4 }}
             transition={{ duration: 0.6 }}
             onAnimationComplete={() => setRipple(null)}
-            className={cn("pointer-events-none absolute top-1/2 grid size-28 -translate-y-1/2 place-items-center rounded-full bg-white/15", ripple.side === "left" ? "left-[12%]" : "right-[12%]")}
+            className={cn(
+              "pointer-events-none absolute top-1/2 grid size-28 -translate-y-1/2 place-items-center rounded-full bg-white/15",
+              ripple.side === "left" ? "left-[12%]" : "right-[12%]",
+            )}
           >
-            {ripple.side === "left" ? <RotateCcw className="size-8" /> : <RotateCw className="size-8" />}
+            {ripple.side === "left" ? (
+              <RotateCcw className="size-8" />
+            ) : (
+              <RotateCw className="size-8" />
+            )}
             <span className="absolute bottom-5 text-[12px] font-bold">{seekStep}s</span>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Chrome */}
-      <motion.div
+      <m.div
         initial={false}
         animate={{ opacity: controls || !playing ? 1 : 0 }}
         transition={{ duration: 0.25 }}
-        className={cn("pointer-events-none absolute inset-0", (controls || !playing) && "[&>*]:pointer-events-auto")}
+        className={cn(
+          "pointer-events-none absolute inset-0",
+          (controls || !playing) && "[&>*]:pointer-events-auto",
+        )}
       >
         <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/80 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-        <div className="absolute left-0 right-0 top-0 flex items-center gap-4 px-[3vw] pt-[max(env(safe-area-inset-top),20px)]" onPointerUp={(e) => e.stopPropagation()}>
-          <button type="button" onClick={() => router.push(exitHref)} aria-label="Back" className="grid size-11 place-items-center rounded-full hover:bg-white/10">
+        <div
+          className="absolute top-0 right-0 left-0 flex items-center gap-4 px-[3vw] pt-[max(env(safe-area-inset-top),20px)]"
+          onPointerUp={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => router.push(exitHref)}
+            aria-label="Back"
+            className="grid size-11 place-items-center rounded-full hover:bg-white/10"
+          >
             <ArrowLeft className="size-7" />
           </button>
           <div className="min-w-0">
             <p className="truncate text-[16px] font-bold md:text-[18px]">{info.title.title}</p>
-            {ep && <p className="truncate text-[13px] text-white/70 md:text-[14px]">S{ep.season_number}:E{ep.number} · {ep.name}</p>}
+            {ep && (
+              <p className="truncate text-[13px] text-white/70 md:text-[14px]">
+                S{ep.season_number}:E{ep.number} · {ep.name}
+              </p>
+            )}
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 px-[3vw] pb-[max(env(safe-area-inset-bottom),18px)]" onPointerUp={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+        <div
+          className="absolute inset-x-0 bottom-0 px-[3vw] pb-[max(env(safe-area-inset-bottom),18px)]"
+          onPointerUp={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
           <div className="flex items-center gap-3">
             <div className="flex-1">
-              <Scrubber current={current} duration={duration} buffered={buffered} thumbnails={thumbs} markers={markers} onSeek={(t) => { seekTo(t); poke(); }} onScrubbing={setScrubbing} />
+              <Scrubber
+                current={current}
+                duration={duration}
+                buffered={buffered}
+                thumbnails={thumbs}
+                markers={markers}
+                onSeek={(t) => {
+                  seekTo(t);
+                  poke();
+                }}
+                onScrubbing={setScrubbing}
+              />
             </div>
-            <span className="w-24 text-right text-[13px] font-semibold tabular-nums text-white/85 md:text-[14px]">-{formatDuration(Math.max(0, duration - current))}</span>
+            <span className="w-24 text-right text-[13px] font-semibold text-white/85 tabular-nums md:text-[14px]">
+              -{formatDuration(Math.max(0, duration - current))}
+            </span>
           </div>
           <div className="mt-2 flex items-center gap-1 md:gap-3">
             <IconButton label={playing ? "Pause (k)" : "Play (k)"} onClick={togglePlay} big>
-              {playing ? <Pause className="size-8 fill-current" /> : <Play className="size-8 fill-current" />}
+              {playing ? (
+                <Pause className="size-8 fill-current" />
+              ) : (
+                <Play className="size-8 fill-current" />
+              )}
             </IconButton>
             <IconButton label={`Back ${seekStep} seconds (j)`} onClick={() => seekBy(-seekStep)}>
-              <span className="relative"><RotateCcw className="size-7" /><span className="absolute inset-0 grid place-items-center pt-0.5 text-[9px] font-bold">{seekStep}</span></span>
+              <span className="relative">
+                <RotateCcw className="size-7" />
+                <span className="absolute inset-0 grid place-items-center pt-0.5 text-[9px] font-bold">
+                  {seekStep}
+                </span>
+              </span>
             </IconButton>
             <IconButton label={`Forward ${seekStep} seconds (l)`} onClick={() => seekBy(seekStep)}>
-              <span className="relative"><RotateCw className="size-7" /><span className="absolute inset-0 grid place-items-center pt-0.5 text-[9px] font-bold">{seekStep}</span></span>
+              <span className="relative">
+                <RotateCw className="size-7" />
+                <span className="absolute inset-0 grid place-items-center pt-0.5 text-[9px] font-bold">
+                  {seekStep}
+                </span>
+              </span>
             </IconButton>
             <div className="group/vol hidden items-center md:flex">
-              <IconButton label={muted ? "Unmute (m)" : "Mute (m)"} onClick={() => video.current && (video.current.muted = !video.current.muted)}>
+              <IconButton
+                label={muted ? "Unmute (m)" : "Mute (m)"}
+                onClick={() => video.current && (video.current.muted = !video.current.muted)}
+              >
                 <VolumeIcon className="size-7" />
               </IconButton>
               <input
-                type="range" min={0} max={1} step={0.02} value={muted ? 0 : volume} aria-label="Volume"
+                type="range"
+                min={0}
+                max={1}
+                step={0.02}
+                value={muted ? 0 : volume}
+                aria-label="Volume"
                 onChange={(e) => setVol(Number(e.target.value))}
                 className="w-0 accent-[var(--accent)] opacity-0 transition-all duration-200 group-hover/vol:w-24 group-hover/vol:opacity-100 focus:w-24 focus:opacity-100"
               />
@@ -494,30 +651,83 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
               )}
               <Menu label="Subtitles and audio (c)" icon={<Captions className="size-7" />}>
                 <MenuLabel>Subtitles</MenuLabel>
-                <MenuItem active={subtitle === -1} onSelect={() => chooseSubtitle(-1)}>Off</MenuItem>
-                {subtitles.map((s) => <MenuItem key={s.id} active={subtitle === s.id} onSelect={() => chooseSubtitle(s.id)}>{s.label}</MenuItem>)}
+                <MenuItem active={subtitle === -1} onSelect={() => chooseSubtitle(-1)}>
+                  Off
+                </MenuItem>
+                {subtitles.map((s) => (
+                  <MenuItem
+                    key={s.id}
+                    active={subtitle === s.id}
+                    onSelect={() => chooseSubtitle(s.id)}
+                  >
+                    {s.label}
+                  </MenuItem>
+                ))}
                 {audioTracks.length > 1 && (
                   <>
                     <MenuLabel>Audio</MenuLabel>
                     {audioTracks.map((a) => (
-                      <MenuItem key={a.id} active={audioTrack === a.id} onSelect={() => { if (engine.current?.hls) engine.current.hls.audioTrack = a.id; setAudioTrack(a.id); }}>{a.label}</MenuItem>
+                      <MenuItem
+                        key={a.id}
+                        active={audioTrack === a.id}
+                        onSelect={() => {
+                          if (engine.current?.hls) engine.current.hls.audioTrack = a.id;
+                          setAudioTrack(a.id);
+                        }}
+                      >
+                        {a.label}
+                      </MenuItem>
                     ))}
                   </>
                 )}
               </Menu>
               <Menu label="Playback speed" icon={<Gauge className="size-7" />}>
                 <MenuLabel>Speed</MenuLabel>
-                {SPEEDS.map((s) => <MenuItem key={s} active={rate === s} onSelect={() => video.current && (video.current.playbackRate = s)}>{s === 1 ? "Normal" : `${s}×`}</MenuItem>)}
+                {SPEEDS.map((s) => (
+                  <MenuItem
+                    key={s}
+                    active={rate === s}
+                    onSelect={() => video.current && (video.current.playbackRate = s)}
+                  >
+                    {s === 1 ? "Normal" : `${s}×`}
+                  </MenuItem>
+                ))}
               </Menu>
               {!engine.current?.native && (
-                <Menu label={`Quality: ${qualityLabel}`} icon={<Settings className="size-7" />} badge={activeLevel && activeLevel.height >= 1080 ? (activeLevel.height >= 2160 ? "4K" : "HD") : undefined}>
+                <Menu
+                  label={`Quality: ${qualityLabel}`}
+                  icon={<Settings className="size-7" />}
+                  badge={
+                    activeLevel && activeLevel.height >= 1080
+                      ? activeLevel.height >= 2160
+                        ? "4K"
+                        : "HD"
+                      : undefined
+                  }
+                >
                   <MenuLabel>Quality</MenuLabel>
                   <MenuItem active={quality === "auto"} onSelect={() => chooseQuality("auto")}>
                     <span>Auto — highest quality</span>
-                    {quality === "auto" && activeLevel && <span className="ml-3 text-white/50">{activeLevel.height}p</span>}
+                    {quality === "auto" && activeLevel && (
+                      <span className="ml-3 text-white/50">{activeLevel.height}p</span>
+                    )}
                   </MenuItem>
-                  {heights.map((h) => <MenuItem key={h} active={quality === String(h)} onSelect={() => chooseQuality(String(h) as QualityPref)}>{h >= 2160 ? "2160p 4K" : `${h}p`}{h >= 1080 && h < 2160 ? " HD" : ""}</MenuItem>)}
-                  <MenuItem active={quality === "data_saver"} onSelect={() => chooseQuality("data_saver")}>Data saver</MenuItem>
+                  {heights.map((h) => (
+                    <MenuItem
+                      key={h}
+                      active={quality === String(h)}
+                      onSelect={() => chooseQuality(String(h) as QualityPref)}
+                    >
+                      {h >= 2160 ? "2160p 4K" : `${h}p`}
+                      {h >= 1080 && h < 2160 ? " HD" : ""}
+                    </MenuItem>
+                  ))}
+                  <MenuItem
+                    active={quality === "data_saver"}
+                    onSelect={() => chooseQuality("data_saver")}
+                  >
+                    Data saver
+                  </MenuItem>
                 </Menu>
               )}
               {typeof document !== "undefined" && document.pictureInPictureEnabled && (
@@ -525,28 +735,31 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
                   <PictureInPicture2 className="size-7" />
                 </IconButton>
               )}
-              <IconButton label={fullscreen ? "Exit full screen (f)" : "Full screen (f)"} onClick={() => void toggleFullscreen()}>
+              <IconButton
+                label={fullscreen ? "Exit full screen (f)" : "Full screen (f)"}
+                onClick={() => void toggleFullscreen()}
+              >
                 {fullscreen ? <Minimize className="size-7" /> : <Maximize className="size-7" />}
               </IconButton>
             </div>
           </div>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Skip Intro */}
       <AnimatePresence>
         {inIntro && (
-          <motion.button
+          <m.button
             type="button"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             onPointerUp={(e) => e.stopPropagation()}
             onClick={() => ep?.intro_end != null && seekTo(ep.intro_end)}
-            className="absolute bottom-[22%] right-[3vw] flex items-center gap-2 rounded-md border border-white/60 bg-black/60 px-5 py-3 text-[16px] font-bold backdrop-blur hover:bg-white hover:text-black"
+            className="absolute right-[3vw] bottom-[22%] flex items-center gap-2 rounded-md border border-white/60 bg-black/60 px-5 py-3 text-[16px] font-bold backdrop-blur hover:bg-white hover:text-black"
           >
             Skip Intro <ChevronsRight className="size-5" />
-          </motion.button>
+          </m.button>
         )}
       </AnimatePresence>
 
@@ -559,7 +772,16 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
           onCancel={() => setNextDismissed(true)}
         />
       )}
-      {ended && !info.next && <EndScreen info={info} onReplay={() => { seekTo(0); void video.current?.play(); }} onExit={() => router.push("/browse")} />}
+      {ended && !info.next && (
+        <EndScreen
+          info={info}
+          onReplay={() => {
+            seekTo(0);
+            void video.current?.play();
+          }}
+          onExit={() => router.push("/browse")}
+        />
+      )}
       {stillWatching && (
         <StillWatching
           title={info.title.title}
@@ -579,37 +801,98 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
         <div className="absolute inset-0 grid place-items-center bg-black/80 p-6 text-center">
           <div>
             <p className="text-[20px] font-bold">{fatal}</p>
-            <button type="button" onClick={() => location.reload()} className="mt-5 rounded-md bg-white px-6 py-2.5 font-semibold text-black">Try again</button>
+            <button
+              type="button"
+              onClick={() => location.reload()}
+              className="mt-5 rounded-md bg-white px-6 py-2.5 font-semibold text-black"
+            >
+              Try again
+            </button>
           </div>
         </div>
       )}
-      {ep && <EpisodeDrawer open={drawer} onOpenChange={setDrawer} slug={info.title.slug} season={ep.season_number} currentEpisode={ep.id} />}
+      {ep && (
+        <EpisodeDrawer
+          open={drawer}
+          onOpenChange={setDrawer}
+          slug={info.title.slug}
+          season={ep.season_number}
+          currentEpisode={ep.id}
+        />
+      )}
       {!playing && current < 1 && info.title.backdrop && waiting && (
         <div className="pointer-events-none absolute inset-0 -z-0 opacity-30">
-          <NetflyImage image={info.title.backdrop} alt="" sizes="100vw" className="object-cover blur-sm" />
+          <NetflyImage
+            image={info.title.backdrop}
+            alt=""
+            sizes="100vw"
+            className="object-cover blur-sm"
+          />
         </div>
       )}
     </div>
   );
 }
 
-function IconButton({ label, onClick, children, big }: { label: string; onClick: () => void; children: React.ReactNode; big?: boolean }) {
+function IconButton({
+  label,
+  onClick,
+  children,
+  big,
+}: {
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+  big?: boolean;
+}) {
   return (
-    <button type="button" onClick={onClick} aria-label={label} title={label} className={cn("grid place-items-center rounded-full text-white transition hover:scale-110 hover:bg-white/10", big ? "size-14" : "size-12")}>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={cn(
+        "grid place-items-center rounded-full text-white transition hover:scale-110 hover:bg-white/10",
+        big ? "size-14" : "size-12",
+      )}
+    >
       {children}
     </button>
   );
 }
 
-function Menu({ label, icon, children, badge }: { label: string; icon: React.ReactNode; children: React.ReactNode; badge?: string }) {
+function Menu({
+  label,
+  icon,
+  children,
+  badge,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  badge?: string;
+}) {
   return (
     <DropdownMenu.Root modal={false}>
-      <DropdownMenu.Trigger aria-label={label} title={label} className="relative grid size-12 place-items-center rounded-full text-white transition hover:scale-110 hover:bg-white/10 data-[state=open]:bg-white/10">
+      <DropdownMenu.Trigger
+        aria-label={label}
+        title={label}
+        className="relative grid size-12 place-items-center rounded-full text-white transition hover:scale-110 hover:bg-white/10 data-[state=open]:bg-white/10"
+      >
         {icon}
-        {badge && <span className="absolute right-1 top-1.5 rounded bg-accent px-1 text-[9px] font-black leading-[14px] text-accent-fg">{badge}</span>}
+        {badge && (
+          <span className="bg-accent text-accent-fg absolute top-1.5 right-1 rounded px-1 text-[9px] leading-[14px] font-black">
+            {badge}
+          </span>
+        )}
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content side="top" align="end" sideOffset={10} className="z-[120] min-w-56 rounded-xl border border-white/10 bg-black/90 p-1.5 text-[15px] text-white shadow-2xl backdrop-blur-xl">
+        <DropdownMenu.Content
+          side="top"
+          align="end"
+          sideOffset={10}
+          className="z-[120] min-w-56 rounded-xl border border-white/10 bg-black/90 p-1.5 text-[15px] text-white shadow-2xl backdrop-blur-xl"
+        >
           {children}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
@@ -618,12 +901,27 @@ function Menu({ label, icon, children, badge }: { label: string; icon: React.Rea
 }
 
 function MenuLabel({ children }: { children: React.ReactNode }) {
-  return <DropdownMenu.Label className="px-3 pb-1 pt-2 text-[12px] font-bold uppercase tracking-wider text-white/50">{children}</DropdownMenu.Label>;
+  return (
+    <DropdownMenu.Label className="px-3 pt-2 pb-1 text-[12px] font-bold tracking-wider text-white/50 uppercase">
+      {children}
+    </DropdownMenu.Label>
+  );
 }
 
-function MenuItem({ children, active, onSelect }: { children: React.ReactNode; active: boolean; onSelect: () => void }) {
+function MenuItem({
+  children,
+  active,
+  onSelect,
+}: {
+  children: React.ReactNode;
+  active: boolean;
+  onSelect: () => void;
+}) {
   return (
-    <DropdownMenu.Item onSelect={onSelect} className="flex h-10 cursor-pointer items-center gap-3 rounded-lg px-3 outline-none data-[highlighted]:bg-white/10">
+    <DropdownMenu.Item
+      onSelect={onSelect}
+      className="flex h-10 cursor-pointer items-center gap-3 rounded-lg px-3 outline-none data-[highlighted]:bg-white/10"
+    >
       <Check className={cn("size-4 shrink-0", active ? "text-accent" : "invisible")} />
       <span className="flex flex-1 items-center justify-between">{children}</span>
     </DropdownMenu.Item>

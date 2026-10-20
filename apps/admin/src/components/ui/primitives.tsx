@@ -15,14 +15,21 @@ const VARIANTS: Record<ButtonVariant, string> = {
 
 export const Button = forwardRef<
   HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; size?: "sm" | "md"; loading?: boolean }
->(function Button({ variant = "secondary", size = "md", loading, className, children, disabled, ...props }, ref) {
+  React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    variant?: ButtonVariant;
+    size?: "sm" | "md";
+    loading?: boolean;
+  }
+>(function Button(
+  { variant = "secondary", size = "md", loading, className, children, disabled, ...props },
+  ref,
+) {
   return (
     <button
       ref={ref}
       disabled={disabled || loading}
       className={cn(
-        "inline-flex select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-md font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex items-center justify-center gap-1.5 rounded-md font-medium whitespace-nowrap transition-colors select-none disabled:pointer-events-none disabled:opacity-50",
         size === "sm" ? "h-7 px-2.5 text-[12.5px]" : "h-8 px-3 text-[13px]",
         VARIANTS[variant],
         className,
@@ -35,44 +42,46 @@ export const Button = forwardRef<
   );
 });
 
-export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }>(
-  function Input({ className, invalid, ...props }, ref) {
-    return (
-      <input
-        ref={ref}
-        aria-invalid={invalid}
-        className={cn(
-          "h-8 w-full rounded-md border bg-panel px-2.5 text-[13px] outline-none transition-shadow placeholder:text-subtle",
-          "focus:border-accent focus:ring-2 focus:ring-accent/20 focus-visible:outline-none",
-          invalid ? "border-red-500" : "border-line",
-          className,
-        )}
-        {...props}
-      />
-    );
-  },
-);
+export const Input = forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }
+>(function Input({ className, invalid, ...props }, ref) {
+  return (
+    <input
+      ref={ref}
+      aria-invalid={invalid}
+      className={cn(
+        "bg-panel placeholder:text-subtle h-8 w-full rounded-md border px-2.5 text-[13px] transition-shadow outline-none",
+        "focus:border-accent focus:ring-accent/20 focus:ring-2 focus-visible:outline-none",
+        invalid ? "border-red-500" : "border-line",
+        className,
+      )}
+      {...props}
+    />
+  );
+});
 
-export const Textarea = forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
-  function Textarea({ className, ...props }, ref) {
-    return (
-      <textarea
-        ref={ref}
-        className={cn(
-          "w-full rounded-md border border-line bg-panel px-2.5 py-2 text-[13px] outline-none placeholder:text-subtle focus:border-accent focus:ring-2 focus:ring-accent/20 focus-visible:outline-none",
-          className,
-        )}
-        {...props}
-      />
-    );
-  },
-);
+export const Textarea = forwardRef<
+  HTMLTextAreaElement,
+  React.TextareaHTMLAttributes<HTMLTextAreaElement>
+>(function Textarea({ className, ...props }, ref) {
+  return (
+    <textarea
+      ref={ref}
+      className={cn(
+        "border-line bg-panel placeholder:text-subtle focus:border-accent focus:ring-accent/20 w-full rounded-md border px-2.5 py-2 text-[13px] outline-none focus:ring-2 focus-visible:outline-none",
+        className,
+      )}
+      {...props}
+    />
+  );
+});
 
 export function Select({ className, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       className={cn(
-        "h-8 rounded-md border border-line bg-panel px-2 text-[13px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20",
+        "border-line bg-panel focus:border-accent focus:ring-accent/20 h-8 rounded-md border px-2 text-[13px] outline-none focus:ring-2",
         className,
       )}
       {...props}
@@ -80,11 +89,22 @@ export function Select({ className, ...props }: React.SelectHTMLAttributes<HTMLS
   );
 }
 
-export function Label({ children, hint, htmlFor }: { children: React.ReactNode; hint?: string; htmlFor?: string }) {
+export function Label({
+  children,
+  hint,
+  htmlFor,
+}: {
+  children: React.ReactNode;
+  hint?: string;
+  htmlFor?: string;
+}) {
   return (
-    <label htmlFor={htmlFor} className="mb-1.5 flex items-baseline justify-between text-[12.5px] font-medium">
+    <label
+      htmlFor={htmlFor}
+      className="mb-1.5 flex items-baseline justify-between text-[12.5px] font-medium"
+    >
       <span>{children}</span>
-      {hint && <span className="font-normal text-subtle">{hint}</span>}
+      {hint && <span className="text-subtle font-normal">{hint}</span>}
     </label>
   );
 }
@@ -106,7 +126,7 @@ export function Switch({
       onCheckedChange={onCheckedChange}
       disabled={disabled}
       aria-label={label}
-      className="relative h-[18px] w-8 shrink-0 rounded-full bg-line transition-colors data-[state=checked]:bg-accent disabled:opacity-50"
+      className="bg-line data-[state=checked]:bg-accent relative h-[18px] w-8 shrink-0 rounded-full transition-colors disabled:opacity-50"
     >
       <SwitchPrimitive.Thumb className="block size-3.5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-4" />
     </SwitchPrimitive.Root>
@@ -122,36 +142,66 @@ const BADGE_TONES = {
   accent: "bg-accent/10 text-accent border-accent/20",
 } as const;
 
-export function Badge({ tone = "neutral", children, className }: { tone?: keyof typeof BADGE_TONES; children: React.ReactNode; className?: string }) {
+export function Badge({
+  tone = "neutral",
+  children,
+  className,
+}: {
+  tone?: keyof typeof BADGE_TONES;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <span className={cn("inline-flex h-5 items-center gap-1 rounded border px-1.5 text-[11.5px] font-medium", BADGE_TONES[tone], className)}>
+    <span
+      className={cn(
+        "inline-flex h-5 items-center gap-1 rounded border px-1.5 text-[11.5px] font-medium",
+        BADGE_TONES[tone],
+        className,
+      )}
+    >
       {children}
     </span>
   );
 }
 
 export function Card({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn("rounded-lg border border-line bg-panel", className)}>{children}</div>;
+  return <div className={cn("border-line bg-panel rounded-lg border", className)}>{children}</div>;
 }
 
-export function PageHeader({ title, description, actions }: { title: string; description?: string; actions?: React.ReactNode }) {
+export function PageHeader({
+  title,
+  description,
+  actions,
+}: {
+  title: string;
+  description?: string;
+  actions?: React.ReactNode;
+}) {
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h1 className="text-[19px] font-semibold tracking-tight">{title}</h1>
-        {description && <p className="mt-0.5 text-[13px] text-muted">{description}</p>}
+        {description && <p className="text-muted mt-0.5 text-[13px]">{description}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
   );
 }
 
-export function Empty({ icon, title, children }: { icon?: React.ReactNode; title: string; children?: React.ReactNode }) {
+export function Empty({
+  icon,
+  title,
+  children,
+}: {
+  icon?: React.ReactNode;
+  title: string;
+  children?: React.ReactNode;
+}) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-6 py-16 text-center">
-      {icon && <div className="mb-1 text-subtle">{icon}</div>}
+      {icon && <div className="text-subtle mb-1">{icon}</div>}
       <p className="font-medium">{title}</p>
-      {children && <div className="max-w-sm text-[13px] text-muted">{children}</div>}
+      {children && <div className="text-muted max-w-sm text-[13px]">{children}</div>}
     </div>
   );
 }

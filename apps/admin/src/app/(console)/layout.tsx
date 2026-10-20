@@ -33,11 +33,13 @@ export default function ConsoleLayout({ children }: { children: React.ReactNode 
   if (status !== "authenticated") {
     return (
       <div className="flex min-h-dvh">
-        <div className="hidden w-[232px] border-r border-line bg-panel md:block" />
+        <div className="border-line bg-panel hidden w-[232px] border-r md:block" />
         <div className="flex-1 p-6">
           <Skeleton className="mb-6 h-6 w-48" />
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)}
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-24" />
+            ))}
           </div>
         </div>
       </div>

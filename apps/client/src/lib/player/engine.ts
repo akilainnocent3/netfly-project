@@ -48,7 +48,8 @@ export function storedBandwidth(): number | null {
 
 function storeBandwidth(bps: number) {
   try {
-    if (Number.isFinite(bps) && bps > 100_000) localStorage.setItem(BW_KEY, String(Math.round(bps)));
+    if (Number.isFinite(bps) && bps > 100_000)
+      localStorage.setItem(BW_KEY, String(Math.round(bps)));
   } catch {
     /* ignore */
   }
@@ -87,9 +88,13 @@ export class PlaybackEngine {
       if (this.video.canPlayType("application/vnd.apple.mpegurl")) {
         this.native = true;
         this.video.src = this.opts.src;
-        this.video.addEventListener("loadedmetadata", () => {
-          if (this.opts.startAt > 0) this.video.currentTime = this.opts.startAt;
-        }, { once: true });
+        this.video.addEventListener(
+          "loadedmetadata",
+          () => {
+            if (this.opts.startAt > 0) this.video.currentTime = this.opts.startAt;
+          },
+          { once: true },
+        );
         return;
       }
       this.opts.onFatal("This browser can't play adaptive video.");
@@ -113,7 +118,19 @@ export class PlaybackEngine {
       startFragPrefetch: true,
       testBandwidth: true,
       enableWorker: true,
-      fragLoadPolicy: { default: { maxTimeToFirstByteMs: 8000, maxLoadTimeMs: 20000, timeoutRetry: { maxNumRetry: 4, retryDelayMs: 0, maxRetryDelayMs: 0 }, errorRetry: { maxNumRetry: 6, retryDelayMs: 500, maxRetryDelayMs: 8000, backoff: "exponential" } } },
+      fragLoadPolicy: {
+        default: {
+          maxTimeToFirstByteMs: 8000,
+          maxLoadTimeMs: 20000,
+          timeoutRetry: { maxNumRetry: 4, retryDelayMs: 0, maxRetryDelayMs: 0 },
+          errorRetry: {
+            maxNumRetry: 6,
+            retryDelayMs: 500,
+            maxRetryDelayMs: 8000,
+            backoff: "exponential",
+          },
+        },
+      },
     });
     this.hls = hls;
 
@@ -131,8 +148,16 @@ export class PlaybackEngine {
     hls.on(HlsCtor.Events.ERROR, (_e, data) => void this.onError(data, HlsCtor));
     const syncTracks = () =>
       this.opts.onTracks({
-        subtitles: hls.subtitleTracks.map((t, i) => ({ id: i, label: t.name || t.lang || `Track ${i + 1}`, lang: t.lang ?? "" })),
-        audio: hls.audioTracks.map((t, i) => ({ id: i, label: t.name || t.lang || `Audio ${i + 1}`, lang: t.lang ?? "" })),
+        subtitles: hls.subtitleTracks.map((t, i) => ({
+          id: i,
+          label: t.name || t.lang || `Track ${i + 1}`,
+          lang: t.lang ?? "",
+        })),
+        audio: hls.audioTracks.map((t, i) => ({
+          id: i,
+          label: t.name || t.lang || `Audio ${i + 1}`,
+          lang: t.lang ?? "",
+        })),
       });
     hls.on(HlsCtor.Events.SUBTITLE_TRACKS_UPDATED, syncTracks);
     hls.on(HlsCtor.Events.AUDIO_TRACKS_UPDATED, syncTracks);
@@ -144,8 +169,11 @@ export class PlaybackEngine {
   /** Highest rung whose bitrate (with headroom) fits the estimate, within the quality preference. */
   private pickStartLevel(levels: LevelInfo[], estimate: number): number {
     const cap = this.capHeight(this.opts.quality);
-    const candidates = levels.filter((l) => !cap || l.height <= cap).sort((a, b) => b.bitrate - a.bitrate);
-    const fit = candidates.find((l) => l.bitrate * HEADROOM <= estimate) ?? candidates[candidates.length - 1];
+    const candidates = levels
+      .filter((l) => !cap || l.height <= cap)
+      .sort((a, b) => b.bitrate - a.bitrate);
+    const fit =
+      candidates.find((l) => l.bitrate * HEADROOM <= estimate) ?? candidates[candidates.length - 1];
     return fit?.index ?? -1;
   }
 
@@ -166,8 +194,13 @@ export class PlaybackEngine {
       return;
     }
     const cap = this.capHeight(pref) ?? Infinity;
-    const allowed = hls.levels.map((l, i) => ({ h: l.height, b: l.bitrate, i })).filter((l) => l.h <= cap).sort((a, b) => b.h - a.h || b.b - a.b);
-    const best = allowed[0] ?? hls.levels.map((l, i) => ({ h: l.height, b: l.bitrate, i })).sort((a, b) => a.h - b.h)[0];
+    const allowed = hls.levels
+      .map((l, i) => ({ h: l.height, b: l.bitrate, i }))
+      .filter((l) => l.h <= cap)
+      .sort((a, b) => b.h - a.h || b.b - a.b);
+    const best =
+      allowed[0] ??
+      hls.levels.map((l, i) => ({ h: l.height, b: l.bitrate, i })).sort((a, b) => a.h - b.h)[0];
     if (!best) return;
     if (pref === "data_saver") {
       hls.autoLevelCapping = best.i;

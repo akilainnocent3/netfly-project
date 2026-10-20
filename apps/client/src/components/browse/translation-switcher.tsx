@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@netfly/ui";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import type { TranslationMode } from "@/lib/types";
 import { useTranslation } from "@/stores/translation";
 import { useConfig } from "../providers/config";
@@ -14,7 +14,8 @@ export function TranslationSwitcher({ compact }: { compact?: boolean }) {
     { value: "translated", label: "Translated", short: "Translated" },
     { value: "not_translated", label: "Not Translated", short: "Original" },
   ];
-  if (config.bool("features.translation_filter_allow_all")) options.push({ value: "all", label: "All", short: "All" });
+  if (config.bool("features.translation_filter_allow_all"))
+    options.push({ value: "all", label: "All", short: "All" });
 
   return (
     <div
@@ -28,7 +29,8 @@ export function TranslationSwitcher({ compact }: { compact?: boolean }) {
         if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
         e.preventDefault();
         const i = options.findIndex((o) => o.value === mode);
-        const next = options[(i + (e.key === "ArrowRight" ? 1 : options.length - 1)) % options.length];
+        const next =
+          options[(i + (e.key === "ArrowRight" ? 1 : options.length - 1)) % options.length];
         if (next) set(next.value);
       }}
     >
@@ -43,15 +45,15 @@ export function TranslationSwitcher({ compact }: { compact?: boolean }) {
             tabIndex={active ? 0 : -1}
             onClick={() => set(option.value)}
             className={cn(
-              "relative z-10 whitespace-nowrap rounded-full font-semibold transition-colors duration-200",
+              "relative z-10 rounded-full font-semibold whitespace-nowrap transition-colors duration-200",
               compact ? "px-3 py-1.5" : "px-4 py-1.5",
               active ? "text-accent-fg" : "text-white/70 hover:text-white",
             )}
           >
             {active && (
-              <motion.span
+              <m.span
                 layoutId="translation-indicator"
-                className="absolute inset-0 -z-10 rounded-full bg-accent shadow-[0_0_20px_rgb(var(--accent-rgb)/0.45)]"
+                className="bg-accent absolute inset-0 -z-10 rounded-full shadow-[0_0_20px_rgb(var(--accent-rgb)/0.45)]"
                 transition={{ type: "spring", stiffness: 500, damping: 38 }}
               />
             )}

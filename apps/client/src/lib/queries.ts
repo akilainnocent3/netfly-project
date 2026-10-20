@@ -1,13 +1,22 @@
 "use client";
 
 import { unwrap } from "@netfly/api-client";
-import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
+import { useInitialMode } from "@/components/providers/initial-mode";
 import { useTranslation } from "@/stores/translation";
 import { api } from "./api";
-import type { HomePage, TitleCard, TranslationMode } from "./types";
+import type { BillboardItem, HomePage, TitleCard, TranslationMode } from "./types";
 
 export function useMode(): TranslationMode {
-  return useTranslation((s) => s.mode) ?? "translated";
+  const initial = useInitialMode();
+  return useTranslation((s) => s.mode) ?? initial;
 }
 
 export const keys = {
@@ -23,25 +32,28 @@ export const keys = {
 
 export function useHome() {
   const mode = useMode();
-  const ready = useTranslation((s) => s.mode !== null);
   return useInfiniteQuery({
     queryKey: keys.home(mode),
-    enabled: ready,
     initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) => unwrap(api.GET("/api/v1/browse/home", { params: { query: { translation: mode, cursor: pageParam } } })),
+    queryFn: ({ pageParam }) =>
+      unwrap(
+        api.GET("/api/v1/browse/home", {
+          params: { query: { translation: mode, cursor: pageParam } },
+        }),
+      ),
     getNextPageParam: (last) => last.next ?? undefined,
     placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
 }
 
-export function useBillboard() {
+export function useBillboard(initial?: { mode: string; items: BillboardItem[] }) {
   const mode = useMode();
-  const ready = useTranslation((s) => s.mode !== null);
   return useQuery({
     queryKey: keys.billboard(mode),
-    enabled: ready,
-    queryFn: () => unwrap(api.GET("/api/v1/browse/billboard", { params: { query: { translation: mode } } })),
+    initialData: initial && initial.mode === mode ? initial.items : undefined,
+    queryFn: () =>
+      unwrap(api.GET("/api/v1/browse/billboard", { params: { query: { translation: mode } } })),
     placeholderData: keepPreviousData,
     staleTime: 5 * 60_000,
   });
@@ -52,7 +64,12 @@ export function useTitlePage(slug: string | null) {
   return useQuery({
     queryKey: keys.title(slug ?? "", mode),
     enabled: !!slug,
-    queryFn: () => unwrap(api.GET("/api/v1/titles/{slug}", { params: { path: { slug: slug! }, query: { translation: mode } } })),
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/v1/titles/{slug}", {
+          params: { path: { slug: slug! }, query: { translation: mode } },
+        }),
+      ),
     staleTime: 30_000,
   });
 }
@@ -63,7 +80,11 @@ export function useEpisodes(slug: string, season: number | null) {
     enabled: season !== null,
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
-      unwrap(api.GET("/api/v1/titles/{slug}/seasons/{number}/episodes", { params: { path: { slug, number: season! }, query: { offset: pageParam, limit: 30 } } })),
+      unwrap(
+        api.GET("/api/v1/titles/{slug}/seasons/{number}/episodes", {
+          params: { path: { slug, number: season! }, query: { offset: pageParam, limit: 30 } },
+        }),
+      ),
     getNextPageParam: (last) => last.next ?? undefined,
   });
 }
@@ -83,7 +104,12 @@ export function useGenreTitles(slug: string, sort: "suggested" | "newest" | "az"
   return useInfiniteQuery({
     queryKey: keys.genre(slug, sort, mode),
     initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) => unwrap(api.GET("/api/v1/genres/{slug}/titles", { params: { path: { slug }, query: { sort, translation: mode, cursor: pageParam } } })),
+    queryFn: ({ pageParam }) =>
+      unwrap(
+        api.GET("/api/v1/genres/{slug}/titles", {
+          params: { path: { slug }, query: { sort, translation: mode, cursor: pageParam } },
+        }),
+      ),
     getNextPageParam: (last) => last.next ?? undefined,
     placeholderData: keepPreviousData,
   });
@@ -94,19 +120,27 @@ export function useSearch(q: string) {
   return useQuery({
     queryKey: keys.search(q, mode),
     enabled: q.length > 0,
-    queryFn: ({ signal }) => unwrap(api.GET("/api/v1/search", { params: { query: { q, translation: mode } }, signal })),
+    queryFn: ({ signal }) =>
+      unwrap(api.GET("/api/v1/search", { params: { query: { q, translation: mode } }, signal })),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
 }
 
 export function useSearchSuggestions() {
-  return useQuery({ queryKey: ["search-suggestions"], queryFn: () => unwrap(api.GET("/api/v1/search/suggestions")), staleTime: 60_000 });
+  return useQuery({
+    queryKey: ["search-suggestions"],
+    queryFn: () => unwrap(api.GET("/api/v1/search/suggestions")),
+    staleTime: 60_000,
+  });
 }
 
 export function useMyList() {
   const mode = useMode();
-  return useQuery({ queryKey: keys.myList(mode), queryFn: () => unwrap(api.GET("/api/v1/my-list", { params: { query: { translation: mode } } })) });
+  return useQuery({
+    queryKey: keys.myList(mode),
+    queryFn: () => unwrap(api.GET("/api/v1/my-list", { params: { query: { translation: mode } } })),
+  });
 }
 
 /** Remove a title from every row currently in the home cache (used by "Not for me"). */
@@ -117,7 +151,9 @@ export function removeFromHome(queryClient: ReturnType<typeof useQueryClient>, t
           ...data,
           pages: data.pages.map((page) => ({
             ...page,
-            rows: page.rows.map((row) => ({ ...row, items: row.items.filter((item) => item.id !== titleId) })).filter((row) => row.items.length > 0),
+            rows: page.rows
+              .map((row) => ({ ...row, items: row.items.filter((item) => item.id !== titleId) }))
+              .filter((row) => row.items.length > 0),
           })),
         }
       : data,
@@ -129,13 +165,24 @@ export function useRate() {
   return useMutation({
     mutationFn: ({ title, value }: { title: TitleCard; value: -1 | 1 | 2 | null }) =>
       value === null
-        ? unwrap(api.DELETE("/api/v1/ratings/{title_id}", { params: { path: { title_id: title.id } } }))
-        : unwrap(api.PUT("/api/v1/ratings/{title_id}", { params: { path: { title_id: title.id } }, body: { value } })),
+        ? unwrap(
+            api.DELETE("/api/v1/ratings/{title_id}", { params: { path: { title_id: title.id } } }),
+          )
+        : unwrap(
+            api.PUT("/api/v1/ratings/{title_id}", {
+              params: { path: { title_id: title.id } },
+              body: { value },
+            }),
+          ),
     onMutate: async ({ title, value }) => {
-      queryClient.setQueriesData<{ viewer: { rating: number | null } | null }>({ queryKey: ["title", title.slug] }, (d) =>
-        d?.viewer ? { ...d, viewer: { ...d.viewer, rating: value } } : d,
+      queryClient.setQueriesData<{ viewer: { rating: number | null } | null }>(
+        { queryKey: ["title", title.slug] },
+        (d) => (d?.viewer ? { ...d, viewer: { ...d.viewer, rating: value } } : d),
       );
-      queryClient.setQueryData<Record<number, number | null>>(["ratings"], (r) => ({ ...(r ?? {}), [title.id]: value }));
+      queryClient.setQueryData<Record<number, number | null>>(["ratings"], (r) => ({
+        ...(r ?? {}),
+        [title.id]: value,
+      }));
     },
     onSettled: () => {
       // Recommendations changed server-side: refetch the feed in the background.
@@ -145,7 +192,12 @@ export function useRate() {
 }
 
 export function useRatings() {
-  return useQuery<Record<number, number | null>>({ queryKey: ["ratings"], queryFn: () => ({}), staleTime: Infinity, gcTime: Infinity });
+  return useQuery<Record<number, number | null>>({
+    queryKey: ["ratings"],
+    queryFn: () => ({}),
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
 }
 
 export function useMyListToggle() {
@@ -153,12 +205,20 @@ export function useMyListToggle() {
   return useMutation({
     mutationFn: ({ title, add }: { title: TitleCard; add: boolean }) =>
       add
-        ? unwrap(api.PUT("/api/v1/my-list/{title_id}", { params: { path: { title_id: title.id } } }))
-        : unwrap(api.DELETE("/api/v1/my-list/{title_id}", { params: { path: { title_id: title.id } } })),
+        ? unwrap(
+            api.PUT("/api/v1/my-list/{title_id}", { params: { path: { title_id: title.id } } }),
+          )
+        : unwrap(
+            api.DELETE("/api/v1/my-list/{title_id}", { params: { path: { title_id: title.id } } }),
+          ),
     onMutate: ({ title, add }) => {
-      queryClient.setQueryData<Record<number, boolean>>(["in-list"], (m) => ({ ...(m ?? {}), [title.id]: add }));
-      queryClient.setQueriesData<{ viewer: { in_my_list: boolean } | null }>({ queryKey: ["title", title.slug] }, (d) =>
-        d?.viewer ? { ...d, viewer: { ...d.viewer, in_my_list: add } } : d,
+      queryClient.setQueryData<Record<number, boolean>>(["in-list"], (m) => ({
+        ...(m ?? {}),
+        [title.id]: add,
+      }));
+      queryClient.setQueriesData<{ viewer: { in_my_list: boolean } | null }>(
+        { queryKey: ["title", title.slug] },
+        (d) => (d?.viewer ? { ...d, viewer: { ...d.viewer, in_my_list: add } } : d),
       );
     },
     onSettled: () => {
@@ -169,5 +229,10 @@ export function useMyListToggle() {
 }
 
 export function useInList() {
-  return useQuery<Record<number, boolean>>({ queryKey: ["in-list"], queryFn: () => ({}), staleTime: Infinity, gcTime: Infinity });
+  return useQuery<Record<number, boolean>>({
+    queryKey: ["in-list"],
+    queryFn: () => ({}),
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
 }

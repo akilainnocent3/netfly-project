@@ -19,7 +19,9 @@ function Watch({ slug }: { slug: string }) {
     if (status !== "authenticated") return;
     let alive = true;
     setInfo(undefined);
-    void getPlayback(slug, { episode: episode ? Number(episode) : null }).then((data) => alive && setInfo(data));
+    void getPlayback(slug, { episode: episode ? Number(episode) : null }).then(
+      (data) => alive && setInfo(data),
+    );
     return () => {
       alive = false;
     };
@@ -29,7 +31,10 @@ function Watch({ slug }: { slug: string }) {
     return (
       <main className="grid min-h-dvh place-items-center bg-black">
         <StateMessage tone="error" title="This title can't be played right now">
-          It may still be processing. <Link href={`/title/${slug}`} className="text-white underline">Back to details</Link>
+          It may still be processing.{" "}
+          <Link href={`/title/${slug}`} className="text-white underline">
+            Back to details
+          </Link>
         </StateMessage>
       </main>
     );
@@ -37,7 +42,7 @@ function Watch({ slug }: { slug: string }) {
   if (!info) {
     return (
       <main className="fixed inset-0 grid place-items-center bg-black" aria-busy>
-        <div className="size-16 animate-spin rounded-full border-[3px] border-white/20 border-t-accent" />
+        <div className="border-t-accent size-16 animate-spin rounded-full border-[3px] border-white/20" />
       </main>
     );
   }

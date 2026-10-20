@@ -5,7 +5,13 @@ import { createContext, useContext, useMemo } from "react";
 
 const ConfigContext = createContext<PublicConfig>({});
 
-export function ConfigProvider({ value, children }: { value: PublicConfig; children: React.ReactNode }) {
+export function ConfigProvider({
+  value,
+  children,
+}: {
+  value: PublicConfig;
+  children: React.ReactNode;
+}) {
   return <ConfigContext.Provider value={value}>{children}</ConfigContext.Provider>;
 }
 

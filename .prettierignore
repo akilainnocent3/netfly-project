@@ -1,0 +1,7 @@
+**/.next
+**/next-env.d.ts
+packages/api-client/src/schema.d.ts
+packages/api-client/openapi.json
+**/node_modules
+e2e/playwright-report
+e2e/test-results

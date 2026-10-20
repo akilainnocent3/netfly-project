@@ -39,19 +39,35 @@ export function Scrubber({
   const pct = (t: number) => (duration ? `${(t / duration) * 100}%` : "0%");
   const preview = hover ?? drag;
   const cue = preview !== null ? cueAt(thumbnails, preview) : null;
-  const previewLeft = preview !== null && bar.current ? Math.max(130, Math.min(bar.current.clientWidth - 130, (preview / duration) * bar.current.clientWidth)) : 0;
+  const previewLeft =
+    preview !== null && bar.current
+      ? Math.max(
+          130,
+          Math.min(bar.current.clientWidth - 130, (preview / duration) * bar.current.clientWidth),
+        )
+      : 0;
 
   return (
     <div className="group/scrub relative flex h-6 items-center">
       {preview !== null && duration > 0 && (
-        <div className="pointer-events-none absolute bottom-7 -translate-x-1/2" style={{ left: previewLeft }}>
+        <div
+          className="pointer-events-none absolute bottom-7 -translate-x-1/2"
+          style={{ left: previewLeft }}
+        >
           {cue && (
             <div
               className="mb-2 overflow-hidden rounded-md bg-black shadow-2xl ring-2 ring-white/80"
-              style={{ width: cue.w, height: cue.h, backgroundImage: `url("${cue.url}")`, backgroundPosition: `-${cue.x}px -${cue.y}px` }}
+              style={{
+                width: cue.w,
+                height: cue.h,
+                backgroundImage: `url("${cue.url}")`,
+                backgroundPosition: `-${cue.x}px -${cue.y}px`,
+              }}
             />
           )}
-          <p className="text-center text-[13px] font-semibold tabular-nums text-white drop-shadow">{formatDuration(preview)}</p>
+          <p className="text-center text-[13px] font-semibold text-white tabular-nums drop-shadow">
+            {formatDuration(preview)}
+          </p>
         </div>
       )}
       <div
@@ -79,14 +95,28 @@ export function Scrubber({
         }}
         className="relative h-[5px] w-full cursor-pointer touch-none rounded-full bg-white/25 transition-[height] duration-150 group-hover/scrub:h-[7px]"
       >
-        <div className="absolute inset-y-0 left-0 rounded-full bg-white/35" style={{ width: pct(buffered) }} />
-        {markers.map((m) => (
-          <div key={m.kind} className="absolute inset-y-0 bg-white/30" style={{ left: pct(m.start), width: pct(m.end - m.start) }} aria-hidden />
-        ))}
-        <div className="absolute inset-y-0 left-0 rounded-full bg-accent" style={{ width: pct(shown) }} />
         <div
-          className="absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 scale-0 rounded-full bg-accent shadow-[0_0_0_4px_rgb(var(--accent-rgb)/0.3)] transition-transform group-hover/scrub:scale-100"
-          style={{ left: pct(shown), transform: drag !== null ? "translate(-50%,-50%) scale(1.15)" : undefined }}
+          className="absolute inset-y-0 left-0 rounded-full bg-white/35"
+          style={{ width: pct(buffered) }}
+        />
+        {markers.map((m) => (
+          <div
+            key={m.kind}
+            className="absolute inset-y-0 bg-white/30"
+            style={{ left: pct(m.start), width: pct(m.end - m.start) }}
+            aria-hidden
+          />
+        ))}
+        <div
+          className="bg-accent absolute inset-y-0 left-0 rounded-full"
+          style={{ width: pct(shown) }}
+        />
+        <div
+          className="bg-accent absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 scale-0 rounded-full shadow-[0_0_0_4px_rgb(var(--accent-rgb)/0.3)] transition-transform group-hover/scrub:scale-100"
+          style={{
+            left: pct(shown),
+            transform: drag !== null ? "translate(-50%,-50%) scale(1.15)" : undefined,
+          }}
         />
       </div>
     </div>

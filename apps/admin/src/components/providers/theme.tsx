@@ -3,7 +3,11 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 type Mode = "light" | "dark" | "system";
-const ThemeContext = createContext<{ mode: Mode; setMode: (m: Mode) => void; resolved: "light" | "dark" }>({
+const ThemeContext = createContext<{
+  mode: Mode;
+  setMode: (m: Mode) => void;
+  resolved: "light" | "dark";
+}>({
   mode: "system",
   setMode: () => undefined,
   resolved: "dark",
@@ -44,7 +48,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  return <ThemeContext.Provider value={{ mode, setMode, resolved }}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={{ mode, setMode, resolved }}>{children}</ThemeContext.Provider>
+  );
 }
 
 export const useTheme = () => useContext(ThemeContext);

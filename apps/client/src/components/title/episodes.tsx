@@ -12,7 +12,15 @@ import { NetflyImage } from "../ui/netfly-image";
 
 const SEASON_KEY = (slug: string) => `netfly-season:${slug}`;
 
-export function Episodes({ title, preferredSeason, scrollParent }: { title: TitleDetail; preferredSeason: number | null; scrollParent: React.RefObject<HTMLElement | null> }) {
+export function Episodes({
+  title,
+  preferredSeason,
+  scrollParent,
+}: {
+  title: TitleDetail;
+  preferredSeason: number | null;
+  scrollParent: React.RefObject<HTMLElement | null>;
+}) {
   const seasons = title.seasons;
   const initial = useMemo(() => {
     let stored: number | null = null;
@@ -43,38 +51,63 @@ export function Episodes({ title, preferredSeason, scrollParent }: { title: Titl
   return (
     <section aria-labelledby="episodes-heading" className="mt-10">
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h3 id="episodes-heading" className="text-[22px] font-bold">Episodes</h3>
+        <h3 id="episodes-heading" className="text-[22px] font-bold">
+          Episodes
+        </h3>
         {seasons.length > 1 ? (
           <DropdownMenu.Root>
             <DropdownMenu.Trigger className="flex h-10 items-center gap-3 rounded-md border border-white/20 bg-white/5 px-4 text-[15px] font-semibold hover:bg-white/10">
               {current?.display_name} <ChevronDown className="size-4" />
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
-              <DropdownMenu.Content align="end" sideOffset={6} className="z-[90] min-w-52 rounded-lg border border-white/10 bg-elevated p-1 shadow-2xl">
+              <DropdownMenu.Content
+                align="end"
+                sideOffset={6}
+                className="bg-elevated z-[90] min-w-52 rounded-lg border border-white/10 p-1 shadow-2xl"
+              >
                 {seasons.map((s) => (
-                  <DropdownMenu.Item key={s.id} onSelect={() => choose(s.number)} className="flex h-10 cursor-pointer items-center justify-between gap-6 rounded-md px-3 text-[15px] outline-none data-[highlighted]:bg-white/10">
+                  <DropdownMenu.Item
+                    key={s.id}
+                    onSelect={() => choose(s.number)}
+                    className="flex h-10 cursor-pointer items-center justify-between gap-6 rounded-md px-3 text-[15px] outline-none data-[highlighted]:bg-white/10"
+                  >
                     <span className={cn(s.number === season && "font-bold")}>{s.display_name}</span>
-                    <span className="text-[13px] text-muted">{s.episode_count} episodes</span>
+                    <span className="text-muted text-[13px]">{s.episode_count} episodes</span>
                   </DropdownMenu.Item>
                 ))}
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
         ) : (
-          <span className="text-[15px] font-semibold text-muted">{current?.display_name}</span>
+          <span className="text-muted text-[15px] font-semibold">{current?.display_name}</span>
         )}
       </div>
       {episodes.isPending ? (
-        <div className="space-y-3">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-28 rounded-lg" />)}</div>
+        <div className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="skeleton h-28 rounded-lg" />
+          ))}
+        </div>
       ) : items.length > 30 ? (
-        <VirtualList items={items} slug={title.slug} scrollParent={scrollParent} onEnd={() => episodes.hasNextPage && void episodes.fetchNextPage()} />
+        <VirtualList
+          items={items}
+          slug={title.slug}
+          scrollParent={scrollParent}
+          onEnd={() => episodes.hasNextPage && void episodes.fetchNextPage()}
+        />
       ) : (
         <ol className="divide-y divide-white/8 border-y border-white/8">
-          {items.map((ep) => <EpisodeRow key={ep.id} episode={ep} slug={title.slug} />)}
+          {items.map((ep) => (
+            <EpisodeRow key={ep.id} episode={ep} slug={title.slug} />
+          ))}
         </ol>
       )}
       {episodes.hasNextPage && items.length <= 30 && (
-        <button type="button" onClick={() => void episodes.fetchNextPage()} className="mx-auto mt-4 block rounded-full border border-white/20 px-5 py-2 text-[14px] font-semibold hover:bg-white/10">
+        <button
+          type="button"
+          onClick={() => void episodes.fetchNextPage()}
+          className="mx-auto mt-4 block rounded-full border border-white/20 px-5 py-2 text-[14px] font-semibold hover:bg-white/10"
+        >
           {episodes.isFetchingNextPage ? "Loading…" : "More episodes"}
         </button>
       )}
@@ -82,7 +115,17 @@ export function Episodes({ title, preferredSeason, scrollParent }: { title: Titl
   );
 }
 
-function VirtualList({ items, slug, scrollParent, onEnd }: { items: Episode[]; slug: string; scrollParent: React.RefObject<HTMLElement | null>; onEnd: () => void }) {
+function VirtualList({
+  items,
+  slug,
+  scrollParent,
+  onEnd,
+}: {
+  items: Episode[];
+  slug: string;
+  scrollParent: React.RefObject<HTMLElement | null>;
+  onEnd: () => void;
+}) {
   const listRef = useRef<HTMLOListElement>(null);
   const virtualizer = useVirtualizer({
     count: items.length,
@@ -97,9 +140,19 @@ function VirtualList({ items, slug, scrollParent, onEnd }: { items: Episode[]; s
     if (last && last.index >= items.length - 5) onEnd();
   }, [virtualItems, items.length, onEnd]);
   return (
-    <ol ref={listRef} className="relative border-y border-white/8" style={{ height: virtualizer.getTotalSize() }}>
+    <ol
+      ref={listRef}
+      className="relative border-y border-white/8"
+      style={{ height: virtualizer.getTotalSize() }}
+    >
       {virtualItems.map((v) => (
-        <div key={v.key} data-index={v.index} ref={virtualizer.measureElement} className="absolute inset-x-0 border-b border-white/8" style={{ transform: `translateY(${v.start - virtualizer.options.scrollMargin}px)` }}>
+        <div
+          key={v.key}
+          data-index={v.index}
+          ref={virtualizer.measureElement}
+          className="absolute inset-x-0 border-b border-white/8"
+          style={{ transform: `translateY(${v.start - virtualizer.options.scrollMargin}px)` }}
+        >
           <EpisodeRow episode={items[v.index]!} slug={slug} />
         </div>
       ))}
@@ -111,32 +164,51 @@ function EpisodeRow({ episode, slug }: { episode: Episode; slug: string }) {
   const href = `/watch/${slug}?episode=${episode.id}`;
   const content = (
     <>
-      <span className="w-6 shrink-0 text-center text-[22px] font-semibold text-white/60">{episode.number}</span>
-      <div className="relative aspect-video w-[132px] shrink-0 overflow-hidden rounded-md bg-surface md:w-[168px]">
+      <span className="w-6 shrink-0 text-center text-[22px] font-semibold text-white/60">
+        {episode.number}
+      </span>
+      <div className="bg-surface relative aspect-video w-[132px] shrink-0 overflow-hidden rounded-md md:w-[168px]">
         <NetflyImage image={episode.thumbnail} alt="" sizes="168px" className="object-cover" />
         {episode.available && (
           <span className="absolute inset-0 grid place-items-center bg-black/30 opacity-0 transition-opacity group-hover/ep:opacity-100">
-            <span className="grid size-10 place-items-center rounded-full border-2 border-white bg-black/50"><Play className="size-4 translate-x-px fill-white" /></span>
+            <span className="grid size-10 place-items-center rounded-full border-2 border-white bg-black/50">
+              <Play className="size-4 translate-x-px fill-white" />
+            </span>
           </span>
         )}
         {episode.progress > 0 && !episode.watched && (
-          <div className="absolute inset-x-0 bottom-0 h-1 bg-white/25"><div className="h-full bg-accent" style={{ width: `${episode.progress * 100}%` }} /></div>
+          <div className="absolute inset-x-0 bottom-0 h-1 bg-white/25">
+            <div className="bg-accent h-full" style={{ width: `${episode.progress * 100}%` }} />
+          </div>
         )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-3">
           <p className="truncate text-[16px] font-semibold">{episode.name}</p>
-          <span className="shrink-0 text-[14px] text-white/70">{formatRuntime(episode.runtime_minutes)}</span>
+          <span className="shrink-0 text-[14px] text-white/70">
+            {formatRuntime(episode.runtime_minutes)}
+          </span>
         </div>
-        <p className="mt-1 line-clamp-2 text-[14px] leading-snug text-white/65">{episode.synopsis}</p>
-        {episode.watched && <p className="mt-1.5 flex items-center gap-1 text-[12px] font-semibold text-emerald-400"><Check className="size-3.5" /> Watched</p>}
+        <p className="mt-1 line-clamp-2 text-[14px] leading-snug text-white/65">
+          {episode.synopsis}
+        </p>
+        {episode.watched && (
+          <p className="mt-1.5 flex items-center gap-1 text-[12px] font-semibold text-emerald-400">
+            <Check className="size-3.5" /> Watched
+          </p>
+        )}
       </div>
     </>
   );
   return (
     <li className="list-none">
       {episode.available ? (
-        <Link href={href} className="group/ep flex items-center gap-4 rounded-md px-2 py-4 transition-colors hover:bg-white/5 md:px-4">{content}</Link>
+        <Link
+          href={href}
+          className="group/ep flex items-center gap-4 rounded-md px-2 py-4 transition-colors hover:bg-white/5 md:px-4"
+        >
+          {content}
+        </Link>
       ) : (
         <div className="flex items-center gap-4 px-2 py-4 opacity-50 md:px-4">{content}</div>
       )}

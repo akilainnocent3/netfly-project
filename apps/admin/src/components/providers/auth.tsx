@@ -46,16 +46,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = useCallback((session: SessionPayload) => api.session.setSession(session), []);
   const signOut = useCallback(async () => {
-    await api.POST("/api/v1/auth/logout", { body: { app: "admin" }, headers: api.session.csrfHeader() });
+    await api.POST("/api/v1/auth/logout", {
+      body: { app: "admin" },
+      headers: api.session.csrfHeader(),
+    });
     api.session.clear();
     router.replace("/login");
   }, [router]);
   const can = useCallback(
-    (...roles: Role[]) => !!user && (user.role === "superadmin" || roles.includes(user.role as Role)),
+    (...roles: Role[]) =>
+      !!user && (user.role === "superadmin" || roles.includes(user.role as Role)),
     [user],
   );
 
-  const value = useMemo(() => ({ status, user, signIn, signOut, can }), [status, user, signIn, signOut, can]);
+  const value = useMemo(
+    () => ({ status, user, signIn, signOut, can }),
+    [status, user, signIn, signOut, can],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

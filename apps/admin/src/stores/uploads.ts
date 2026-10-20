@@ -73,11 +73,17 @@ export const useUploads = create<UploadsStore>((set, get) => ({
   add: (file, kind, target) => {
     const key = fingerprintOf(file);
     if (get().items[key] && !["done", "error"].includes(get().items[key]!.state)) return;
-    const record: PendingRecord = { fingerprint: key, filename: file.name, size: file.size, target };
+    const record: PendingRecord = {
+      fingerprint: key,
+      filename: file.name,
+      size: file.size,
+      target,
+    };
     writePending([...readPending().filter((p) => p.fingerprint !== key), record]);
     let lastBytes = 0;
     let lastAt = performance.now();
-    const patch = (p: Partial<UploadItem>) => set((s) => (s.items[key] ? { items: { ...s.items, [key]: { ...s.items[key]!, ...p } } } : s));
+    const patch = (p: Partial<UploadItem>) =>
+      set((s) => (s.items[key] ? { items: { ...s.items, [key]: { ...s.items[key]!, ...p } } } : s));
     const upload = new MultipartUpload(file, kind, {
       onProgress: (loaded) => {
         const now = performance.now();
@@ -91,20 +97,44 @@ export const useUploads = create<UploadsStore>((set, get) => ({
     });
     set((s) => ({
       pending: readPending(),
-      items: { ...s.items, [key]: { key, filename: file.name, size: file.size, loaded: 0, state: "preparing", target, speed: 0, upload } },
+      items: {
+        ...s.items,
+        [key]: {
+          key,
+          filename: file.name,
+          size: file.size,
+          loaded: 0,
+          state: "preparing",
+          target,
+          speed: 0,
+          upload,
+        },
+      },
     }));
     upload
       .start()
       .then(async (assetId) => {
         if (target.type === "title") {
-          await unwrap(api.PATCH("/api/v1/admin/titles/{id}", { params: { path: { id: target.id } }, body: { [target.field]: assetId } }));
+          await unwrap(
+            api.PATCH("/api/v1/admin/titles/{id}", {
+              params: { path: { id: target.id } },
+              body: { [target.field]: assetId },
+            }),
+          );
         } else {
-          await unwrap(api.PATCH("/api/v1/admin/episodes/{id}", { params: { path: { id: target.id } }, body: { video_id: assetId } }));
+          await unwrap(
+            api.PATCH("/api/v1/admin/episodes/{id}", {
+              params: { path: { id: target.id } },
+              body: { video_id: assetId },
+            }),
+          );
         }
         get().forgetPending(key);
         set((s) => ({ completedVersion: s.completedVersion + 1 }));
       })
-      .catch((e: unknown) => patch({ state: "error", error: e instanceof Error ? e.message : "Upload failed" }));
+      .catch((e: unknown) =>
+        patch({ state: "error", error: e instanceof Error ? e.message : "Upload failed" }),
+      );
   },
   pause: (key) => get().items[key]?.upload.pause(),
   resume: (key) => get().items[key]?.upload.resume(),

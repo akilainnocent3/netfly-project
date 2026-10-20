@@ -3,7 +3,16 @@ export interface Strength {
   label: string;
 }
 
-const COMMON = ["password", "123456", "qwerty", "letmein", "welcome", "netfly", "iloveyou", "admin"];
+const COMMON = [
+  "password",
+  "123456",
+  "qwerty",
+  "letmein",
+  "welcome",
+  "netfly",
+  "iloveyou",
+  "admin",
+];
 
 /** Lightweight strength estimate: length and variety, penalising common patterns. */
 export function passwordStrength(password: string): Strength {
@@ -16,6 +25,8 @@ export function passwordStrength(password: string): Strength {
   if (COMMON.some((c) => lower.includes(c))) bits -= 25;
   if (/(.)\1{2,}/.test(password)) bits -= 10;
   if (/^(?:0123|1234|abcd|qwer)/i.test(password)) bits -= 10;
-  const score = (bits < 28 ? 0 : bits < 40 ? 1 : bits < 55 ? 2 : bits < 70 ? 3 : 4) as Strength["score"];
+  const score = (
+    bits < 28 ? 0 : bits < 40 ? 1 : bits < 55 ? 2 : bits < 70 ? 3 : 4
+  ) as Strength["score"];
   return { score, label: ["Too weak", "Weak", "Okay", "Strong", "Very strong"][score] ?? "" };
 }

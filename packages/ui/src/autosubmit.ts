@@ -28,23 +28,20 @@ export function useAutoSubmit<V>({ values, isValid, delay, onSubmit, enabled = t
   latest.current = onSubmit;
   const key = JSON.stringify(values);
 
-  const run = useCallback(
-    async (snapshot: V, snapshotKey: string) => {
-      if (busy.current) return;
-      busy.current = true;
-      attempted.current = snapshotKey;
-      setStatus("submitting");
-      try {
-        const ok = await latest.current(snapshot);
-        setStatus(ok ? "done" : "failed");
-      } catch {
-        setStatus("failed");
-      } finally {
-        busy.current = false;
-      }
-    },
-    [],
-  );
+  const run = useCallback(async (snapshot: V, snapshotKey: string) => {
+    if (busy.current) return;
+    busy.current = true;
+    attempted.current = snapshotKey;
+    setStatus("submitting");
+    try {
+      const ok = await latest.current(snapshot);
+      setStatus(ok ? "done" : "failed");
+    } catch {
+      setStatus("failed");
+    } finally {
+      busy.current = false;
+    }
+  }, []);
 
   useEffect(() => {
     if (!enabled || !isValid || busy.current || attempted.current === key) {
