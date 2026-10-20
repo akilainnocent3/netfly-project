@@ -47,8 +47,7 @@ superadmin with `python manage.py createsuperuser`, then sign in to the Studio.
       "Resource": "arn:aws:s3:::YOUR-BUCKET" },
     { "Effect": "Allow",
       "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts"],
-      "Resource": "arn:aws:s3:::YOUR-BUCKET/*" }
-  ]
+      "Resource": "arn:aws:s3:::YOUR-BUCKET/*" 
 }
 ```
 
