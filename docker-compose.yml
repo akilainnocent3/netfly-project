@@ -1,0 +1,94 @@
+# Local development: `docker compose up`
+# Only four bootstrap variables exist (see docs/DECISIONS.md). Defaults below are
+# for local development only — production values come from your secret manager.
+x-backend-env: &backend-env
+  DATABASE_URL: ${DATABASE_URL:-postgres://netfly:netfly@postgres:5432/netfly}
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-only-insecure-secret-key-change-me-0123456789}
+  CONFIG_ENCRYPTION_KEY: ${CONFIG_ENCRYPTION_KEY:-ZGV2LW9ubHktZmVybmV0LWtleS1jaGFuZ2UtbWUtMDA=}
+
+x-backend: &backend
+  build: { context: ./backend, target: dev }
+  image: netfly-backend:dev
+  environment: *backend-env
+  volumes: ["./backend:/app"]
+  depends_on:
+    postgres: { condition: service_healthy }
+    redis: { condition: service_healthy }
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment: { POSTGRES_USER: netfly, POSTGRES_PASSWORD: netfly, POSTGRES_DB: netfly }
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    ports: ["5432:5432"]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U netfly"], interval: 3s, retries: 20 }
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: ["redisdata:/data"]
+    ports: ["6379:6379"]
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 3s, retries: 20 }
+
+  migrate:
+    <<: *backend
+    restart: "no"
+    command: sh -c "python manage.py migrate --noinput && python manage.py seed_config && python manage.py seed_demo"
+
+  backend:
+    <<: *backend
+    command: python manage.py runserver 0.0.0.0:8000
+    ports: ["8000:8000"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck: { test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/api/health')"], interval: 5s, retries: 30 }
+
+  worker:
+    <<: *backend
+    command: celery -A netfly worker -Q default -c 2 -l info
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  worker-transcode:
+    <<: *backend
+    command: celery -A netfly worker -Q transcode -c 1 -l info --max-tasks-per-child 20
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  beat:
+    <<: *backend
+    command: celery -A netfly beat -l info --schedule /tmp/celerybeat-schedule
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  client:
+    build: { context: ., dockerfile: infra/node.Dockerfile, target: dev }
+    image: netfly-node:dev
+    command: pnpm --filter @netfly/client dev
+    environment: { NETFLY_API_URL: http://backend:8000 }
+    ports: ["3000:3000"]
+    volumes:
+      - ./apps:/repo/apps
+      - ./packages:/repo/packages
+      - /repo/apps/client/.next
+    depends_on:
+      backend: { condition: service_healthy }
+
+  admin:
+    image: netfly-node:dev
+    command: pnpm --filter @netfly/admin dev
+    environment: { NETFLY_API_URL: http://backend:8000 }
+    ports: ["3001:3001"]
+    volumes:
+      - ./apps:/repo/apps
+      - ./packages:/repo/packages
+      - /repo/apps/admin/.next
+    depends_on:
+      backend: { condition: service_healthy }
+      client: { condition: service_started }
+
+volumes:
+  pgdata:
+  redisdata:
