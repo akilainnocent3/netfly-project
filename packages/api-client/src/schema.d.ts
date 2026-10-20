@@ -37,6 +37,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin_audit_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/billboards": {
         parameters: {
             query?: never;
@@ -186,6 +202,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["admin_config_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin_dashboard"];
         put?: never;
         post?: never;
         delete?: never;
@@ -497,6 +529,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_staff_list"];
+        put?: never;
+        /** @description Promote an existing account, or create a new staff account with a password. */
+        post: operations["admin_staff_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/staff/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        delete: operations["admin_staff_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        patch: operations["admin_staff_partial_update"];
+        trace?: never;
+    };
     "/api/v1/admin/storage/apply-cors": {
         parameters: {
             query?: never;
@@ -733,6 +801,91 @@ export interface paths {
         put?: never;
         /** @description Every admin write lands in the audit log with a field-level diff. */
         post: operations["admin_uploads_sign_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Viewers: search, history, ratings, disable, reset password. */
+        get: operations["admin_users_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Viewers: search, history, ratings, disable, reset password. */
+        get: operations["admin_users_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Viewers: search, history, ratings, disable, reset password. */
+        post: operations["admin_users_disable_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Viewers: search, history, ratings, disable, reset password. */
+        post: operations["admin_users_enable_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Sets a one-time temporary password (shown once, never stored in plain text) and signs the user out. */
+        post: operations["admin_users_reset_password_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1259,6 +1412,21 @@ export interface components {
         AdminImageRequest: {
             crop?: unknown;
         };
+        AdminUser: {
+            readonly id: number;
+            readonly username: string;
+            readonly full_name: string;
+            readonly is_active: boolean;
+            readonly is_staff: boolean;
+            readonly role: components["schemas"]["RoleEnum"];
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly last_seen: string | null;
+            readonly translation_mode: components["schemas"]["TranslationModeEnum"];
+            readonly watch_count: number;
+            readonly rating_count: number;
+        };
         AdminVideo: {
             /** Format: uuid */
             readonly id: string;
@@ -1453,6 +1621,35 @@ export interface components {
             description?: string;
             readonly entries: components["schemas"]["ConfigEntry"][];
         };
+        Dashboard: {
+            range: string;
+            active_viewers: number;
+            plays_today: number;
+            plays_7d: number;
+            plays_30d: number;
+            /** Format: double */
+            avg_startup_ms: number | null;
+            /**
+             * Format: double
+             * @description Share of plays with at least one rebuffer.
+             */
+            rebuffer_ratio: number | null;
+            /** Format: double */
+            rebuffers_per_hour: number | null;
+            /** Format: double */
+            watch_hours: number;
+            viewers_total: number;
+            titles_published: number;
+            transcoding: {
+                [key: string]: number;
+            };
+            storage_bytes: number | null;
+            quality_mix: {
+                [key: string]: number;
+            };
+            series: components["schemas"]["SeriesPoint"][];
+            top_titles: components["schemas"]["TopTitle"][];
+        };
         Episode: {
             readonly id: number;
             number: number;
@@ -1590,6 +1787,16 @@ export interface components {
         Health: {
             ok: boolean;
         };
+        HistoryItem: {
+            title_id: number;
+            title: string;
+            episode: string | null;
+            /** Format: double */
+            progress: number;
+            completed: boolean;
+            /** Format: date-time */
+            updated_at: string;
+        };
         HomePage: {
             rows: components["schemas"]["Row"][];
             next: string | null;
@@ -1683,6 +1890,36 @@ export interface components {
             name: string;
             synopsis: string;
             thumbnail: components["schemas"]["ImageRef"] | null;
+        };
+        PaginatedAdminUserList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["AdminUser"][];
+        };
+        PaginatedAuditLogList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["AuditLog"][];
         };
         PaginatedTitleAdminListList: {
             /** @example 123 */
@@ -1791,6 +2028,9 @@ export interface components {
         };
         PatchedRelatedWeightRequest: {
             weight?: number;
+        };
+        PatchedRoleRequest: {
+            role?: components["schemas"]["RoleEnum"];
         };
         PatchedSeasonAdminRequest: {
             number?: number;
@@ -1934,6 +2174,13 @@ export interface components {
         RatingInputRequest: {
             value: components["schemas"]["ValueEnum"];
         };
+        RatingItem: {
+            title_id: number;
+            title: string;
+            value: number;
+            /** Format: date-time */
+            updated_at: string;
+        };
         RatingResult: {
             title_id: number;
             value: number | null;
@@ -1994,6 +2241,9 @@ export interface components {
         ReorderRequest: {
             ids: number[];
         };
+        ResetPasswordResult: {
+            temporary_password: string;
+        };
         /**
          * @description * `superadmin` - Super admin
          *     * `content_manager` - Content manager
@@ -2035,6 +2285,17 @@ export interface components {
             readonly display_name: string;
             readonly episode_count: number;
         };
+        SeriesPoint: {
+            /** Format: date */
+            date: string;
+            plays: number;
+            viewers: number;
+            /** Format: double */
+            startup_ms: number | null;
+            /** Format: double */
+            rebuffers_per_play: number | null;
+            signups: number;
+        };
         Session: {
             access: string;
             expires_in: number;
@@ -2055,6 +2316,12 @@ export interface components {
             password: string;
             /** @default client */
             app: components["schemas"]["AppEnum"];
+        };
+        StaffInputRequest: {
+            username: string;
+            full_name?: string;
+            role: components["schemas"]["RoleEnum"];
+            password?: string;
         };
         StorageTestRequestRequest: {
             bucket?: string;
@@ -2283,6 +2550,12 @@ export interface components {
          * @enum {string}
          */
         TitleTypeEnum: "movie" | "series";
+        TopTitle: {
+            id: number;
+            title: string;
+            plays: number;
+            viewers: number;
+        };
         TranscodeStats: {
             queued: number;
             transcoding: number;
@@ -2347,6 +2620,11 @@ export interface components {
             autoplay_next?: boolean;
             autoplay_previews?: boolean;
             subtitles_language?: string;
+        };
+        UserDetail: {
+            user: components["schemas"]["AdminUser"];
+            history: components["schemas"]["HistoryItem"][];
+            ratings: components["schemas"]["RatingItem"][];
         };
         UsernameAvailability: {
             username: string;
@@ -2474,6 +2752,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicConfig"];
+                };
+            };
+        };
+    };
+    admin_audit_list: {
+        parameters: {
+            query?: {
+                action?: string;
+                actor?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                search?: string;
+                target_type?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAuditLogList"];
                 };
             };
         };
@@ -2867,6 +3173,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuditLog"][];
+                };
+            };
+        };
+    };
+    admin_dashboard: {
+        parameters: {
+            query?: {
+                range?: "30d" | "7d" | "90d" | "today";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Dashboard"];
                 };
             };
         };
@@ -3667,6 +3994,97 @@ export interface operations {
             };
         };
     };
+    admin_staff_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"][];
+                };
+            };
+        };
+    };
+    admin_staff_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffInputRequest"];
+                "multipart/form-data": components["schemas"]["StaffInputRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+        };
+    };
+    admin_staff_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this user. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_staff_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this user. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedRoleRequest"];
+                "multipart/form-data": components["schemas"]["PatchedRoleRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+        };
+    };
     admin_storage_apply_cors: {
         parameters: {
             query?: never;
@@ -4118,6 +4536,120 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SignedPart"][];
+                };
+            };
+        };
+    };
+    admin_users_list: {
+        parameters: {
+            query?: {
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                search?: string;
+                staff?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAdminUserList"];
+                };
+            };
+        };
+    };
+    admin_users_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this user. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDetail"];
+                };
+            };
+        };
+    };
+    admin_users_disable_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this user. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+        };
+    };
+    admin_users_enable_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this user. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+        };
+    };
+    admin_users_reset_password_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this user. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResetPasswordResult"];
                 };
             };
         };

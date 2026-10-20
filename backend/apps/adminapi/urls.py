@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from . import catalog_views as cv
 from . import config_views as cfg
 from . import media_views as mv
+from . import people_views as pv
 
 router = DefaultRouter(trailing_slash=False)
 router.include_root_view = False
@@ -18,9 +19,13 @@ router.register("billboards", cv.BillboardViewSet, basename="admin-billboards")
 router.register("images", cv.ImageViewSet, basename="admin-images")
 router.register("uploads", mv.UploadViewSet, basename="admin-uploads")
 router.register("videos", mv.VideoViewSet, basename="admin-videos")
+router.register("users", pv.UserViewSet, basename="admin-users")
+router.register("staff", pv.StaffViewSet, basename="admin-staff")
+router.register("audit", pv.AuditLogViewSet, basename="admin-audit")
 
 urlpatterns = [
     path("title-picker", cv.TitlePickerView.as_view(), name="admin-title-picker"),
+    path("dashboard", pv.DashboardView.as_view(), name="admin-dashboard"),
     path("config", cfg.ConfigListView.as_view(), name="admin-config"),
     path("config/<str:key>", cfg.ConfigEntryView.as_view(), name="admin-config-entry"),
     path("config/<str:key>/history", cfg.ConfigHistoryView.as_view(), name="admin-config-history"),

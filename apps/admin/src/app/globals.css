@@ -51,3 +51,7 @@ body { font-size: 13.5px; }
 @keyframes shimmer { from { background-position: -200% 0 } to { background-position: 200% 0 } }
 .tabular { font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+/* Data-viz roles (validated reference palette, slot 1 = blue). */
+:root { --series-1: #2a78d6; --viz-grid: #ececef; --viz-axis: #8a8a94; }
+.dark { --series-1: #3987e5; --viz-grid: #22222a; --viz-axis: #75757f; }
