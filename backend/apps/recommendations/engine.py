@@ -332,7 +332,7 @@ def because_you_liked(
             reverse=True,
         )
         ids += [c.title_id for c in neighbours]
-        if len(ids) >= 3:
+        if len(ids) >= 2:
             rows.append((seed, ids[:limit]))
     return rows
 

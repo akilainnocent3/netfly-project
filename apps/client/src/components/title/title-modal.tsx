@@ -3,16 +3,19 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { TitleView } from "./title-view";
 
 /** Title detail as a modal over the current page. Closing returns to the exact scroll position. */
 export function TitleModal({ slug, fallbackHref }: { slug: string; fallbackHref?: string }) {
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [pageScroll] = useState(() => (typeof window === "undefined" ? 0 : window.scrollY));
   const close = () => {
     if (fallbackHref) router.push(fallbackHref, { scroll: false });
     else router.back();
+    // Return to exactly where the viewer was, once the route change settles.
+    for (const delay of [0, 50, 150, 300]) setTimeout(() => window.scrollTo({ top: pageScroll }), delay);
   };
   return (
     <Dialog.Root open onOpenChange={(open) => !open && close()}>

@@ -1,5 +1,6 @@
 import { themeVariables } from "@netfly/ui";
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Providers } from "@/components/providers";
 import { fontFor, fontVariables } from "@/lib/fonts";
 import { getPublicConfig } from "@/lib/server-config";
@@ -24,7 +25,9 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const config = await getPublicConfig();
+  // Reading the request makes every page dynamic, so Next can stamp the CSP nonce
+  // (set by middleware) onto its inline scripts.
+  const [config] = await Promise.all([getPublicConfig(), headers()]);
   const font = typeof config["branding.font_family"] === "string" ? config["branding.font_family"] : "Inter";
   const style = { ...themeVariables(config), "--brand-font": fontFor(font) } as React.CSSProperties;
   return (

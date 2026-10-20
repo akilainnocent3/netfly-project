@@ -48,6 +48,19 @@ export function RatingButton({ title, size = "md", onDisliked }: { title: TitleC
   useEffect(() => () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
   }, []);
+  // Close on Escape or a tap elsewhere (touch has no mouseleave).
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => root.current && !root.current.contains(e.target as Node) && setOpen(false);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   const choose = (value: Value) => {
     const next = current === value ? null : value;
@@ -72,6 +85,7 @@ export function RatingButton({ title, size = "md", onDisliked }: { title: TitleC
 
   return (
     <div
+      ref={root}
       className="relative"
       onMouseEnter={() => {
         if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -85,7 +99,7 @@ export function RatingButton({ title, size = "md", onDisliked }: { title: TitleC
         type="button"
         aria-label={current ? `Rated: ${CHOICES.find((c) => c.value === current)?.label}. Change rating` : "Rate this title"}
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen(true)}
         className={cn(
           "grid place-items-center rounded-full border-2 transition-colors",
           dim,

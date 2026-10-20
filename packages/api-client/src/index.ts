@@ -86,6 +86,11 @@ export class SessionManager {
     this.emit();
   }
 
+  /** A refresh cookie exists, so a session can be restored before the first request. */
+  canRestore(): boolean {
+    return !this.access && !!readCookie(`netfly_csrf_${this.app}`);
+  }
+
   isFresh(): boolean {
     return !!this.access && Date.now() < this.expiresAt - 30_000;
   }
@@ -159,7 +164,8 @@ export function createNetflyClient(options: {
       }
       return request;
     };
-    if (session.token && !session.isFresh()) await session.refresh();
+    // On a fresh page load, restore the session first so early requests aren't anonymous.
+    if (session.canRestore() || (session.token && !session.isFresh())) await session.refresh();
     let response = await fetch(withAuth(input));
     if (response.status === 401 && session.token) {
       if (await session.refresh()) {
