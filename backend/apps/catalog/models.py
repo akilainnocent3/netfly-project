@@ -95,6 +95,16 @@ class Title(models.Model):
     publish_at = models.DateTimeField(null=True, blank=True)
     published_at = models.DateTimeField(null=True, blank=True)
     is_featured = models.BooleanField(default=False)
+    boost = models.SmallIntegerField(
+        default=0,
+        validators=[MinValueValidator(-2), MaxValueValidator(5)],
+        help_text=(
+            "Recommendation priority. 0 = normal; positive pushes the title up in every personalised row "
+            "and the billboard; negative demotes it."
+        ),
+    )
+    boost_starts_at = models.DateTimeField(null=True, blank=True)
+    boost_ends_at = models.DateTimeField(null=True, blank=True)
 
     rights_holder = models.CharField(max_length=200, blank=True)
     license_start = models.DateTimeField(null=True, blank=True)
@@ -120,6 +130,7 @@ class Title(models.Model):
             models.Index(fields=["status", "translation_status", "-published_at"]),
             models.Index(fields=["status", "-trending"]),
             models.Index(fields=["license_end"]),
+            models.Index(fields=["status", "boost"]),
             GinIndex(fields=["title"], name="title_trgm", opclasses=["gin_trgm_ops"]),
             GinIndex(
                 fields=["original_title"], name="title_original_trgm", opclasses=["gin_trgm_ops"]
@@ -132,6 +143,19 @@ class Title(models.Model):
     @property
     def is_series(self) -> bool:
         return self.type == self.Type.SERIES
+
+    def effective_boost(self, now=None) -> int:
+        return effective_boost(self.boost, self.boost_starts_at, self.boost_ends_at, now)
+
+
+def effective_boost(boost: int, starts_at, ends_at, now=None) -> int:
+    """The boost in force at `now`: outside the campaign window a boost counts as 0."""
+    if not boost:
+        return 0
+    now = now or timezone.now()
+    if (starts_at and now < starts_at) or (ends_at and now >= ends_at):
+        return 0
+    return boost
 
 
 class RelatedTitle(models.Model):

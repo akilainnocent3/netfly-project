@@ -19,9 +19,10 @@ from apps.core.config import config
 from apps.core.throttling import throttle
 from apps.engagement.models import MyListItem, Rating, SearchLog, WatchProgress
 from apps.recommendations import engine, feed
+from apps.recommendations.cache import catalog_version
 
 from . import serializers as s
-from .models import Billboard, Episode, Genre, Season, Title
+from .models import Episode, Genre, Season, Title
 from .queries import card_queryset, cards_by_ids, translation_mode, viewer_state, visible_titles
 
 TRANSLATION = OpenApiParameter("translation", str, enum=["translated", "not_translated", "all"])
@@ -57,12 +58,16 @@ class HomeView(APIView):
     permission_classes = [IsViewer]
 
     @extend_schema(
-        parameters=[TRANSLATION, CURSOR], responses=s.HomePageSerializer, operation_id="browse_home"
+        parameters=[TRANSLATION, CURSOR, OpenApiParameter("type", str, enum=["movie", "series"])],
+        responses=s.HomePageSerializer,
+        operation_id="browse_home",
     )
     def get(self, request):
         mode = translation_mode(request)
         page = _offset(request.query_params.get("cursor"))
-        rows, match, more = feed.home_page(request.user.pk, mode, page)
+        kind = request.query_params.get("type")
+        kind = kind if kind in ("movie", "series") else None
+        rows, match, more = feed.home_page(request.user.pk, mode, page, kind)
         cards = feed.hydrate(rows)
         viewer = viewer_state(request.user, cards)
         out = []
@@ -86,7 +91,7 @@ class HomeView(APIView):
 
 
 class BillboardView(APIView):
-    authentication_classes: list = []
+    """Hero billboard. Anonymous: short public cache. Signed in: computed per viewer (dislikes excluded)."""
 
     @extend_schema(
         parameters=[TRANSLATION],
@@ -95,49 +100,33 @@ class BillboardView(APIView):
     )
     def get(self, request):
         mode = translation_mode(request)
-        ck = f"billboard:{mode}"
-        data = cache.get(ck)
-        if data is None:
-            now = timezone.now()
-            visible = visible_titles(mode)
-            items = [
-                b
-                for b in Billboard.objects.filter(is_active=True, title__in=visible)
-                .filter(
-                    Q(starts_at__isnull=True) | Q(starts_at__lte=now),
-                    Q(ends_at__isnull=True) | Q(ends_at__gt=now),
-                )
-                .order_by("order")
-                if b.title_id
-            ]
-            ids = [b.title_id for b in items]
-            if not ids:
-                ids = list(
-                    visible.filter(is_featured=True, backdrop__isnull=False)
-                    .order_by("-published_at")
-                    .values_list("pk", flat=True)[:5]
-                )
-            if not ids:
-                ids = list(
-                    visible.filter(backdrop__isnull=False)
-                    .order_by("-trending", "-published_at")
-                    .values_list("pk", flat=True)[:5]
-                )
-            cards = {t.pk: t for t in cards_by_ids(ids)}
-            meta = {b.title_id: b for b in items}
-            data = [
-                {
-                    "id": meta[i].pk if i in meta else -i,
-                    "headline": meta[i].headline if i in meta else "",
-                    "tagline": (meta[i].tagline if i in meta else "") or cards[i].short_synopsis,
-                    "use_trailer": meta[i].use_trailer if i in meta else True,
-                    "title": s.TitleCardSerializer(cards[i]).data,
-                }
-                for i in ids
-                if i in cards
-            ]
-            cache.set(ck, data, 60)
-        return _public_cache(Response(data))
+        user_id = request.user.pk if request.user.is_authenticated else None
+        if user_id is None:
+            ck = f"billboard:{catalog_version()}:{mode}"
+            data = cache.get(ck)
+            if data is None:
+                data = self._build(mode, None)
+                cache.set(ck, data, 60)
+            return _public_cache(Response(data))
+        response = Response(self._build(mode, user_id))
+        response["Cache-Control"] = "private, no-store"
+        return response
+
+    @staticmethod
+    def _build(mode: str, user_id: int | None) -> list[dict]:
+        ids, meta = feed.billboard_ids(mode, user_id)
+        cards = {t.pk: t for t in cards_by_ids(ids)}
+        return [
+            {
+                "id": meta[i].pk if i in meta else -i,
+                "headline": meta[i].headline if i in meta else "",
+                "tagline": (meta[i].tagline if i in meta else "") or cards[i].short_synopsis,
+                "use_trailer": meta[i].use_trailer if i in meta else True,
+                "title": s.TitleCardSerializer(cards[i]).data,
+            }
+            for i in ids
+            if i in cards
+        ]
 
 
 def _progress_by_episode(user_id: int, title: Title) -> dict[int, WatchProgress]:

@@ -77,6 +77,11 @@ class GenreBriefSerializer(serializers.ModelSerializer):
 
 class TitleAdminListSerializer(serializers.ModelSerializer):
     poster = AdminImageSerializer(read_only=True)
+    effective_boost = serializers.SerializerMethodField()
+
+    def get_effective_boost(self, obj) -> int:
+        return obj.effective_boost()
+
     genres = GenreBriefSerializer(many=True, read_only=True)
     video_status = serializers.CharField(source="video.status", read_only=True, default=None)
     season_count = serializers.IntegerField(read_only=True)
@@ -94,6 +99,10 @@ class TitleAdminListSerializer(serializers.ModelSerializer):
             "year",
             "maturity_rating",
             "is_featured",
+            "boost",
+            "boost_starts_at",
+            "boost_ends_at",
+            "effective_boost",
             "poster",
             "genres",
             "video_status",
@@ -123,6 +132,10 @@ class TitleAdminSerializer(serializers.ModelSerializer):
     trailer = AdminVideoSerializer(read_only=True)
     publish_blockers = serializers.SerializerMethodField()
     is_billboard = serializers.SerializerMethodField()
+    effective_boost = serializers.SerializerMethodField()
+
+    def get_effective_boost(self, obj) -> int:
+        return obj.effective_boost()
 
     class Meta:
         model = Title
@@ -158,6 +171,10 @@ class TitleAdminSerializer(serializers.ModelSerializer):
             "publish_at",
             "published_at",
             "is_featured",
+            "boost",
+            "boost_starts_at",
+            "boost_ends_at",
+            "effective_boost",
             "rights_holder",
             "license_start",
             "license_end",
@@ -193,6 +210,12 @@ class TitleAdminSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
+        b_start = attrs.get("boost_starts_at", getattr(self.instance, "boost_starts_at", None))
+        b_end = attrs.get("boost_ends_at", getattr(self.instance, "boost_ends_at", None))
+        if b_start and b_end and b_end <= b_start:
+            raise serializers.ValidationError(
+                {"boost_ends_at": "The priority campaign must end after it starts."}
+            )
         start = attrs.get("license_start", getattr(self.instance, "license_start", None))
         end = attrs.get("license_end", getattr(self.instance, "license_end", None))
         if start and end and end <= start:
@@ -319,8 +342,14 @@ class RelatedWeightSerializer(serializers.Serializer):
 class BulkActionSerializer(serializers.Serializer):
     ids = serializers.ListField(child=serializers.IntegerField(), min_length=1, max_length=500)
     action = serializers.ChoiceField(
-        choices=["publish", "archive", "draft", "feature", "unfeature"]
+        choices=["publish", "archive", "draft", "feature", "unfeature", "set_priority"]
     )
+    boost = serializers.IntegerField(min_value=-2, max_value=5, required=False)
+
+    def validate(self, attrs):
+        if attrs["action"] == "set_priority" and "boost" not in attrs:
+            raise serializers.ValidationError({"boost": "Choose a priority between −2 and +5."})
+        return attrs
 
 
 class BulkResultSerializer(serializers.Serializer):

@@ -3943,6 +3943,7 @@
         "/api/v1/browse/billboard": {
             "get": {
                 "operationId": "browse_billboard",
+                "description": "Hero billboard. Anonymous: short public cache. Signed in: computed per viewer (dislikes excluded).",
                 "parameters": [
                     {
                         "in": "query",
@@ -3961,6 +3962,9 @@
                     "browse"
                 ],
                 "security": [
+                    {
+                        "bearerAuth": []
+                    },
                     {}
                 ],
                 "responses": {
@@ -4001,6 +4005,17 @@
                                 "all",
                                 "not_translated",
                                 "translated"
+                            ]
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "type",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "movie",
+                                "series"
                             ]
                         }
                     }
@@ -5249,10 +5264,11 @@
                     "archive",
                     "draft",
                     "feature",
-                    "unfeature"
+                    "unfeature",
+                    "set_priority"
                 ],
                 "type": "string",
-                "description": "* `publish` - publish\n* `archive` - archive\n* `draft` - draft\n* `feature` - feature\n* `unfeature` - unfeature"
+                "description": "* `publish` - publish\n* `archive` - archive\n* `draft` - draft\n* `feature` - feature\n* `unfeature` - unfeature\n* `set_priority` - set_priority"
             },
             "BulkActionRequest": {
                 "type": "object",
@@ -5267,6 +5283,11 @@
                     },
                     "action": {
                         "$ref": "#/components/schemas/BulkActionActionEnum"
+                    },
+                    "boost": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": -2
                     }
                 },
                 "required": [
@@ -7029,6 +7050,22 @@
                     "is_featured": {
                         "type": "boolean"
                     },
+                    "boost": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": -2,
+                        "description": "Recommendation priority. 0 = normal; positive pushes the title up in every personalised row and the billboard; negative demotes it."
+                    },
+                    "boost_starts_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "boost_ends_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
                     "rights_holder": {
                         "type": "string",
                         "maxLength": 200
@@ -8314,6 +8351,26 @@
                     "is_featured": {
                         "type": "boolean"
                     },
+                    "boost": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": -2,
+                        "description": "Recommendation priority. 0 = normal; positive pushes the title up in every personalised row and the billboard; negative demotes it."
+                    },
+                    "boost_starts_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "boost_ends_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "effective_boost": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
                     "rights_holder": {
                         "type": "string",
                         "maxLength": 200
@@ -8358,6 +8415,7 @@
                 "required": [
                     "backdrop",
                     "created_at",
+                    "effective_boost",
                     "genres",
                     "id",
                     "is_billboard",
@@ -8413,6 +8471,26 @@
                     "is_featured": {
                         "type": "boolean"
                     },
+                    "boost": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": -2,
+                        "description": "Recommendation priority. 0 = normal; positive pushes the title up in every personalised row and the billboard; negative demotes it."
+                    },
+                    "boost_starts_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "boost_ends_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "effective_boost": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
                     "poster": {
                         "allOf": [
                             {
@@ -8462,6 +8540,7 @@
                     }
                 },
                 "required": [
+                    "effective_boost",
                     "episode_count",
                     "genres",
                     "id",
@@ -8584,6 +8663,22 @@
                     },
                     "is_featured": {
                         "type": "boolean"
+                    },
+                    "boost": {
+                        "type": "integer",
+                        "maximum": 5,
+                        "minimum": -2,
+                        "description": "Recommendation priority. 0 = normal; positive pushes the title up in every personalised row and the billboard; negative demotes it."
+                    },
+                    "boost_starts_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "boost_ends_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
                     },
                     "rights_holder": {
                         "type": "string",

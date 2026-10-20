@@ -1,19 +1,20 @@
 """Home feed: an ordered list of rows, paginated so the page can scroll forever.
 
 Personalised rows (top picks, because-you-liked, genre rows ranked for the
-viewer) are computed once and cached per user + translation mode; the cache is
-versioned so a rating / finish / My List change invalidates it instantly.
+viewer) are computed once and cached per user + translation mode + type; the
+cache key carries the viewer's version (rating / finish / My List) and the
+global catalog version (any Studio edit), so both invalidate instantly.
+Disliked titles are excluded from every row except Continue Watching, and a
+title may appear in at most `row_dedupe_window` rows on one page.
 Continue Watching and My List are always computed live (cheap, and must
 reflect progress saved seconds ago).
 """
 
 from __future__ import annotations
 
-import random
 from dataclasses import asdict, dataclass, field
 
 from django.core.cache import cache
-from django.db.models import Max
 
 from apps.catalog.models import Collection, Episode, Genre, HomeRow, Title
 from apps.catalog.queries import cards_by_ids, visible_titles
@@ -52,7 +53,7 @@ def _limit() -> int:
 
 
 # -- live rows -------------------------------------------------------------------
-def continue_watching(user_id: int, mode: str, limit: int) -> Row:
+def continue_watching(user_id: int, mode: str, limit: int, kind: str | None = None) -> Row:
     ignores_filter = config.get_bool("features.continue_watching_ignores_filter")
     latest: dict[int, WatchProgress] = {}
     for p in (
@@ -61,9 +62,10 @@ def continue_watching(user_id: int, mode: str, limit: int) -> Row:
         .order_by("-updated_at")[:200]
     ):
         latest.setdefault(p.title_id, p)
-    visible = set(
-        visible_titles("all").filter(pk__in=list(latest)).values_list("pk", "translation_status")
-    )
+    visible_qs = visible_titles("all").filter(pk__in=list(latest))
+    if kind:
+        visible_qs = visible_qs.filter(type=kind)
+    visible = set(visible_qs.values_list("pk", "translation_status"))
     visible_ids = {pk for pk, _ in visible}
     status_of = dict(visible)
     ids: list[int] = []
@@ -132,9 +134,10 @@ def next_episode(episode: Episode) -> Episode | None:
     )
 
 
-def my_list(user_id: int, mode: str, limit: int) -> Row:
+def my_list(user_id: int, mode: str, limit: int, kind: str | None = None) -> Row:
+    titles = visible_titles(mode).filter(type=kind) if kind else visible_titles(mode)
     ids = list(
-        MyListItem.objects.filter(user_id=user_id, title__in=visible_titles(mode))
+        MyListItem.objects.filter(user_id=user_id, title__in=titles)
         .order_by("-created_at")
         .values_list("title_id", flat=True)[:limit]
     )
@@ -145,123 +148,204 @@ def my_list(user_id: int, mode: str, limit: int) -> Row:
 def _layout() -> list[dict]:
     rows = list(
         HomeRow.objects.filter(is_active=True)
-        .select_related("collection", "genre")
         .order_by("order", "id")
+        .values("kind", "title", "collection_id", "genre_id")
     )
     if not rows:
-        return [{"kind": k, "title": ""} for k in DEFAULT_LAYOUT]
-    return [
-        {"kind": r.kind, "title": r.title, "collection": r.collection_id, "genre": r.genre_id}
-        for r in rows
-    ]
+        return [
+            {"kind": k, "title": "", "collection_id": None, "genre_id": None}
+            for k in DEFAULT_LAYOUT
+        ]
+    return rows
 
 
-def _personal_rows(user_id: int, mode: str) -> list[dict]:
-    """All non-live rows in layout order (ids only), cached per user + mode."""
-    ck = cache_key(user_id, "rows", mode)
+LIVE_KINDS = ("continue_watching", "my_list")
+DEDUPE_EXEMPT = ("continue_watching", "my_list", "top10")
+MIN_ROW = 4
+
+
+class _Dedupe:
+    """Caps how many rows a title appears in. A row is never shrunk below MIN_ROW items: if the cap
+    would leave fewer, it is topped up with the least-shown of its original titles (small catalogs).
+    """
+
+    def __init__(self, window: int) -> None:
+        self.window = window
+        self.count: dict[int, int] = {}
+
+    def apply(self, kind: str, ids: list[int]) -> list[int]:
+        if kind in DEDUPE_EXEMPT:
+            return ids
+        kept = [i for i in ids if self.count.get(i, 0) < self.window]
+        if kind == "explore":
+            # Tail rows exist to show something new: never pad them with repeats (short ones are dropped).
+            if len(kept) >= 3:
+                for i in kept:
+                    self.count[i] = self.count.get(i, 0) + 1
+            return kept
+        if len(kept) < min(MIN_ROW, len(ids)):
+            spare = sorted(
+                (i for i in ids if i not in kept),
+                key=lambda i: (self.count.get(i, 0), ids.index(i)),
+            )
+            fill = set(spare[: min(MIN_ROW, len(ids)) - len(kept)])
+            kept = [i for i in ids if i in kept or i in fill]  # keep the row's own order
+        for i in kept:
+            self.count[i] = self.count.get(i, 0) + 1
+        return kept
+
+
+def _personal_rows(user_id: int, mode: str, kind: str | None = None) -> dict:
+    """All non-live rows in layout order (ids only), cached per user + mode + type."""
+    ck = cache_key(user_id, "rows", mode, kind or "all")
     cached = cache.get(ck)
     if cached is not None:
         return cached
     limit = _limit()
     signals = engine.load_signals(user_id)
-    ranked, scores = engine.score(user_id, mode, signals)
-    match = engine.to_match(scores, ranked) if signals.seeds else {}
-    pool_ids = ranked or list(visible_titles(mode).values_list("pk", flat=True))
+    pool = engine.candidates(mode, kind)
+    disliked = signals.disliked
+    ranked, scores = engine.score(user_id, mode, signals, pool=pool)
+    personal = bool(signals.seeds)
+    match = engine.to_match(scores, ranked) if personal else {}
+    seen = signals.completed | signals.in_progress | set(signals.seeds) | disliked
+    dedupe = _Dedupe(config.get_int("recommendations.row_dedupe_window", 3))
     out: list[dict] = []
     shown_genres: set[int] = set()
+    genre_names = dict(Genre.objects.filter(is_active=True).values_list("pk", "name"))
 
     def add(row: Row) -> None:
-        if row.ids or row.kind in ("continue_watching", "my_list"):
+        if row.kind in LIVE_KINDS:
+            out.append(asdict(row))
+            return
+        row.ids = dedupe.apply(row.kind, [i for i in row.ids if i not in disliked])
+        if row.ids and (row.kind != "explore" or len(row.ids) >= 3):
             out.append(asdict(row))
 
+    def top_picks() -> list[int]:
+        pinned = engine.pin_boosted(ranked, pool, scores, limit)
+        n_pinned = sum(
+            1
+            for pk in pinned[: config.get_int("recommendations.boost_pin_top_picks", 2)]
+            if pool[pk].boost > 0
+        )
+        return engine.with_exploration(
+            pinned,
+            [pk for pk in ranked if pk not in disliked],
+            user_id,
+            limit,
+            "top",
+            keep_first=n_pinned,
+        )
+
     for spec in _layout():
-        kind, heading = spec["kind"], spec.get("title") or ""
-        if kind in ("continue_watching", "my_list"):
-            add(
-                Row(kind, kind, heading or HomeRow.Kind(kind).label, [])
-            )  # placeholder, filled live
-        elif kind == "because_you_liked":
-            for seed, ids in engine.because_you_liked(user_id, mode, signals, limit):
-                name = (
-                    Title.objects.filter(pk=seed.title_id).values_list("title", flat=True).first()
-                    or ""
-                )
+        row_kind, heading = spec["kind"], spec.get("title") or ""
+        if row_kind in LIVE_KINDS:
+            add(Row(row_kind, row_kind, heading or HomeRow.Kind(row_kind).label, []))
+        elif row_kind == "because_you_liked":
+            for seed, name, ids in engine.because_you_liked(user_id, mode, signals, limit, pool):
                 verb = "watched" if seed.reason == "watched" else "liked"
-                add(Row(f"byl:{seed.title_id}", kind, f"Because you {verb} {name}", ids, seed=name))
-        elif kind == "top_picks":
+                add(
+                    Row(
+                        f"byl:{seed.title_id}",
+                        row_kind,
+                        f"Because you {verb} {name}",
+                        ids,
+                        seed=name,
+                    )
+                )
+        elif row_kind == "top_picks":
+            add(Row("top_picks", row_kind, heading or "Top picks for you", top_picks()))
+        elif row_kind == "trending":
             add(
                 Row(
-                    "top_picks",
-                    kind,
-                    heading or "Top picks for you",
-                    engine.with_exploration(ranked, pool_ids, user_id, limit, "top"),
+                    "trending",
+                    row_kind,
+                    heading or "Trending now",
+                    engine.trending_ids(mode, limit, disliked, kind),
                 )
             )
-        elif kind == "trending":
-            add(Row("trending", kind, heading or "Trending now", engine.trending_ids(mode, limit)))
-        elif kind == "top10":
+        elif row_kind == "top10":
             if config.get_bool("features.top10_row", True):
-                ids = engine.trending_ids(mode, 10)
+                ids = engine.trending_ids(mode, 10, disliked, kind)
                 if len(ids) >= 5:
                     add(
                         Row(
                             "top10",
-                            kind,
-                            heading or "Top 10 today",
+                            row_kind,
+                            heading
+                            or (
+                                "Top 10 series today"
+                                if kind == "series"
+                                else "Top 10 films today" if kind == "movie" else "Top 10 today"
+                            ),
                             ids,
                             {pk: {"rank": i + 1} for i, pk in enumerate(ids)},
                         )
                     )
-        elif kind == "new_releases":
+        elif row_kind == "new_releases":
             add(
                 Row(
                     "new_releases",
-                    kind,
+                    row_kind,
                     heading or "New releases",
-                    engine.new_release_ids(mode, limit),
+                    engine.new_release_ids(pool, limit, disliked),
                 )
             )
-        elif kind in ("collection", "collections"):
+        elif row_kind in ("collection", "collections"):
             collections = (
-                Collection.objects.filter(pk=spec["collection"])
-                if kind == "collection"
+                Collection.objects.filter(pk=spec["collection_id"])
+                if row_kind == "collection"
                 else Collection.objects.filter(is_active=True)
             )
-            visible = set(visible_titles(mode).values_list("pk", flat=True))
-            for col in collections.prefetch_related("items"):
+            for col in collections.prefetch_related("items").order_by("name"):
                 if not col.is_live():
                     continue
-                ids = [i.title_id for i in col.items.all() if i.title_id in visible][:limit]
+                ids = [i.title_id for i in col.items.all() if i.title_id in pool][:limit]
                 add(
                     Row(
                         f"collection:{col.pk}",
                         "collection",
-                        (kind == "collection" and heading) or col.name,
+                        (row_kind == "collection" and heading) or col.name,
                         ids,
                     )
                 )
-        elif kind in ("genre", "home_genres"):
-            genres = (
-                Genre.objects.filter(pk=spec["genre"])
-                if kind == "genre"
+        elif row_kind in ("genre", "home_genres"):
+            genre_qs = (
+                Genre.objects.filter(pk=spec["genre_id"])
+                if row_kind == "genre"
                 else Genre.objects.filter(show_on_home=True, is_active=True)
             )
-            for g in genres.order_by("order"):
-                shown_genres.add(g.pk)
-                ids = engine.genre_ids(mode, g.pk, limit, scores if signals.seeds else None)
-                add(Row(f"genre:{g.pk}", "genre", (kind == "genre" and heading) or g.name, ids))
+            for g in genre_qs.order_by("order").values("pk", "name"):
+                shown_genres.add(g["pk"])
+                ids = engine.genre_ids(pool, g["pk"], limit, scores if personal else None, disliked)
+                add(
+                    Row(
+                        f"genre:{g['pk']}",
+                        "genre",
+                        (row_kind == "genre" and heading) or g["name"],
+                        ids,
+                    )
+                )
 
-    # Endless tail: remaining genres, then a couple of exploration rows.
-    for g in Genre.objects.filter(is_active=True).exclude(pk__in=shown_genres).order_by("order"):
-        ids = engine.genre_ids(mode, g.pk, limit, scores if signals.seeds else None)
+    # Endless tail: remaining genres, then rows with a real reason to exist.
+    for gid, name in genre_names.items():
+        if gid in shown_genres:
+            continue
+        ids = engine.genre_ids(pool, gid, limit, scores if personal else None, disliked)
         if len(ids) >= 3:
-            add(Row(f"genre:{g.pk}", "genre", f"Explore {g.name}", ids))
-    rng = random.Random(f"{user_id}:{mode}")
-    everything = list(pool_ids)
-    for n, heading in enumerate(["Something different", "Hidden gems", "You might have missed"]):
-        rng.shuffle(everything)
-        if len(everything) >= 6:
-            add(Row(f"explore:{n}", "explore", heading, everything[:limit]))
+            add(Row(f"genre:{gid}", "genre", f"Explore {name}", ids))
+    for key_, heading, ids in [
+        ("hidden_gems", "Hidden gems", engine.hidden_gems(pool, seen, limit, user_id)),
+        (
+            "something_different",
+            "Something different",
+            engine.something_different(pool, signals, seen, limit),
+        ),
+        ("might_have_missed", "You might have missed", engine.might_have_missed(pool, seen, limit)),
+    ]:
+        if len(ids) >= 3:
+            add(Row(key_, "explore", heading, ids))
 
     for row in out:
         row["extras"] = {str(k): v for k, v in row["extras"].items()}
@@ -270,9 +354,11 @@ def _personal_rows(user_id: int, mode: str) -> list[dict]:
     return payload
 
 
-def home_page(user_id: int, mode: str, page: int) -> tuple[list[Row], dict[int, int], bool]:
+def home_page(
+    user_id: int, mode: str, page: int, kind: str | None = None
+) -> tuple[list[Row], dict[int, int], bool]:
     """Rows for one page of the feed, plus match scores, plus whether more pages exist."""
-    payload = _personal_rows(user_id, mode)
+    payload = _personal_rows(user_id, mode, kind)
     per_page = config.get_int("content.home_rows_per_page", 6)
     specs = payload["rows"]
     chunk = specs[page * per_page : (page + 1) * per_page]
@@ -280,13 +366,11 @@ def home_page(user_id: int, mode: str, page: int) -> tuple[list[Row], dict[int, 
     rows: list[Row] = []
     for spec in chunk:
         if spec["kind"] == "continue_watching":
-            live = continue_watching(user_id, mode, limit)
-            live.title = spec["title"]
-            row = live
+            row = continue_watching(user_id, mode, limit, kind)
+            row.title = spec["title"]
         elif spec["kind"] == "my_list":
-            live = my_list(user_id, mode, limit)
-            live.title = spec["title"]
-            row = live
+            row = my_list(user_id, mode, limit, kind)
+            row.title = spec["title"]
         else:
             row = Row(
                 spec["key"],
@@ -308,5 +392,50 @@ def hydrate(rows: list[Row]) -> dict[int, Title]:
     return {t.pk: t for t in cards_by_ids(ids)}
 
 
-def latest_activity(user_id: int):
-    return WatchProgress.objects.filter(user_id=user_id).aggregate(m=Max("updated_at"))["m"]
+def billboard_ids(
+    mode: str, user_id: int | None, limit: int = 5
+) -> tuple[list[int], dict[int, object]]:
+    """Admin billboard rows first, then effective boost, featured, trending. Viewer dislikes excluded."""
+    from django.db.models import Q
+    from django.utils import timezone
+
+    from apps.catalog.models import Billboard
+    from apps.engagement.models import Rating
+
+    now = timezone.now()
+    visible = visible_titles(mode)
+    disliked = (
+        set(Rating.objects.filter(user_id=user_id, value=-1).values_list("title_id", flat=True))
+        if user_id
+        else set()
+    )
+    items = list(
+        Billboard.objects.filter(is_active=True, title__in=visible)
+        .filter(
+            Q(starts_at__isnull=True) | Q(starts_at__lte=now),
+            Q(ends_at__isnull=True) | Q(ends_at__gt=now),
+        )
+        .exclude(title_id__in=disliked)
+        .order_by("order", "id")
+    )
+    meta = {b.title_id: b for b in items}
+    ids = [b.title_id for b in items]
+    if len(ids) < limit:
+        pool = engine.candidates(mode)
+        info = {pk: (t, b) for pk, t, b in visible.values_list("pk", "trending", "backdrop_id")}
+        rest = sorted(
+            (c for pk, c in pool.items() if pk in info and pk not in meta and pk not in disliked),
+            # Titles with artwork first, then priority, featured, trending.
+            key=lambda c: (
+                info[c.title_id][1] is None,
+                -c.boost,
+                not c.is_featured,
+                -(info[c.title_id][0] or 0),
+                c.title_id,
+            ),
+        )
+        # Only boosted/featured titles top up an admin-curated billboard; an empty one uses everything.
+        if ids:
+            rest = [c for c in rest if c.boost > 0 or c.is_featured]
+        ids += [c.title_id for c in rest][: limit - len(ids)]
+    return ids, meta

@@ -270,6 +270,13 @@ KEYS: list[Key] = [
         validation={"min": 5, "max": 100},
     ),
     Key(
+        "content.client_app_url",
+        "url",
+        "http://localhost:3000",
+        "Public URL of the viewer app (Preview as viewer, sitemap and canonical links).",
+        public=True,
+    ),
+    Key(
         "content.public_cache_seconds",
         "int",
         60,
@@ -691,6 +698,32 @@ KEYS: list[Key] = [
         "float",
         0.3,
         "Boost for featured titles (mainly cold start).",
+    ),
+    Key(
+        "recommendations.weight_boost",
+        "float",
+        0.6,
+        "Score added per boost level (admin recommendation priority).",
+    ),
+    Key(
+        "recommendations.boost_pin_top_picks",
+        "int",
+        2,
+        "Highest-boost titles guaranteed in the first N slots of Top picks, if not completed/disliked.",
+        validation={"min": 0, "max": 10},
+    ),
+    Key(
+        "recommendations.cold_start_popularity",
+        "float",
+        1.0,
+        "Weight of popularity for viewers with no signals yet.",
+    ),
+    Key(
+        "recommendations.row_dedupe_window",
+        "int",
+        3,
+        "A title may appear in at most this many rows on one home page.",
+        validation={"min": 1, "max": 20},
     ),
     Key(
         "recommendations.dislike_penalty",

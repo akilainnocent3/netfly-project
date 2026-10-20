@@ -27,6 +27,7 @@ from apps.core.throttling import throttle
 from apps.media import images
 from apps.media.models import ImageAsset
 from apps.media.serializers import AdminImageSerializer, ImageUploadSerializer
+from apps.recommendations.cache import bump_catalog_on_commit
 
 from . import serializers as s
 from .mixins import AdminPagination, AuditedMixin
@@ -78,10 +79,26 @@ class TitleViewSet(AuditedMixin, viewsets.ModelViewSet):
                 qs = qs.filter(genres__id=genre)
             if p.get("featured") in ("true", "1"):
                 qs = qs.filter(is_featured=True)
+            priority = p.get("priority")
+            if priority == "boosted":
+                qs = qs.filter(boost__gt=0)
+            elif priority == "demoted":
+                qs = qs.filter(boost__lt=0)
+            elif priority == "normal":
+                qs = qs.filter(boost=0)
             ordering = p.get("ordering", "-updated_at")
             if search and ordering == "-updated_at":
                 ordering = "-sim"
-            allowed = {"-updated_at", "title", "-published_at", "-popularity", "year", "-sim"}
+            allowed = {
+                "-updated_at",
+                "title",
+                "-published_at",
+                "-popularity",
+                "year",
+                "-sim",
+                "-boost",
+                "boost",
+            }
             return qs.order_by(ordering if ordering in allowed else "-updated_at", "-id")
         return qs.select_related("poster", "backdrop", "logo", "video", "trailer").prefetch_related(
             "genres", "video__subtitles", "trailer__subtitles"
@@ -97,6 +114,23 @@ class TitleViewSet(AuditedMixin, viewsets.ModelViewSet):
     def perform_create(self, serializer):
         instance = serializer.save(created_by=self.request.user)
         self._audit("create", instance, {"title": instance.title})
+
+    BOOST_FIELDS = ("boost", "boost_starts_at", "boost_ends_at")
+
+    def perform_update(self, serializer):
+        before = {f: getattr(serializer.instance, f) for f in self.BOOST_FIELDS}
+        super().perform_update(serializer)
+        after = {f: getattr(serializer.instance, f) for f in self.BOOST_FIELDS}
+        if before != after:
+            self._audit(
+                "boost",
+                serializer.instance,
+                {
+                    f: {"old": str(before[f]), "new": str(after[f])}
+                    for f in self.BOOST_FIELDS
+                    if before[f] != after[f]
+                },
+            )
 
     @extend_schema(request=None, responses=s.TitleAdminSerializer)
     @action(detail=True, methods=["post"])
@@ -139,6 +173,9 @@ class TitleViewSet(AuditedMixin, viewsets.ModelViewSet):
                         Title.Status.ARCHIVED if verb == "archive" else Title.Status.DRAFT
                     )
                     title.save(update_fields=["status", "updated_at"])
+                elif verb == "set_priority":
+                    title.boost = data.validated_data["boost"]
+                    title.save(update_fields=["boost", "updated_at"])
                 else:
                     title.is_featured = verb == "feature"
                     title.save(update_fields=["is_featured", "updated_at"])
@@ -149,7 +186,11 @@ class TitleViewSet(AuditedMixin, viewsets.ModelViewSet):
             None,
             target_type="catalog.title",
             target_id=",".join(map(str, updated))[:150],
-            changes={"ids": updated, "skipped": skipped},
+            changes={
+                "ids": updated,
+                "skipped": skipped,
+                **({"boost": data.validated_data["boost"]} if verb == "set_priority" else {}),
+            },
             ip=client_ip(request),
         )
         return Response({"updated": updated, "skipped": skipped})
@@ -307,6 +348,7 @@ class RelatedLinkViewSet(AuditedMixin, mixins.UpdateModelMixin, viewsets.Generic
         RelatedTitle.objects.filter(title_id=link.related_id, related_id=link.title_id).update(
             weight=link.weight
         )
+        bump_catalog_on_commit()
         self._audit("update", link, {"weight": link.weight})
         return Response(s.RelatedAdminSerializer(link).data)
 
@@ -315,6 +357,7 @@ class RelatedLinkViewSet(AuditedMixin, mixins.UpdateModelMixin, viewsets.Generic
         RelatedTitle.objects.filter(title_id=link.related_id, related_id=link.title_id).update(
             weight=link.weight
         )
+        bump_catalog_on_commit()
         self._audit("update", link, {"weight": link.weight})
 
     @extend_schema(parameters=[OpenApiParameter("two_way", bool)], responses={204: None})
@@ -353,6 +396,7 @@ class GenreViewSet(AuditedMixin, viewsets.ModelViewSet):
         with transaction.atomic():
             for order, pk in enumerate(data.validated_data["ids"]):
                 Genre.objects.filter(pk=pk).update(order=order)
+            bump_catalog_on_commit()
         record(
             request.user,
             "genre.reorder",
@@ -384,6 +428,7 @@ class OrderedViewSet(AuditedMixin, viewsets.ModelViewSet):
         with transaction.atomic():
             for order, pk in enumerate(data.validated_data["ids"]):
                 model.objects.filter(pk=pk).update(order=order)
+            bump_catalog_on_commit()
         record(
             request.user,
             f"{self.audit_type}.reorder",

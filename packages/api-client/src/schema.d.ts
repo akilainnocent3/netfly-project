@@ -1130,6 +1130,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description Hero billboard. Anonymous: short public cache. Signed in: computed per viewer (dislikes excluded). */
         get: operations["browse_billboard"];
         put?: never;
         post?: never;
@@ -1532,12 +1533,14 @@ export interface components {
          *     * `draft` - draft
          *     * `feature` - feature
          *     * `unfeature` - unfeature
+         *     * `set_priority` - set_priority
          * @enum {string}
          */
-        BulkActionActionEnum: "publish" | "archive" | "draft" | "feature" | "unfeature";
+        BulkActionActionEnum: "publish" | "archive" | "draft" | "feature" | "unfeature" | "set_priority";
         BulkActionRequest: {
             ids: number[];
             action: components["schemas"]["BulkActionActionEnum"];
+            boost?: number;
         };
         BulkResult: {
             updated: number[];
@@ -2068,6 +2071,12 @@ export interface components {
             /** Format: date-time */
             publish_at?: string | null;
             is_featured?: boolean;
+            /** @description Recommendation priority. 0 = normal; positive pushes the title up in every personalised row and the billboard; negative demotes it. */
+            boost?: number;
+            /** Format: date-time */
+            boost_starts_at?: string | null;
+            /** Format: date-time */
+            boost_ends_at?: string | null;
             rights_holder?: string;
             /** Format: date-time */
             license_start?: string | null;
@@ -2405,6 +2414,13 @@ export interface components {
             /** Format: date-time */
             readonly published_at: string | null;
             is_featured?: boolean;
+            /** @description Recommendation priority. 0 = normal; positive pushes the title up in every personalised row and the billboard; negative demotes it. */
+            boost?: number;
+            /** Format: date-time */
+            boost_starts_at?: string | null;
+            /** Format: date-time */
+            boost_ends_at?: string | null;
+            readonly effective_boost: number;
             rights_holder?: string;
             /** Format: date-time */
             license_start?: string | null;
@@ -2429,6 +2445,13 @@ export interface components {
             year?: number | null;
             maturity_rating?: string;
             is_featured?: boolean;
+            /** @description Recommendation priority. 0 = normal; positive pushes the title up in every personalised row and the billboard; negative demotes it. */
+            boost?: number;
+            /** Format: date-time */
+            boost_starts_at?: string | null;
+            /** Format: date-time */
+            boost_ends_at?: string | null;
+            readonly effective_boost: number;
             readonly poster: components["schemas"]["AdminImage"];
             readonly genres: components["schemas"]["GenreBrief"][];
             readonly video_status: string;
@@ -2472,6 +2495,12 @@ export interface components {
             /** Format: date-time */
             publish_at?: string | null;
             is_featured?: boolean;
+            /** @description Recommendation priority. 0 = normal; positive pushes the title up in every personalised row and the billboard; negative demotes it. */
+            boost?: number;
+            /** Format: date-time */
+            boost_starts_at?: string | null;
+            /** Format: date-time */
+            boost_ends_at?: string | null;
             rights_holder?: string;
             /** Format: date-time */
             license_start?: string | null;
@@ -5022,6 +5051,7 @@ export interface operations {
             query?: {
                 cursor?: string;
                 translation?: "all" | "not_translated" | "translated";
+                type?: "movie" | "series";
             };
             header?: never;
             path?: never;
