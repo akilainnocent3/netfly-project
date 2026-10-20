@@ -2731,6 +2731,469 @@
                 }
             }
         },
+        "/api/v1/admin/uploads": {
+            "post": {
+                "operationId": "admin_uploads_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UploadStartRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UploadStartRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UploadSession"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/uploads/{id}": {
+            "delete": {
+                "operationId": "admin_uploads_destroy",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this upload session.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/uploads/{id}/complete": {
+            "post": {
+                "operationId": "admin_uploads_complete_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this upload session.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CompleteRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CompleteRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminVideo"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/uploads/{id}/sign": {
+            "post": {
+                "operationId": "admin_uploads_sign_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this upload session.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SignPartsRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SignPartsRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SignedPart"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/videos": {
+            "get": {
+                "operationId": "admin_videos_list",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "status",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Comma-separated statuses"
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedVideoJobList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/videos/{id}": {
+            "get": {
+                "operationId": "admin_videos_retrieve",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this video asset.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VideoJob"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/videos/{id}/preview": {
+            "get": {
+                "operationId": "admin_videos_preview_retrieve",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this video asset.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Preview"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/videos/{id}/retry": {
+            "post": {
+                "operationId": "admin_videos_retry_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this video asset.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VideoJob"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/videos/{id}/subtitles": {
+            "post": {
+                "operationId": "admin_videos_subtitles_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this video asset.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubtitleUploadRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Subtitle"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/videos/{id}/subtitles/{sub_id}": {
+            "delete": {
+                "operationId": "admin_videos_subtitles_destroy",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this video asset.",
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "sub_id",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^\\d+$"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/videos/stats": {
+            "get": {
+                "operationId": "admin_videos_stats_retrieve",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TranscodeStats"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/auth/login": {
             "post": {
                 "operationId": "auth_login",
@@ -3217,9 +3680,17 @@
                         "readOnly": true
                     },
                     "renditions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Rendition"
+                        },
                         "readOnly": true
                     },
                     "audio_tracks": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AudioTrack"
+                        },
                         "readOnly": true
                     },
                     "sprite": {
@@ -3314,6 +3785,44 @@
                         "default": "client"
                     }
                 }
+            },
+            "AudioTrack": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "type": "string"
+                    },
+                    "default": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "language",
+                    "name"
+                ]
+            },
+            "AudioTrackRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "language": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "default": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "language",
+                    "name"
+                ]
             },
             "AuditLog": {
                 "type": "object",
@@ -3664,6 +4173,20 @@
                         "minimum": 0
                     }
                 }
+            },
+            "CompleteRequest": {
+                "type": "object",
+                "properties": {
+                    "parts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PartRequest"
+                        }
+                    }
+                },
+                "required": [
+                    "parts"
+                ]
             },
             "ConfigEntry": {
                 "type": "object",
@@ -4271,6 +4794,76 @@
                     }
                 }
             },
+            "PaginatedVideoJobList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VideoJob"
+                        }
+                    }
+                }
+            },
+            "Part": {
+                "type": "object",
+                "properties": {
+                    "number": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "etag": {
+                        "type": "string"
+                    },
+                    "size": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "etag",
+                    "number"
+                ]
+            },
+            "PartRequest": {
+                "type": "object",
+                "properties": {
+                    "number": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "etag": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "size": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "etag",
+                    "number"
+                ]
+            },
             "PatchedAdminImageRequest": {
                 "type": "object",
                 "properties": {
@@ -4666,6 +5259,26 @@
                     }
                 }
             },
+            "Preview": {
+                "type": "object",
+                "properties": {
+                    "master_url": {
+                        "type": "string"
+                    },
+                    "thumbnails_url": {
+                        "type": "string"
+                    },
+                    "duration": {
+                        "type": "number",
+                        "format": "double"
+                    }
+                },
+                "required": [
+                    "duration",
+                    "master_url",
+                    "thumbnails_url"
+                ]
+            },
             "PublicConfig": {
                 "type": "object",
                 "properties": {
@@ -4810,6 +5423,77 @@
                     "type"
                 ]
             },
+            "Rendition": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "height": {
+                        "type": "integer"
+                    },
+                    "width": {
+                        "type": "integer"
+                    },
+                    "bandwidth": {
+                        "type": "integer"
+                    },
+                    "avg_bandwidth": {
+                        "type": "integer"
+                    },
+                    "codecs": {
+                        "type": "string"
+                    },
+                    "codec": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "avg_bandwidth",
+                    "bandwidth",
+                    "codecs",
+                    "height",
+                    "name",
+                    "width"
+                ]
+            },
+            "RenditionRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "height": {
+                        "type": "integer"
+                    },
+                    "width": {
+                        "type": "integer"
+                    },
+                    "bandwidth": {
+                        "type": "integer"
+                    },
+                    "avg_bandwidth": {
+                        "type": "integer"
+                    },
+                    "codecs": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "codec": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "avg_bandwidth",
+                    "bandwidth",
+                    "codecs",
+                    "height",
+                    "name",
+                    "width"
+                ]
+            },
             "ReorderRequest": {
                 "type": "object",
                 "properties": {
@@ -4934,6 +5618,39 @@
                     "csrf",
                     "expires_in",
                     "user"
+                ]
+            },
+            "SignPartsRequest": {
+                "type": "object",
+                "properties": {
+                    "numbers": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "maxItems": 100,
+                        "minItems": 1
+                    }
+                },
+                "required": [
+                    "numbers"
+                ]
+            },
+            "SignedPart": {
+                "type": "object",
+                "properties": {
+                    "number": {
+                        "type": "integer"
+                    },
+                    "url": {
+                        "type": "string",
+                        "format": "uri"
+                    }
+                },
+                "required": [
+                    "number",
+                    "url"
                 ]
             },
             "SignupRequest": {
@@ -5068,6 +5785,38 @@
                     }
                 },
                 "required": [
+                    "label",
+                    "language"
+                ]
+            },
+            "SubtitleUploadRequest": {
+                "type": "object",
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary"
+                    },
+                    "language": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^[a-z]{2,3}(-[A-Za-z]{2,4})?$"
+                    },
+                    "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                    },
+                    "is_default": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "is_forced": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                },
+                "required": [
+                    "file",
                     "label",
                     "language"
                 ]
@@ -5553,6 +6302,33 @@
                 "type": "string",
                 "description": "* `movie` - Movie\n* `series` - Series"
             },
+            "TranscodeStats": {
+                "type": "object",
+                "properties": {
+                    "queued": {
+                        "type": "integer"
+                    },
+                    "transcoding": {
+                        "type": "integer"
+                    },
+                    "failed": {
+                        "type": "integer"
+                    },
+                    "ready": {
+                        "type": "integer"
+                    },
+                    "uploading": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "failed",
+                    "queued",
+                    "ready",
+                    "transcoding",
+                    "uploading"
+                ]
+            },
             "TranslationModeEnum": {
                 "enum": [
                     "translated",
@@ -5569,6 +6345,113 @@
                 ],
                 "type": "string",
                 "description": "* `translated` - Translated\n* `not_translated` - Not translated"
+            },
+            "UploadSession": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "asset_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "filename": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "size": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "format": "int64"
+                    },
+                    "part_size": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "format": "int64"
+                    },
+                    "part_count": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/UploadSessionStatusEnum"
+                    },
+                    "completed_parts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Part"
+                        },
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "asset_id",
+                    "completed_parts",
+                    "created_at",
+                    "filename",
+                    "id",
+                    "part_count",
+                    "part_size",
+                    "size"
+                ]
+            },
+            "UploadSessionStatusEnum": {
+                "enum": [
+                    "active",
+                    "completed",
+                    "aborted"
+                ],
+                "type": "string",
+                "description": "* `active` - Active\n* `completed` - Completed\n* `aborted` - Aborted"
+            },
+            "UploadStartRequest": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "size": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "content_type": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "kind": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/VideoKindEnum"
+                            }
+                        ],
+                        "default": "feature"
+                    },
+                    "fingerprint": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "content_type",
+                    "filename",
+                    "fingerprint",
+                    "size"
+                ]
             },
             "User": {
                 "type": "object",
@@ -5670,6 +6553,163 @@
                 ],
                 "type": "string",
                 "description": "* `string` - String\n* `text` - Text\n* `int` - Int\n* `float` - Float\n* `bool` - Bool\n* `json` - Json\n* `secret` - Secret\n* `color` - Color\n* `url` - Url\n* `enum` - Enum"
+            },
+            "VideoJob": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "kind": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/VideoKindEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/VideoStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "progress": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true
+                    },
+                    "stage": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "original_filename": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "source_size": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "duration": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true
+                    },
+                    "source_width": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "source_height": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "source_fps": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true
+                    },
+                    "source_codec": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "renditions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Rendition"
+                        },
+                        "readOnly": true
+                    },
+                    "audio_tracks": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AudioTrack"
+                        },
+                        "readOnly": true
+                    },
+                    "sprite": {
+                        "readOnly": true
+                    },
+                    "attempts": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "error": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "log": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "queued_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "started_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "finished_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "subtitles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Subtitle"
+                        },
+                        "readOnly": true
+                    },
+                    "usage": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "attempts",
+                    "audio_tracks",
+                    "created_at",
+                    "duration",
+                    "error",
+                    "finished_at",
+                    "id",
+                    "kind",
+                    "log",
+                    "original_filename",
+                    "progress",
+                    "queued_at",
+                    "renditions",
+                    "source_codec",
+                    "source_fps",
+                    "source_height",
+                    "source_size",
+                    "source_width",
+                    "sprite",
+                    "stage",
+                    "started_at",
+                    "status",
+                    "subtitles",
+                    "usage"
+                ]
             },
             "VideoKindEnum": {
                 "enum": [

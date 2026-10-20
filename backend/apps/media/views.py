@@ -1,13 +1,16 @@
+import re
+
 from django.core.cache import cache
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.utils.cache import patch_cache_control, patch_vary_headers
 from django.views import View
 
 from apps.core import storage
 from apps.core.config import config
 
+from . import delivery
 from .images import variant_for
-from .models import ImageAsset
+from .models import ImageAsset, VideoAsset
 
 
 def image_meta(asset_id: str) -> dict | None:
@@ -40,4 +43,50 @@ class ImageRedirectView(View):
         # URLs are time-bucketed (stable for ttl/4), so the redirect can be cached for a while.
         patch_cache_control(response, public=True, max_age=max(60, ttl // 8))
         patch_vary_headers(response, ("Accept",))
+        return response
+
+
+# -- HLS delivery ---------------------------------------------------------------
+STREAM_NAME = re.compile(r"^(master|v\d+|a\d+|s\d+)$")
+
+
+class StreamView(View):
+    """Token-checked playlists: master, renditions (v#), audio (a#), subtitles (s#)."""
+
+    def get(self, request, asset_id, name: str):
+        token = request.GET.get("t", "")
+        if not STREAM_NAME.match(name) or delivery.check_token(token, str(asset_id)) is None:
+            return JsonResponse({"code": "forbidden", "message": "This playback link has expired."}, status=403)
+        asset = VideoAsset.objects.filter(pk=asset_id, status=VideoAsset.Status.READY).first()
+        if asset is None:
+            return JsonResponse({"code": "not_found", "message": "Video not available."}, status=404)
+        try:
+            if name == "master":
+                max_h = request.GET.get("max_height")
+                body = delivery.master_playlist(asset, token, max_height=int(max_h) if max_h and max_h.isdigit() else None)
+            elif name[0] == "v":
+                body = delivery.media_playlist(asset, asset.renditions[int(name[1:])]["playlist"])
+            elif name[0] == "a":
+                body = delivery.media_playlist(asset, asset.audio_tracks[int(name[1:])]["playlist"])
+            else:
+                sub = asset.subtitles.filter(pk=int(name[1:])).first()
+                if sub is None:
+                    return JsonResponse({"code": "not_found", "message": "Subtitle not found."}, status=404)
+                body = delivery.subtitle_playlist(asset, sub)
+        except IndexError:
+            return JsonResponse({"code": "not_found", "message": "Rendition not found."}, status=404)
+        response = HttpResponse(body, content_type="application/vnd.apple.mpegurl")
+        response["Cache-Control"] = "private, max-age=60"
+        return response
+
+
+class ThumbnailsView(View):
+    def get(self, request, asset_id):
+        if delivery.check_token(request.GET.get("t", ""), str(asset_id)) is None:
+            return JsonResponse({"code": "forbidden", "message": "Expired."}, status=403)
+        asset = VideoAsset.objects.filter(pk=asset_id, status=VideoAsset.Status.READY).first()
+        if asset is None:
+            return JsonResponse({"code": "not_found", "message": "Video not available."}, status=404)
+        response = HttpResponse(delivery.thumbnails_vtt(asset), content_type="text/vtt; charset=utf-8")
+        response["Cache-Control"] = "private, max-age=300"
         return response

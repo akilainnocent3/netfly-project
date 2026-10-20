@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/providers/auth";
+import { UploadDock } from "@/components/catalog/upload-dock";
 import { CommandPalette } from "@/components/shell/command-palette";
 import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
@@ -50,6 +51,7 @@ export default function ConsoleLayout({ children }: { children: React.ReactNode 
         <main className="mx-auto w-full max-w-[1400px] px-4 py-6 md:px-6">{children}</main>
       </div>
       <CommandPalette open={palette} onOpenChange={setPalette} />
+      <UploadDock />
     </div>
   );
 }

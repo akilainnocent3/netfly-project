@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from . import catalog_views as cv
 from . import config_views as cfg
+from . import media_views as mv
 
 router = DefaultRouter(trailing_slash=False)
 router.include_root_view = False
@@ -15,6 +16,8 @@ router.register("collections", cv.CollectionViewSet, basename="admin-collections
 router.register("home-rows", cv.HomeRowViewSet, basename="admin-home-rows")
 router.register("billboards", cv.BillboardViewSet, basename="admin-billboards")
 router.register("images", cv.ImageViewSet, basename="admin-images")
+router.register("uploads", mv.UploadViewSet, basename="admin-uploads")
+router.register("videos", mv.VideoViewSet, basename="admin-videos")
 
 urlpatterns = [
     path("title-picker", cv.TitlePickerView.as_view(), name="admin-title-picker"),

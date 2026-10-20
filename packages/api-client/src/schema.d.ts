@@ -671,6 +671,193 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_uploads_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/uploads/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        delete: operations["admin_uploads_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/uploads/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_uploads_complete_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/uploads/{id}/sign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_uploads_sign_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/videos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_videos_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/videos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_videos_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/videos/{id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_videos_preview_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/videos/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_videos_retry_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/videos/{id}/subtitles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_videos_subtitles_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/videos/{id}/subtitles/{sub_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        delete: operations["admin_videos_subtitles_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/videos/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_videos_stats_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -852,8 +1039,8 @@ export interface components {
             /** Format: double */
             readonly source_fps: number;
             readonly source_codec: string;
-            readonly renditions: unknown;
-            readonly audio_tracks: unknown;
+            readonly renditions: components["schemas"]["Rendition"][];
+            readonly audio_tracks: components["schemas"]["AudioTrack"][];
             readonly sprite: unknown;
             readonly attempts: number;
             readonly error: string;
@@ -877,6 +1064,16 @@ export interface components {
         AppRequest: {
             /** @default client */
             app: components["schemas"]["AppEnum"];
+        };
+        AudioTrack: {
+            name: string;
+            language: string;
+            default?: boolean;
+        };
+        AudioTrackRequest: {
+            name: string;
+            language: string;
+            default?: boolean;
         };
         AuditLog: {
             readonly id: number;
@@ -968,6 +1165,9 @@ export interface components {
         };
         CollectionItemRequest: {
             order?: number;
+        };
+        CompleteRequest: {
+            parts: components["schemas"]["PartRequest"][];
         };
         ConfigEntry: {
             key: string;
@@ -1153,6 +1353,31 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["TitleAdminList"][];
         };
+        PaginatedVideoJobList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["VideoJob"][];
+        };
+        Part: {
+            number: number;
+            etag: string;
+            size?: number;
+        };
+        PartRequest: {
+            number: number;
+            etag: string;
+            size?: number;
+        };
         PatchedAdminImageRequest: {
             crop?: unknown;
         };
@@ -1271,6 +1496,12 @@ export interface components {
             autoplay_previews?: boolean;
             subtitles_language?: string;
         };
+        Preview: {
+            master_url: string;
+            thumbnails_url: string;
+            /** Format: double */
+            duration: number;
+        };
         PublicConfig: {
             values: {
                 [key: string]: unknown;
@@ -1305,6 +1536,24 @@ export interface components {
             year?: number | null;
             status?: components["schemas"]["TitleStatusEnum"];
             translation_status: components["schemas"]["TranslationStatusEnum"];
+        };
+        Rendition: {
+            name: string;
+            height: number;
+            width: number;
+            bandwidth: number;
+            avg_bandwidth: number;
+            codecs: string;
+            codec?: string;
+        };
+        RenditionRequest: {
+            name: string;
+            height: number;
+            width: number;
+            bandwidth: number;
+            avg_bandwidth: number;
+            codecs: string;
+            codec?: string;
         };
         ReorderRequest: {
             ids: number[];
@@ -1342,6 +1591,14 @@ export interface components {
             csrf: string;
             user: components["schemas"]["User"];
         };
+        SignPartsRequest: {
+            numbers: number[];
+        };
+        SignedPart: {
+            number: number;
+            /** Format: uri */
+            url: string;
+        };
         SignupRequest: {
             username: string;
             full_name: string;
@@ -1376,6 +1633,16 @@ export interface components {
             label: string;
             is_default?: boolean;
             is_forced?: boolean;
+        };
+        SubtitleUploadRequest: {
+            /** Format: binary */
+            file: string;
+            language: string;
+            label: string;
+            /** @default false */
+            is_default: boolean;
+            /** @default false */
+            is_forced: boolean;
         };
         TitleAdmin: {
             readonly id: number;
@@ -1503,6 +1770,13 @@ export interface components {
          * @enum {string}
          */
         TitleTypeEnum: "movie" | "series";
+        TranscodeStats: {
+            queued: number;
+            transcoding: number;
+            failed: number;
+            ready: number;
+            uploading: number;
+        };
         /**
          * @description * `translated` - Translated
          *     * `not_translated` - Not Translated
@@ -1516,6 +1790,37 @@ export interface components {
          * @enum {string}
          */
         TranslationStatusEnum: "translated" | "not_translated";
+        UploadSession: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            readonly asset_id: string;
+            filename: string;
+            /** Format: int64 */
+            size: number;
+            /** Format: int64 */
+            part_size: number;
+            part_count: number;
+            status?: components["schemas"]["UploadSessionStatusEnum"];
+            readonly completed_parts: components["schemas"]["Part"][];
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `active` - Active
+         *     * `completed` - Completed
+         *     * `aborted` - Aborted
+         * @enum {string}
+         */
+        UploadSessionStatusEnum: "active" | "completed" | "aborted";
+        UploadStartRequest: {
+            filename: string;
+            size: number;
+            content_type: string;
+            /** @default feature */
+            kind: components["schemas"]["VideoKindEnum"];
+            fingerprint: string;
+        };
         User: {
             readonly id: number;
             readonly username: string;
@@ -1549,6 +1854,40 @@ export interface components {
          * @enum {string}
          */
         ValueTypeEnum: "string" | "text" | "int" | "float" | "bool" | "json" | "secret" | "color" | "url" | "enum";
+        VideoJob: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly kind: components["schemas"]["VideoKindEnum"];
+            readonly status: components["schemas"]["VideoStatusEnum"];
+            /** Format: double */
+            readonly progress: number;
+            readonly stage: string;
+            readonly original_filename: string;
+            readonly source_size: number;
+            /** Format: double */
+            readonly duration: number;
+            readonly source_width: number;
+            readonly source_height: number;
+            /** Format: double */
+            readonly source_fps: number;
+            readonly source_codec: string;
+            readonly renditions: components["schemas"]["Rendition"][];
+            readonly audio_tracks: components["schemas"]["AudioTrack"][];
+            readonly sprite: unknown;
+            readonly attempts: number;
+            readonly error: string;
+            readonly log: string;
+            /** Format: date-time */
+            readonly queued_at: string | null;
+            /** Format: date-time */
+            readonly started_at: string | null;
+            /** Format: date-time */
+            readonly finished_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly subtitles: components["schemas"]["Subtitle"][];
+            readonly usage: string[];
+        };
         /**
          * @description * `feature` - Feature
          *     * `episode` - Episode
@@ -3154,6 +3493,264 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BulkResult"];
+                };
+            };
+        };
+    };
+    admin_uploads_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UploadStartRequest"];
+                "multipart/form-data": components["schemas"]["UploadStartRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadSession"];
+                };
+            };
+        };
+    };
+    admin_uploads_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this upload session. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_uploads_complete_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this upload session. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompleteRequest"];
+                "multipart/form-data": components["schemas"]["CompleteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminVideo"];
+                };
+            };
+        };
+    };
+    admin_uploads_sign_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this upload session. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignPartsRequest"];
+                "multipart/form-data": components["schemas"]["SignPartsRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignedPart"][];
+                };
+            };
+        };
+    };
+    admin_videos_list: {
+        parameters: {
+            query?: {
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description Comma-separated statuses */
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedVideoJobList"];
+                };
+            };
+        };
+    };
+    admin_videos_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this video asset. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoJob"];
+                };
+            };
+        };
+    };
+    admin_videos_preview_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this video asset. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Preview"];
+                };
+            };
+        };
+    };
+    admin_videos_retry_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this video asset. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoJob"];
+                };
+            };
+        };
+    };
+    admin_videos_subtitles_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this video asset. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["SubtitleUploadRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Subtitle"];
+                };
+            };
+        };
+    };
+    admin_videos_subtitles_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this video asset. */
+                id: string;
+                sub_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_videos_stats_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranscodeStats"];
                 };
             };
         };

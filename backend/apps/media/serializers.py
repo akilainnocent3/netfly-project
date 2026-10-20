@@ -68,8 +68,26 @@ class SubtitleSerializer(serializers.ModelSerializer):
         fields = ["id", "language", "label", "is_default", "is_forced", "created_at"]
 
 
+class RenditionSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    height = serializers.IntegerField()
+    width = serializers.IntegerField()
+    bandwidth = serializers.IntegerField()
+    avg_bandwidth = serializers.IntegerField()
+    codecs = serializers.CharField()
+    codec = serializers.CharField(required=False)
+
+
+class AudioTrackSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    language = serializers.CharField()
+    default = serializers.BooleanField(required=False)
+
+
 class AdminVideoSerializer(serializers.ModelSerializer):
     subtitles = SubtitleSerializer(many=True, read_only=True)
+    renditions = RenditionSerializer(many=True, read_only=True)
+    audio_tracks = AudioTrackSerializer(many=True, read_only=True)
 
     class Meta:
         model = VideoAsset
