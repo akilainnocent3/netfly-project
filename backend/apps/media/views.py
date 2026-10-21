@@ -57,14 +57,30 @@ class ImageRedirectView(View):
 STREAM_NAME = re.compile(r"^(master|v\d+|a\d+|s\d+)$")
 
 
+def _allowance_left(user_id: int) -> bool:
+    from apps.accounts.models import User
+    from apps.billing import usage
+
+    user = User.objects.filter(pk=user_id, is_active=True).first()
+    return user is not None and usage.snapshot(user)["allowed"]
+
+
 class StreamView(View):
     """Token-checked playlists: master, renditions (v#), audio (a#), subtitles (s#)."""
 
     def get(self, request, asset_id, name: str):
         token = request.GET.get("t", "")
-        if not STREAM_NAME.match(name) or delivery.check_token(token, str(asset_id)) is None:
+        claims = delivery.token_claims(token, str(asset_id)) if STREAM_NAME.match(name) else None
+        if claims is None:
             return JsonResponse(
                 {"code": "forbidden", "message": "This playback link has expired."}, status=403
+            )
+        if claims.get("s") and name[0] in "mva" and not _allowance_left(claims["u"]):
+            # A metered session stops loading once the viewing allowance is spent, even for a
+            # client that ignores the heartbeat's "stop".
+            return JsonResponse(
+                {"code": "usage_limit_reached", "message": "You've reached your viewing limit."},
+                status=403,
             )
         asset = VideoAsset.objects.filter(pk=asset_id, status=VideoAsset.Status.READY).first()
         if asset is None:
@@ -74,8 +90,11 @@ class StreamView(View):
         try:
             if name == "master":
                 max_h = request.GET.get("max_height")
+                asked = int(max_h) if max_h and max_h.isdigit() else None
+                # A preview token keeps its cap whatever the URL says.
+                cap = claims.get("h")
                 body = delivery.master_playlist(
-                    asset, token, max_height=int(max_h) if max_h and max_h.isdigit() else None
+                    asset, token, max_height=min(filter(None, [asked, cap]), default=None)
                 )
             elif name[0] == "v":
                 body = delivery.media_playlist(asset, asset.renditions[int(name[1:])]["playlist"])

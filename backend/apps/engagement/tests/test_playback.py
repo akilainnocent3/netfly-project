@@ -67,7 +67,13 @@ def test_playback_requires_login(api):
     assert api.get(f"/api/v1/playback/{TitleFactory().slug}").status_code in (401, 403)
 
 
-def test_progress_upsert_and_completion_invalidates_recs(auth_api):
+def test_progress_upsert_and_completion_invalidates_recs(auth_api, monkeypatch):
+    import time as real_time
+
+    from apps.engagement import tracking
+
+    clock = {"now": real_time.time()}
+    monkeypatch.setattr(tracking.time, "time", lambda: clock["now"])
     movie = TitleFactory()
     before = user_version(auth_api.user.pk)
     body = {"updates": [{"title_id": movie.pk, "position": 120, "duration": 600, "watched": 10}]}
@@ -75,6 +81,7 @@ def test_progress_upsert_and_completion_invalidates_recs(auth_api):
         "saved": 1,
         "completed": [],
     }
+    clock["now"] += 10  # the player saves every 10 s
     auth_api.post(
         "/api/v1/playback/progress",
         {"updates": [{"title_id": movie.pk, "position": 130, "duration": 600, "watched": 10}]},
@@ -141,3 +148,30 @@ def test_events_are_buffered_then_flushed(auth_api):
     assert set(ViewEvent.objects.values_list("kind", flat=True)) == {"start", "rebuffer", "quality"}
     assert ViewEvent.objects.get(kind="quality").data == {"height": 1080}
     assert active_viewers() >= 1
+
+
+def test_progress_watched_is_bounded_by_server_time(auth_api, monkeypatch):
+    import time as real_time
+
+    from apps.engagement import tracking
+
+    clock = {"now": real_time.time()}
+    monkeypatch.setattr(tracking.time, "time", lambda: clock["now"])
+    movie = TitleFactory()
+
+    def save(watched):
+        auth_api.post(
+            "/api/v1/playback/progress",
+            {
+                "updates": [
+                    {"title_id": movie.pk, "position": 60, "duration": 600, "watched": watched}
+                ]
+            },
+            format="json",
+        )
+
+    save(3600)  # first save: at most two save intervals (+ slack)
+    clock["now"] += 30
+    save(3600)  # 30 s later: at most 30 s (+ slack)
+    p = WatchProgress.objects.get(user=auth_api.user, title=movie)
+    assert p.watch_seconds <= 25 + 35

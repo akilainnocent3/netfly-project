@@ -1,6 +1,8 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
+from apps.billing import admin_views as bv
+
 from . import catalog_views as cv
 from . import config_views as cfg
 from . import media_views as mv
@@ -22,10 +24,13 @@ router.register("videos", mv.VideoViewSet, basename="admin-videos")
 router.register("users", pv.UserViewSet, basename="admin-users")
 router.register("staff", pv.StaffViewSet, basename="admin-staff")
 router.register("audit", pv.AuditLogViewSet, basename="admin-audit")
+router.register("plans", bv.PlanViewSet, basename="admin-plans")
+router.register("subscribers", bv.SubscriberViewSet, basename="admin-subscribers")
 
 urlpatterns = [
     path("title-picker", cv.TitlePickerView.as_view(), name="admin-title-picker"),
     path("dashboard", pv.DashboardView.as_view(), name="admin-dashboard"),
+    path("billing/stats", bv.BillingStatsView.as_view(), name="admin-billing-stats"),
     path("config", cfg.ConfigListView.as_view(), name="admin-config"),
     path("config/<str:key>", cfg.ConfigEntryView.as_view(), name="admin-config-entry"),
     path("config/<str:key>/history", cfg.ConfigHistoryView.as_view(), name="admin-config-history"),

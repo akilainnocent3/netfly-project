@@ -62,6 +62,23 @@ test.describe("signed in", () => {
   test("/account", async ({ page }) => {
     await page.goto("/account");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.getByTestId("membership-card")).toBeVisible();
+    await audit(page);
+  });
+
+  test("/account/membership and /account/usage", async ({ page }) => {
+    await page.goto("/account/membership");
+    await expect(page.getByTestId("membership-card")).toBeVisible();
+    await audit(page);
+    await page.goto("/account/usage");
+    await expect(page.getByTestId("usage-month")).toBeVisible();
+    await audit(page);
+  });
+
+  test("/signup/plan (light layout)", async ({ page }) => {
+    await page.goto("/signup/plan?from=account");
+    await expect(page.getByRole("radio", { checked: true })).toBeVisible();
+    await page.waitForTimeout(400); // entrance animation (contrast is measured on final colours)
     await audit(page);
   });
 

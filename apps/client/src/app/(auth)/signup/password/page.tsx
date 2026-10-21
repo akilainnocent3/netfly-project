@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { LightField } from "@/components/ui/light-field";
 import { goAfterAuth } from "@/lib/after-auth";
 import { api } from "@/lib/api";
+import { safeNext } from "@/lib/safe-next";
 import { clearSignupDraft, useSignupDraft } from "../draft";
 
 const BAR = ["bg-[#e50914]", "bg-[#e87c03]", "bg-[#d9a400]", "bg-[#5aa02c]", "bg-[#2f9e44]"];
@@ -47,7 +48,8 @@ export default function SignupPasswordStep() {
       );
       signIn(session);
       clearSignupDraft();
-      goAfterAuth(draft.next || "/browse");
+      // Every new member picks a plan next (Free is preselected); `next` rides along.
+      goAfterAuth(`/signup/plan?next=${encodeURIComponent(safeNext(draft.next))}`);
     } catch (e) {
       const err = e instanceof ApiError ? e : null;
       const fields = err?.fields ?? {};

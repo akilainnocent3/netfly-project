@@ -3,6 +3,7 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDown, LogOut, Pencil, Settings, User } from "lucide-react";
 import Link from "next/link";
+import { UsageMenuLine, useUsageLine } from "../billing/usage-ring";
 import { Avatar } from "../profiles/avatar";
 import { useAuth } from "../providers/auth";
 import { useProfiles } from "../providers/profile";
@@ -18,6 +19,7 @@ export function ProfileMenu() {
   const p = useProfiles();
   const initial = user?.full_name.slice(0, 1).toUpperCase() ?? "";
   const others = p.profiles.filter((profile) => profile.id !== p.active?.id);
+  const usage = useUsageLine();
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
@@ -68,6 +70,11 @@ export function ProfileMenu() {
               <p className="text-muted text-meta">@{user?.username}</p>
             </div>
           )}
+          {usage ? (
+            <DropdownMenu.Item asChild>
+              <UsageMenuLine line={usage} className="h-9 px-3 data-[highlighted]:underline" />
+            </DropdownMenu.Item>
+          ) : null}
           <DropdownMenu.Item asChild>
             <Link href="/account" className={ITEM}>
               <Settings className="size-4 text-white/60" /> Account

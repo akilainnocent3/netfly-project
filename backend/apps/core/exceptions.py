@@ -18,13 +18,20 @@ class APIError(exceptions.APIException):
     default_detail = "Something went wrong."
 
     def __init__(
-        self, message: str, code: str | None = None, status_code: int | None = None, fields=None
+        self,
+        message: str,
+        code: str | None = None,
+        status_code: int | None = None,
+        fields=None,
+        extra: dict | None = None,
     ):
         super().__init__(message, code)
         self.error_code = code or self.default_code
         if status_code:
             self.status_code = status_code
         self.fields = fields
+        # Machine-readable context next to {code, message} (e.g. the usage snapshot).
+        self.extra = extra or {}
 
 
 def _first(value):
@@ -57,7 +64,7 @@ def exception_handler(exc, context):
         )
 
     if isinstance(exc, APIError):
-        body = {"code": exc.error_code, "message": str(exc.detail)}
+        body = {**exc.extra, "code": exc.error_code, "message": str(exc.detail)}
         if exc.fields:
             body["fields"] = exc.fields
     elif isinstance(exc, exceptions.ValidationError):

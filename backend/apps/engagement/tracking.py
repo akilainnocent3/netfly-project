@@ -90,6 +90,7 @@ class ProgressView(APIView):
                     continue
             duration = update["duration"]
             position = min(update["position"], duration) if duration else update["position"]
+            watched = _server_bounded_watch(who, title.pk, episode.pk if episode else 0, update)
             done = bool(duration) and position / duration >= ratio
             with transaction.atomic():
                 progress, _ = WatchProgress.objects.select_for_update().get_or_create(
@@ -98,7 +99,7 @@ class ProgressView(APIView):
                 was_completed = progress.completed
                 progress.position_seconds = 0 if done else position
                 progress.duration_seconds = duration
-                progress.watch_seconds += update["watched"]
+                progress.watch_seconds += watched
                 # Completion follows the latest position: rewatching a finished title reopens it.
                 progress.completed = done
                 # Watching again brings a title removed from Continue Watching back.
@@ -110,6 +111,20 @@ class ProgressView(APIView):
         if completed_now:
             invalidate_viewer(who)
         return Response({"saved": saved, "completed": completed_now})
+
+
+def _server_bounded_watch(who, title_id: int, episode_id: int, update: dict) -> float:
+    """Never trust the client's `watched`: it can't exceed the time that really passed since the
+    previous save for this item (plus slack); a first save counts at most two save intervals."""
+    key = f"progress:last:{who.cache_id}:{title_id}:{episode_id}"
+    now = time.time()
+    last = get_redis().set(key, now, ex=6 * 3600, get=True)
+    slack = 5.0
+    if last is None:
+        allowance = config.get_int("playback.progress_save_seconds", 10) * 2 + slack
+    else:
+        allowance = max(0.0, now - float(last)) + slack
+    return max(0.0, min(float(update["watched"]), allowance))
 
 
 class EventsView(APIView):

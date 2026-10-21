@@ -60,7 +60,7 @@ export function RegistrationShell({
           {children}
         </m.div>
       </main>
-      <footer className="text-meta border-t border-[#e6e6e6] bg-[#f3f3f3] px-[max(4vw,16px)] py-8 text-[#737373]">
+      <footer className="text-meta border-t border-[#e6e6e6] bg-[#f3f3f3] px-[max(4vw,16px)] py-8 text-[#595959]">
         <p>{config.str("branding.footer_text")}</p>
         <p className="mt-3 flex gap-5">
           <Link href="/legal/terms" className="hover:underline">

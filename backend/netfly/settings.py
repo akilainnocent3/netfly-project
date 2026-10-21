@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "apps.media",
     "apps.engagement",
     "apps.recommendations",
+    "apps.billing",
     "apps.adminapi",
 ]
 
@@ -153,6 +154,8 @@ SPECTACULAR_SETTINGS = {
         "TitleStatusEnum": "apps.catalog.models.Title.Status",
         "TitleTypeEnum": "apps.catalog.models.Title.Type",
         "TranslationStatusEnum": "apps.catalog.models.TranslationStatus",
+        "UsageScopeEnum": "apps.billing.models.UsageAdjustment.Scope",
+        "SubscriptionStatusEnum": "apps.billing.models.Subscription.Status",
     },
     "SCHEMA_PATH_PREFIX": r"/api/(v1|public)",
 }

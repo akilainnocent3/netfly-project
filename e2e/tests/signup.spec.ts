@@ -88,6 +88,9 @@ test("the steps keep `next` and send the new member there", async ({ page }) => 
   await page.getByRole("button", { name: "Next" }).click();
   await page.locator("input[name=password]").fill(PASSWORD);
   await page.getByRole("button", { name: "Finish" }).click();
+  // Every new member picks a plan next; `next` rides along.
+  await expect(page).toHaveURL(/\/signup\/plan\?next=%2Fnew-and-popular/);
+  await page.getByRole("button", { name: "Start watching" }).click();
   await page.waitForURL(/\/new-and-popular/);
 });
 

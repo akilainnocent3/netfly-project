@@ -392,6 +392,31 @@
                 }
             }
         },
+        "/api/v1/admin/billing/stats": {
+            "get": {
+                "operationId": "admin_billing_stats",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BillingStats"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/admin/brand/intro": {
             "post": {
                 "operationId": "admin_intro_upload",
@@ -1801,6 +1826,282 @@
                 }
             }
         },
+        "/api/v1/admin/plans": {
+            "get": {
+                "operationId": "admin_plans_list",
+                "description": "Plans differ only in limits. Exactly one active, free, default plan always exists.",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AdminPlan"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "admin_plans_create",
+                "description": "Plans differ only in limits. Exactly one active, free, default plan always exists.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminPlanRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminPlanRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminPlan"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/plans/{id}": {
+            "get": {
+                "operationId": "admin_plans_retrieve",
+                "description": "Plans differ only in limits. Exactly one active, free, default plan always exists.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this plan.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminPlan"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "admin_plans_update",
+                "description": "Plans differ only in limits. Exactly one active, free, default plan always exists.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this plan.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminPlanRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminPlanRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminPlan"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "admin_plans_partial_update",
+                "description": "Plans differ only in limits. Exactly one active, free, default plan always exists.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this plan.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminPlanRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedAdminPlanRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminPlan"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "admin_plans_destroy",
+                "description": "Plans differ only in limits. Exactly one active, free, default plan always exists.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this plan.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/plans/reorder": {
+            "post": {
+                "operationId": "admin_plans_reorder",
+                "description": "Plans differ only in limits. Exactly one active, free, default plan always exists.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PlanReorderRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PlanReorderRequestRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AdminPlan"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/admin/related/{id}": {
             "patch": {
                 "operationId": "admin_related_partial_update",
@@ -2410,6 +2711,416 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/StorageTestResult"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/subscribers": {
+            "get": {
+                "operationId": "admin_subscribers_list",
+                "description": "Members with their plan, status, period and usage; staff actions are audited.",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "plan",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "q",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "status",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedSubscriberList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/subscribers/{id}": {
+            "get": {
+                "operationId": "admin_subscribers_retrieve",
+                "description": "Members with their plan, status, period and usage; staff actions are audited.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this user.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriberDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/subscribers/{id}/bonus": {
+            "post": {
+                "operationId": "admin_subscriber_bonus",
+                "description": "Members with their plan, status, period and usage; staff actions are audited.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this user.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubscriberActionRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubscriberActionRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriberDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/subscribers/{id}/cancel": {
+            "post": {
+                "operationId": "admin_subscriber_cancel",
+                "description": "Members with their plan, status, period and usage; staff actions are audited.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this user.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubscriberActionRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubscriberActionRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriberDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/subscribers/{id}/change-plan": {
+            "post": {
+                "operationId": "admin_subscriber_change_plan",
+                "description": "Members with their plan, status, period and usage; staff actions are audited.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this user.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubscriberActionRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubscriberActionRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriberDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/subscribers/{id}/end-trial": {
+            "post": {
+                "operationId": "admin_subscriber_end_trial",
+                "description": "Members with their plan, status, period and usage; staff actions are audited.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this user.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubscriberActionRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubscriberActionRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriberDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/subscribers/{id}/extend": {
+            "post": {
+                "operationId": "admin_subscriber_extend",
+                "description": "Members with their plan, status, period and usage; staff actions are audited.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this user.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubscriberActionRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubscriberActionRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriberDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/subscribers/{id}/reset-usage": {
+            "post": {
+                "operationId": "admin_subscriber_reset_usage",
+                "description": "Members with their plan, status, period and usage; staff actions are audited.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this user.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubscriberActionRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubscriberActionRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubscriberDetail"
                                 }
                             }
                         },
@@ -3990,6 +4701,162 @@
                 }
             }
         },
+        "/api/v1/billing/auto-renew": {
+            "post": {
+                "operationId": "billing_auto_renew",
+                "tags": [
+                    "billing"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AutoRenewRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AutoRenewRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Subscription"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/billing/membership": {
+            "get": {
+                "operationId": "billing_membership",
+                "tags": [
+                    "billing"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Membership"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/billing/plan": {
+            "post": {
+                "operationId": "billing_choose_plan",
+                "description": "Free applies at once. Paid plans / trials return the steps still needed (verify, pay);\na downgrade from a paid plan waits for the end of the paid period.",
+                "tags": [
+                    "billing"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChoosePlanRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChoosePlanRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChoosePlanResult"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/billing/plans": {
+            "get": {
+                "operationId": "billing_plans",
+                "description": "Public plan list for the plan picker (cached; Studio edits clear it).",
+                "tags": [
+                    "billing"
+                ],
+                "security": [
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PlansResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/billing/usage": {
+            "get": {
+                "operationId": "billing_usage",
+                "description": "Lightweight usage snapshot (profile menu, Play button, re-sync every 30 s).",
+                "tags": [
+                    "billing"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UsageSnapshot"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/browse/billboard": {
             "get": {
                 "operationId": "browse_billboard",
@@ -4595,6 +5462,47 @@
                 "responses": {
                     "202": {
                         "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/playback/heartbeat": {
+            "post": {
+                "operationId": "playback_heartbeat",
+                "description": "The player reports viewing time; the server decides what counts (see usage.heartbeat).",
+                "tags": [
+                    "playback"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/HeartbeatRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/HeartbeatRequestRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HeartbeatResponse"
+                                }
+                            }
+                        },
+                        "description": ""
                     }
                 }
             }
@@ -5258,6 +6166,179 @@
                     "crop": {}
                 }
             },
+            "AdminPlan": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "slug": {
+                        "type": "string",
+                        "maxLength": 60,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 60
+                    },
+                    "tagline": {
+                        "type": "string",
+                        "maxLength": 160
+                    },
+                    "price_tzs": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0
+                    },
+                    "period_days": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0
+                    },
+                    "daily_limit_minutes": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "weekly_limit_minutes": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "monthly_limit_minutes": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "trial_eligible": {
+                        "type": "boolean"
+                    },
+                    "is_free": {
+                        "type": "boolean"
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    },
+                    "highlight_label": {
+                        "type": "string",
+                        "maxLength": 40
+                    },
+                    "order": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0
+                    },
+                    "feature_bullets": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "subscribers": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "default": 0
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "slug",
+                    "subscribers",
+                    "updated_at"
+                ]
+            },
+            "AdminPlanRequest": {
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                    },
+                    "tagline": {
+                        "type": "string",
+                        "maxLength": 160
+                    },
+                    "price_tzs": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0
+                    },
+                    "period_days": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0
+                    },
+                    "daily_limit_minutes": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "weekly_limit_minutes": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "monthly_limit_minutes": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "trial_eligible": {
+                        "type": "boolean"
+                    },
+                    "is_free": {
+                        "type": "boolean"
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    },
+                    "highlight_label": {
+                        "type": "string",
+                        "maxLength": 40
+                    },
+                    "order": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0
+                    },
+                    "feature_bullets": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "name",
+                    "slug"
+                ]
+            },
             "AdminUser": {
                 "type": "object",
                 "properties": {
@@ -5585,6 +6666,17 @@
                     "target_type"
                 ]
             },
+            "AutoRenewRequest": {
+                "type": "object",
+                "properties": {
+                    "on": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "on"
+                ]
+            },
             "AvatarKeyEnum": {
                 "enum": [
                     "avatar-1",
@@ -5729,6 +6821,43 @@
                     "use_trailer"
                 ]
             },
+            "BillingStats": {
+                "type": "object",
+                "properties": {
+                    "paid_by_plan": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PaidByPlan"
+                        }
+                    },
+                    "trials_running": {
+                        "type": "integer"
+                    },
+                    "mrr_tzs": {
+                        "type": "integer"
+                    },
+                    "renewals_due_48h": {
+                        "type": "integer"
+                    },
+                    "failed_payments_7d": {
+                        "type": "integer"
+                    },
+                    "plans": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Plan"
+                        }
+                    }
+                },
+                "required": [
+                    "failed_payments_7d",
+                    "mrr_tzs",
+                    "paid_by_plan",
+                    "plans",
+                    "renewals_due_48h",
+                    "trials_running"
+                ]
+            },
             "BlankEnum": {
                 "enum": [
                     ""
@@ -5850,6 +6979,54 @@
                     "current_password",
                     "new_password"
                 ]
+            },
+            "ChoosePlanRequest": {
+                "type": "object",
+                "properties": {
+                    "plan": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "trial": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                },
+                "required": [
+                    "plan"
+                ]
+            },
+            "ChoosePlanResult": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/ChoosePlanResultStatusEnum"
+                    },
+                    "steps": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "subscription": {
+                        "$ref": "#/components/schemas/Subscription"
+                    }
+                },
+                "required": [
+                    "status",
+                    "steps",
+                    "subscription"
+                ]
+            },
+            "ChoosePlanResultStatusEnum": {
+                "enum": [
+                    "applied",
+                    "scheduled",
+                    "needs"
+                ],
+                "type": "string",
+                "description": "* `applied` - applied\n* `scheduled` - scheduled\n* `needs` - needs"
             },
             "CollectionAdmin": {
                 "type": "object",
@@ -6700,6 +7877,103 @@
                     "ok"
                 ]
             },
+            "HeartbeatRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "session_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^[0-9a-f]{32}$"
+                    },
+                    "watched": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 3600,
+                        "minimum": 0,
+                        "default": 0.0
+                    },
+                    "playing": {
+                        "type": "boolean",
+                        "default": true
+                    }
+                },
+                "required": [
+                    "session_id"
+                ]
+            },
+            "HeartbeatResponse": {
+                "type": "object",
+                "properties": {
+                    "plan": {
+                        "$ref": "#/components/schemas/UsagePlan"
+                    },
+                    "exempt": {
+                        "type": "boolean"
+                    },
+                    "allowed": {
+                        "type": "boolean"
+                    },
+                    "limit_reached": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UsageScopeEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/NullEnum"
+                            }
+                        ]
+                    },
+                    "limits": {
+                        "$ref": "#/components/schemas/UsageWindows"
+                    },
+                    "used": {
+                        "$ref": "#/components/schemas/UsageWindows"
+                    },
+                    "remaining": {
+                        "$ref": "#/components/schemas/UsageWindows"
+                    },
+                    "remaining_seconds": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "resets_at": {
+                        "$ref": "#/components/schemas/Resets"
+                    },
+                    "warn_at_minutes": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "heartbeat_seconds": {
+                        "type": "integer"
+                    },
+                    "server_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "credited": {
+                        "type": "number",
+                        "format": "double"
+                    }
+                },
+                "required": [
+                    "allowed",
+                    "credited",
+                    "exempt",
+                    "heartbeat_seconds",
+                    "limit_reached",
+                    "limits",
+                    "plan",
+                    "remaining",
+                    "remaining_seconds",
+                    "resets_at",
+                    "server_time",
+                    "used",
+                    "warn_at_minutes"
+                ]
+            },
             "HistoryItem": {
                 "type": "object",
                 "properties": {
@@ -7045,6 +8319,25 @@
                     "username"
                 ]
             },
+            "Membership": {
+                "type": "object",
+                "properties": {
+                    "subscription": {
+                        "$ref": "#/components/schemas/Subscription"
+                    },
+                    "usage": {
+                        "$ref": "#/components/schemas/UsageSnapshot"
+                    },
+                    "trial": {
+                        "$ref": "#/components/schemas/TrialInfo"
+                    }
+                },
+                "required": [
+                    "subscription",
+                    "trial",
+                    "usage"
+                ]
+            },
             "NewAndPopular": {
                 "type": "object",
                 "properties": {
@@ -7238,6 +8531,37 @@
                     }
                 }
             },
+            "PaginatedSubscriberList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Subscriber"
+                        }
+                    }
+                }
+            },
             "PaginatedTitleAdminListList": {
                 "type": "object",
                 "required": [
@@ -7300,6 +8624,25 @@
                     }
                 }
             },
+            "PaidByPlan": {
+                "type": "object",
+                "properties": {
+                    "plan": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "count": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "count",
+                    "plan",
+                    "slug"
+                ]
+            },
             "Part": {
                 "type": "object",
                 "properties": {
@@ -7343,6 +8686,81 @@
                 "type": "object",
                 "properties": {
                     "crop": {}
+                }
+            },
+            "PatchedAdminPlanRequest": {
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 60
+                    },
+                    "tagline": {
+                        "type": "string",
+                        "maxLength": 160
+                    },
+                    "price_tzs": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0
+                    },
+                    "period_days": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0
+                    },
+                    "daily_limit_minutes": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "weekly_limit_minutes": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "monthly_limit_minutes": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "trial_eligible": {
+                        "type": "boolean"
+                    },
+                    "is_free": {
+                        "type": "boolean"
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    },
+                    "highlight_label": {
+                        "type": "string",
+                        "maxLength": 40
+                    },
+                    "order": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0
+                    },
+                    "feature_bullets": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
                 }
             },
             "PatchedBillboardAdminRequest": {
@@ -7792,6 +9210,134 @@
                     }
                 }
             },
+            "Plan": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "slug": {
+                        "type": "string",
+                        "readOnly": true,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "tagline": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "price_tzs": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "period_days": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "daily_limit_minutes": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "weekly_limit_minutes": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "monthly_limit_minutes": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "trial_eligible": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "is_free": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "is_default": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "highlight_label": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "order": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "feature_bullets": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "daily_limit_minutes",
+                    "feature_bullets",
+                    "highlight_label",
+                    "id",
+                    "is_default",
+                    "is_free",
+                    "monthly_limit_minutes",
+                    "name",
+                    "order",
+                    "period_days",
+                    "price_tzs",
+                    "slug",
+                    "tagline",
+                    "trial_eligible",
+                    "weekly_limit_minutes"
+                ]
+            },
+            "PlanReorderRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "required": [
+                    "ids"
+                ]
+            },
+            "PlansResponse": {
+                "type": "object",
+                "properties": {
+                    "plans": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Plan"
+                        }
+                    },
+                    "trial_enabled": {
+                        "type": "boolean"
+                    },
+                    "trial_days": {
+                        "type": "integer"
+                    },
+                    "currency": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "currency",
+                    "plans",
+                    "trial_days",
+                    "trial_enabled"
+                ]
+            },
             "PlayTarget": {
                 "type": "object",
                 "description": "What the smart Play button does.",
@@ -7897,6 +9443,9 @@
                     },
                     "is_preview": {
                         "type": "boolean"
+                    },
+                    "metered": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -7906,6 +9455,7 @@
                     "is_preview",
                     "master_url",
                     "max_height",
+                    "metered",
                     "next",
                     "renditions",
                     "session_id",
@@ -8508,6 +10058,28 @@
                     "temporary_password"
                 ]
             },
+            "Resets": {
+                "type": "object",
+                "properties": {
+                    "day": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "week": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "month": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "day",
+                    "month",
+                    "week"
+                ]
+            },
             "RoleEnum": {
                 "enum": [
                     "superadmin",
@@ -8913,6 +10485,298 @@
                     "message",
                     "ok"
                 ]
+            },
+            "Subscriber": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "username": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9_]{3,30}$",
+                        "maxLength": 30
+                    },
+                    "full_name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "nullable": true,
+                        "maxLength": 254
+                    },
+                    "email_verified": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "phone": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 15
+                    },
+                    "phone_verified": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "is_staff": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "plan": {
+                        "type": "string"
+                    },
+                    "plan_slug": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "default": "free"
+                    },
+                    "current_period_end": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "trial_end": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "auto_renew": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "payment_phone": {
+                        "type": "string",
+                        "default": ""
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "email_verified",
+                    "full_name",
+                    "id",
+                    "phone_verified",
+                    "username"
+                ]
+            },
+            "SubscriberActionRequest": {
+                "type": "object",
+                "properties": {
+                    "plan": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "days": {
+                        "type": "integer",
+                        "maximum": 3650,
+                        "minimum": 1
+                    },
+                    "minutes": {
+                        "type": "integer",
+                        "maximum": 44640,
+                        "minimum": 1
+                    },
+                    "scope": {
+                        "$ref": "#/components/schemas/UsageScopeEnum"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 200
+                    }
+                }
+            },
+            "SubscriberDetail": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "username": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9_]{3,30}$",
+                        "maxLength": 30
+                    },
+                    "full_name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "nullable": true,
+                        "maxLength": 254
+                    },
+                    "email_verified": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "phone": {
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 15
+                    },
+                    "phone_verified": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "is_staff": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "plan": {
+                        "type": "string"
+                    },
+                    "plan_slug": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "default": "free"
+                    },
+                    "current_period_end": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "trial_end": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "auto_renew": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "payment_phone": {
+                        "type": "string",
+                        "default": ""
+                    },
+                    "usage": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UsageSnapshot"
+                            }
+                        ],
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "email_verified",
+                    "full_name",
+                    "id",
+                    "phone_verified",
+                    "usage",
+                    "username"
+                ]
+            },
+            "Subscription": {
+                "type": "object",
+                "properties": {
+                    "plan": {
+                        "$ref": "#/components/schemas/Plan"
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/SubscriptionStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "current_period_start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "current_period_end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "trial_start": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "trial_end": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "auto_renew": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "cancel_at_period_end": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "scheduled_plan": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/Plan"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "payment_phone_masked": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "payment_network": {
+                        "type": "string",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "grace_until": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "auto_renew",
+                    "cancel_at_period_end",
+                    "current_period_end",
+                    "current_period_start",
+                    "grace_until",
+                    "payment_network",
+                    "payment_phone_masked",
+                    "plan",
+                    "scheduled_plan",
+                    "status",
+                    "trial_end",
+                    "trial_start"
+                ]
+            },
+            "SubscriptionStatusEnum": {
+                "enum": [
+                    "free",
+                    "trialing",
+                    "active",
+                    "past_due",
+                    "grace",
+                    "canceled",
+                    "expired"
+                ],
+                "type": "string",
+                "description": "* `free` - Free\n* `trialing` - Trialing\n* `active` - Active\n* `past_due` - Past Due\n* `grace` - Grace\n* `canceled` - Canceled\n* `expired` - Expired"
             },
             "Subtitle": {
                 "type": "object",
@@ -10049,6 +11913,25 @@
                 "type": "string",
                 "description": "* `translated` - Translated\n* `not_translated` - Not translated"
             },
+            "TrialInfo": {
+                "type": "object",
+                "properties": {
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "days": {
+                        "type": "integer"
+                    },
+                    "eligible": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "days",
+                    "eligible",
+                    "enabled"
+                ]
+            },
             "Upcoming": {
                 "type": "object",
                 "description": "A Coming Soon card: when it lands and whether this viewer asked to be reminded.",
@@ -10330,6 +12213,124 @@
                     "filename",
                     "fingerprint",
                     "size"
+                ]
+            },
+            "UsagePlan": {
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "is_free": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "is_free",
+                    "name",
+                    "slug"
+                ]
+            },
+            "UsageScopeEnum": {
+                "enum": [
+                    "day",
+                    "week",
+                    "month"
+                ],
+                "type": "string",
+                "description": "* `day` - Day\n* `week` - Week\n* `month` - Month"
+            },
+            "UsageSnapshot": {
+                "type": "object",
+                "properties": {
+                    "plan": {
+                        "$ref": "#/components/schemas/UsagePlan"
+                    },
+                    "exempt": {
+                        "type": "boolean"
+                    },
+                    "allowed": {
+                        "type": "boolean"
+                    },
+                    "limit_reached": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UsageScopeEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/NullEnum"
+                            }
+                        ]
+                    },
+                    "limits": {
+                        "$ref": "#/components/schemas/UsageWindows"
+                    },
+                    "used": {
+                        "$ref": "#/components/schemas/UsageWindows"
+                    },
+                    "remaining": {
+                        "$ref": "#/components/schemas/UsageWindows"
+                    },
+                    "remaining_seconds": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "resets_at": {
+                        "$ref": "#/components/schemas/Resets"
+                    },
+                    "warn_at_minutes": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "heartbeat_seconds": {
+                        "type": "integer"
+                    },
+                    "server_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "allowed",
+                    "exempt",
+                    "heartbeat_seconds",
+                    "limit_reached",
+                    "limits",
+                    "plan",
+                    "remaining",
+                    "remaining_seconds",
+                    "resets_at",
+                    "server_time",
+                    "used",
+                    "warn_at_minutes"
+                ]
+            },
+            "UsageWindows": {
+                "type": "object",
+                "properties": {
+                    "day": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "week": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "month": {
+                        "type": "integer",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "day",
+                    "month",
+                    "week"
                 ]
             },
             "User": {

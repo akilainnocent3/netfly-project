@@ -1,5 +1,7 @@
 import {
+  BadgeCheck,
   Clapperboard,
+  CreditCard,
   Cpu,
   FolderTree,
   Gauge,
@@ -30,6 +32,13 @@ export const NAV: Array<{ section: string; items: NavItem[] }> = [
       { href: "/categories", label: "Categories", icon: FolderTree },
       { href: "/home-layout", label: "Home layout", icon: LayoutTemplate },
       { href: "/transcoding", label: "Transcoding", icon: Cpu },
+    ],
+  },
+  {
+    section: "Membership",
+    items: [
+      { href: "/plans", label: "Plans", icon: CreditCard },
+      { href: "/subscribers", label: "Subscribers", icon: BadgeCheck },
     ],
   },
   {

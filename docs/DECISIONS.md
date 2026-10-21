@@ -125,6 +125,34 @@ Ambiguities in the build brief, the option chosen, and why.
     `history.replaceState`, not `router.replace` (a soft navigation re-ran the interceptor and mounted a
     second title modal on deep links).
 
+## Plans & viewing-time limits
+
+34. **Plans differ only in viewing time.** A `billing.Plan` has a price, a period and daily / weekly /
+    monthly minute limits; quality, devices and features are identical on every plan (the plan card
+    shows "Video quality: Best (same on every plan)"). Exactly one active, free plan is the default
+    (DB constraints + an atomic hand-over in Studio). Limits are read live from the member's plan — never
+    copied onto the user — so a Studio edit applies to everyone on that plan at once. Staff are exempt.
+35. **Usage is metered by the server, per playback session.** Issuing a (non-preview) playback session
+    checks the allowance (`403 usage_limit_reached` + the usage snapshot when spent) and opens a lease in
+    Redis. The player reports content time every `usage.heartbeat_seconds`; the server credits
+    `min(reported, time since the lease's previous beat + usage.tolerance_seconds)`, only while playing,
+    so pauses, 2× speed or a tampered client can't inflate or dodge it, and concurrent streams each count.
+    A resume sends a zero beat (restarts the server's clock), a pause credits what just played. The
+    brand pre-roll, previews and (by default, `usage.count_trailers`) trailers are never counted.
+36. **The player also stops loading.** Stream tokens of metered sessions carry the session; once the
+    allowance is spent the API refuses new master / rendition playlists for them, so a client that ignores
+    the heartbeat's `allowed: false` can't switch renditions or restart. Preview tokens carry their 720p cap
+    (the `max_height` URL parameter can't lift it). Segments already listed stay fetchable until their
+    signed URLs expire — the overshoot is bounded by one heartbeat for a well-behaved client.
+37. **Windows are computed, not cron-reset.** Day / week / month keys come from the clock in
+    `usage.timezone` (week start `usage.week_starts_on`; month = calendar month or the billing period).
+    `UsageLedger` (one row per session per local day) is the source of truth; Redis counters are a cache
+    rebuilt from it when missing. Staff corrections are `UsageAdjustment` rows (bonus minutes; a reset is a
+    bonus equal to what was used), all audit-logged. A beat task only purges stale counter keys.
+38. **Usage is shown only where it's asked for:** Account → Usage (three live bars, per-second reset
+    countdowns re-synced every 30 s and from every heartbeat), one line in the profile menu, a toast at
+    `usage.warn_at_minutes` while watching (never over the intro), and the limit overlay. Nothing on Home.
+
 ## Resilience
 
 32. **Errors are contained where they happen:** each home row and the hero have their own error boundary

@@ -31,12 +31,15 @@ export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
   readonly fields: Record<string, string>;
+  /** The whole error body: some errors carry context next to {code, message} (e.g. `usage`). */
+  readonly body: Record<string, unknown>;
 
   constructor(status: number, body: Partial<ApiErrorBody> | undefined) {
     super(body?.message ?? fallbackMessage(status));
     this.status = status;
     this.code = body?.code ?? "error";
     this.fields = body?.fields ?? {};
+    this.body = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   }
 }
 

@@ -23,6 +23,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -41,11 +42,15 @@ import {
   type BeforePlayback,
 } from "@/lib/intro";
 import { PlaybackTracker } from "@/lib/player/tracker";
-import { getPlayback, warmManifest, type PlaybackInfo } from "@/lib/playback";
+import { UsageMeter } from "@/lib/player/usage-meter";
+import { getPlayback, loadPlayback, warmManifest, type PlaybackInfo } from "@/lib/playback";
+import { isExhausted, SCOPE_PHRASE, tightestScope, type UsageSnapshot } from "@/lib/usage";
+import { LimitOverlay } from "../billing/usage-limit";
 import { useAuth } from "../providers/auth";
 import { useConfig } from "../providers/config";
 import { Button, IconButton as UiIconButton } from "../ui/button";
 import { NetflyImage } from "../ui/netfly-image";
+import { useToast } from "../ui/toast";
 import { EpisodeDrawer } from "./episode-drawer";
 import { IntroPreroll } from "./intro-preroll";
 import { EndScreen, NextEpisodeCard, StillWatching } from "./overlays";
@@ -77,10 +82,14 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
   const config = useConfig();
   const router = useRouter();
   const { user } = useAuth();
+  const toast = useToast();
+  const queryClient = useQueryClient();
   const shell = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const engine = useRef<PlaybackEngine | null>(null);
   const tracker = useRef<PlaybackTracker | null>(null);
+  const meter = useRef<UsageMeter | null>(null);
+  const warned = useRef<Set<number>>(new Set());
   const loadStarted = useRef(performance.now());
   const waitingSince = useRef<number | null>(null);
   const seekFrom = useRef<number | null>(null);
@@ -115,6 +124,9 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
   const [ended, setEnded] = useState(false);
   const [fatal, setFatal] = useState<string | null>(null);
   const [stillWatching, setStillWatching] = useState(false);
+  // Viewing allowance spent: the frame stays paused under a black overlay.
+  const [limit, setLimit] = useState<{ snapshot: UsageSnapshot | null } | null>(null);
+  const limited = useRef(false);
   // Brand pre-roll: decided once per playback session; the title buffers paused underneath.
   const [preroll, setPreroll] = useState(() =>
     prerollDue(
@@ -193,6 +205,23 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
     t.start();
     loadStarted.current = performance.now();
 
+    // Viewing time against the plan's limits (content only; the server decides what counts).
+    const usageMeter = info.metered
+      ? new UsageMeter(info.session_id, el, {
+          everySeconds: config.num("usage.heartbeat_seconds", 30),
+          onSnapshot: (snapshot) => onUsage.current(snapshot),
+          renewSession: async () => {
+            const r = await loadPlayback(info.title.slug, { episode: ep?.id ?? null, fresh: true });
+            if (r.ok) return r.info.session_id;
+            if (r.limit) onUsage.current(r.limit);
+            return null;
+          },
+        })
+      : null;
+    meter.current = usageMeter;
+    usageMeter?.seed(queryClient.getQueryData<UsageSnapshot>(["usage"]));
+    usageMeter?.start();
+
     const e = new PlaybackEngine(el, {
       src: info.master_url,
       startAt: info.start_at,
@@ -234,7 +263,10 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
       if (!askStill && !prerollActive.current) void el.play().catch(() => setPlaying(false));
     });
 
-    const onPageHide = () => t.stop();
+    const onPageHide = () => {
+      t.stop();
+      usageMeter?.stop();
+    };
     const onVisibility = () => document.visibilityState === "hidden" && void t.saveProgress(true);
     window.addEventListener("pagehide", onPageHide);
     document.addEventListener("visibilitychange", onVisibility);
@@ -242,6 +274,7 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
       window.removeEventListener("pagehide", onPageHide);
       document.removeEventListener("visibilitychange", onVisibility);
       t.stop();
+      usageMeter?.stop();
       e.destroy();
     };
     // The engine is (re)created per playback session only.
@@ -264,6 +297,47 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
     if (showNext && info.next)
       void getPlayback(info.title.slug, { episode: info.next.id }).then(warmManifest);
   }, [showNext, info.next, info.title.slug]);
+
+  /** Allowance spent: pause on the current frame, stop loading, show the overlay. */
+  const hitLimit = useCallback((snapshot: UsageSnapshot | null) => {
+    if (limited.current) return;
+    limited.current = true;
+    setLimit({ snapshot });
+    const el = video.current;
+    el?.pause();
+    engine.current?.hls?.stopLoad();
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+  }, []);
+
+  /** "10 minutes of viewing left today" once per threshold (config `usage.warn_at_minutes`). */
+  const warnIfNeeded = useCallback(
+    (left: number, snapshot: UsageSnapshot | null) => {
+      // Not over the brand intro: the first content tick checks again.
+      if (prerollActive.current) return;
+      const thresholds = [...(snapshot?.warn_at_minutes ?? [10, 2])].sort((a, b) => b - a);
+      const crossed = thresholds.filter((t) => left <= t * 60 && !warned.current.has(t));
+      if (!crossed.length || left <= 0) return;
+      crossed.forEach((t) => warned.current.add(t));
+      const scope = (snapshot && tightestScope(snapshot)) ?? "day";
+      const minutes = Math.max(1, Math.ceil(left / 60));
+      toast(
+        {
+          message: `${minutes === 1 ? "1 minute" : `${minutes} minutes`} of viewing left ${SCOPE_PHRASE[scope]}`,
+        },
+        6000,
+      );
+    },
+    [toast],
+  );
+
+  const lastSnapshot = useRef<UsageSnapshot | null>(null);
+  const onUsage = useRef<(snapshot: UsageSnapshot) => void>(() => undefined);
+  onUsage.current = (snapshot) => {
+    lastSnapshot.current = snapshot;
+    if (isExhausted(snapshot)) hitLimit(snapshot);
+    else if (snapshot.remaining_seconds != null && !snapshot.exempt)
+      warnIfNeeded(snapshot.remaining_seconds, snapshot);
+  };
 
   /** Pre-roll ended or skipped: start the (already buffered) title right away. */
   const startContent = useCallback(() => {
@@ -298,7 +372,7 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
   // -- actions -------------------------------------------------------------------
   const togglePlay = useCallback(() => {
     const el = video.current;
-    if (!el) return;
+    if (!el || limited.current) return;
     if (el.paused) void el.play();
     else el.pause();
   }, []);
@@ -381,7 +455,7 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
   // -- keyboard ---------------------------------------------------------------------
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (prerollActive.current) return; // the pre-roll handles its own keys
+      if (prerollActive.current || limited.current) return; // the pre-roll handles its own keys
       if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey || e.altKey) return;
       const key = e.key.toLowerCase();
       if (key === " " || key === "k") togglePlay();
@@ -420,7 +494,7 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
 
   // -- touch gestures: double-tap sides to seek, horizontal swipe to scrub -----------------
   const onPointerUp = (e: React.PointerEvent) => {
-    if (prerollActive.current) return;
+    if (prerollActive.current || limited.current) return;
     if (e.pointerType === "mouse") {
       togglePlay();
       return;
@@ -504,15 +578,21 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
         preload="auto"
         crossOrigin="anonymous"
         poster={undefined}
-        onPlay={() => {
+        onPlay={(e) => {
+          if (limited.current) {
+            e.currentTarget.pause();
+            return;
+          }
           setPlaying(true);
           setEnded(false);
           tracker.current?.track("play");
+          meter.current?.resumed();
         }}
         onPause={() => {
           setPlaying(false);
           tracker.current?.track("pause");
           void tracker.current?.saveProgress();
+          meter.current?.paused();
         }}
         onPlaying={() => {
           if (loadStarted.current) {
@@ -545,6 +625,22 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
         onTimeUpdate={(e) => {
           const el = e.currentTarget;
           tracker.current?.tick();
+          const m = meter.current;
+          if (m && !prerollActive.current) {
+            m.tick();
+            const left = m.remaining();
+            if (left !== null) {
+              if (left <= 0) {
+                // Out of time between heartbeats: stop now and let the server confirm.
+                void m.beat(true);
+                hitLimit(
+                  lastSnapshot.current ??
+                    queryClient.getQueryData<UsageSnapshot>(["usage"]) ??
+                    null,
+                );
+              } else warnIfNeeded(left, lastSnapshot.current);
+            }
+          }
           if (!scrubbing) setCurrent(el.currentTime);
           if (el.buffered.length) setBuffered(el.buffered.end(el.buffered.length - 1));
         }}
@@ -892,7 +988,8 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
           onExit={() => router.push("/browse")}
         />
       )}
-      {fatal && (
+      {limit && <LimitOverlay snapshot={limit.snapshot} onBack={() => router.push("/browse")} />}
+      {fatal && !limit && (
         <div className="absolute inset-0 grid place-items-center bg-black/80 p-6 text-center">
           <div>
             <p className="text-h3 font-bold">{fatal}</p>

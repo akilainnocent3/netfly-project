@@ -1,6 +1,7 @@
 from django.urls import path
 
 from apps.accounts.profile_views import ProfileDetailView, ProfilesView
+from apps.billing.views import HeartbeatView
 from apps.catalog.playback import PlaybackView
 
 from . import tracking, views
@@ -21,5 +22,7 @@ urlpatterns = [
     path("notifications/seen", views.NotificationsSeenView.as_view(), name="notifications-seen"),
     path("playback/progress", tracking.ProgressView.as_view(), name="playback-progress"),
     path("playback/events", tracking.EventsView.as_view(), name="playback-events"),
+    # Before playback/<slug>: "heartbeat" would otherwise be taken for a title slug.
+    path("playback/heartbeat", HeartbeatView.as_view(), name="playback-heartbeat"),
     path("playback/<slug:slug>", PlaybackView.as_view(), name="playback"),
 ]

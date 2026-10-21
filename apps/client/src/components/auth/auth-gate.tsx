@@ -18,6 +18,9 @@ import {
   useState,
 } from "react";
 import { api } from "@/lib/api";
+import { takeFlash } from "@/lib/flash";
+import { useUsage } from "@/lib/queries";
+import { isExhausted, subscribeUsage, type UsageSnapshot } from "@/lib/usage";
 import {
   clearIntent,
   INTENT_PARAM,
@@ -28,6 +31,7 @@ import {
   type Intent,
   type IntentAction,
 } from "@/lib/intent";
+import { LimitDialog } from "../billing/usage-limit";
 import { BRAND } from "../brand/logo";
 import { useAuth } from "../providers/auth";
 import { Button, IconButton } from "../ui/button";
@@ -55,15 +59,33 @@ function hasSessionCookie(): boolean {
 export function AuthGateProvider({ children }: { children: React.ReactNode }) {
   const { status } = useAuth();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState<{ intent: Intent; titleName: string } | null>(null);
+  const [limit, setLimit] = useState<UsageSnapshot | null>(null);
+  // The signed-in viewer's allowance: polled every 30 s, and pushed by every player heartbeat.
+  useUsage(status === "authenticated");
+  useEffect(() => {
+    const unsubscribe = subscribeUsage((snapshot) => queryClient.setQueryData(["usage"], snapshot));
+    return unsubscribe;
+  }, [queryClient]);
   // Any navigation (the gate's own links included) closes it.
   useEffect(() => {
     setOpen(null);
+    setLimit(null);
   }, [pathname]);
   const gate = useCallback<Gate>(
     ({ titleName, ...request }) => {
+      if (status === "authenticated") {
+        // Play with the allowance spent: say so here instead of opening the player.
+        const usage = queryClient.getQueryData<UsageSnapshot>(["usage"]);
+        if (request.action === "play" && isExhausted(usage)) {
+          setLimit(usage!);
+          return false;
+        }
+        return true;
+      }
       // While the session is being restored, a session cookie means "signed in".
-      if (status === "authenticated" || (status === "loading" && hasSessionCookie())) return true;
+      if (status === "loading" && hasSessionCookie()) return true;
       const intent: Intent = {
         ...request,
         name: titleName,
@@ -75,12 +97,13 @@ export function AuthGateProvider({ children }: { children: React.ReactNode }) {
       setOpen({ intent, titleName });
       return false;
     },
-    [status],
+    [status, queryClient],
   );
   return (
     <GateContext.Provider value={gate}>
       {children}
       <GateDialog state={open} onClose={() => setOpen(null)} />
+      <LimitDialog snapshot={limit} open={!!limit} onClose={() => setLimit(null)} />
       <Suspense>
         <IntentResumer />
       </Suspense>
@@ -275,6 +298,12 @@ function IntentResumer() {
     },
     [queryClient],
   );
+
+  // One-shot messages carried across a full page load (welcome, plan changes…).
+  useEffect(() => {
+    const message = takeFlash();
+    if (message) toast({ message, tone: "success" }, 4000);
+  }, [toast]);
 
   useEffect(() => {
     if (status !== "authenticated") return;

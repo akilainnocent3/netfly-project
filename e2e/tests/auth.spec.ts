@@ -1,4 +1,4 @@
-import { expect, PASSWORD, signUp, test, uniqueName } from "./helpers";
+import { chooseFreePlan, expect, PASSWORD, signUp, test, uniqueName } from "./helpers";
 
 test("sign up never submits on its own; Finish does", async ({ page }) => {
   let posts = 0;
@@ -14,6 +14,7 @@ test("sign up never submits on its own; Finish does", async ({ page }) => {
   expect(posts).toBe(0);
   await expect(page).toHaveURL(/\/signup\/password/);
   await page.getByRole("button", { name: "Finish" }).click();
+  await chooseFreePlan(page);
   await page.waitForURL("**/browse**");
   expect(posts).toBe(1);
   await expect(page.getByRole("radiogroup", { name: "Translation filter" })).toBeVisible();
@@ -47,7 +48,7 @@ test("log in submits on Enter only and wrong passwords explain themselves", asyn
 
 test("password change never submits on its own and needs the new password twice", async ({ page }) => {
   await signUp(page);
-  await page.goto("/account");
+  await page.goto("/account/security");
   let posts = 0;
   page.on("request", (r) => r.method() === "POST" && r.url().endsWith("/api/v1/auth/me/password") && posts++);
   const form = page.getByTestId("password-form");

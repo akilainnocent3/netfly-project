@@ -16,6 +16,7 @@ GROUPS: list[tuple[str, str, str]] = [
     ("ux", "Interface", "Timings for interface behaviour (hover, hero)."),
     ("playback", "Playback", "Player defaults and adaptive streaming tuning."),
     ("intro", "Brand intro", "The NETFLY ident shown on app open and before playback."),
+    ("usage", "Usage limits", "How viewing time is metered against each plan's limits."),
     ("transcoding", "Transcoding", "FFmpeg encoding ladder and outputs."),
     ("storage", "Storage & CDN", "Amazon S3 bucket, credentials and CDN delivery."),
     ("upload", "Uploads", "Upload limits and validation."),
@@ -905,6 +906,64 @@ KEYS: list[Key] = [
         public=True,
         unit="ms",
         validation={"min": 0, "max": 10000},
+    ),
+    # ---- usage metering -----------------------------------------------------
+    Key(
+        "usage.timezone",
+        "string",
+        "Africa/Dar_es_Salaam",
+        "Daily / weekly / monthly limits reset at midnight in this IANA timezone.",
+        public=True,
+        validation={"regex": r"^[A-Za-z_]+(/[A-Za-z0-9_+-]+){0,2}$"},
+    ),
+    Key(
+        "usage.week_starts_on",
+        "enum",
+        "monday",
+        "First day of the weekly window.",
+        public=True,
+        validation={"choices": ["monday", "sunday", "saturday"]},
+    ),
+    Key(
+        "usage.monthly_reset",
+        "enum",
+        "calendar_month",
+        "Monthly window: the calendar month, or each member's billing period.",
+        public=True,
+        validation={"choices": ["calendar_month", "billing_period"]},
+    ),
+    Key(
+        "usage.heartbeat_seconds",
+        "int",
+        30,
+        "How often the player reports viewing time.",
+        public=True,
+        unit="s",
+        validation={"min": 10, "max": 120},
+    ),
+    Key(
+        "usage.tolerance_seconds",
+        "int",
+        5,
+        "Slack added to server-measured time between heartbeats (network jitter).",
+        unit="s",
+        validation={"min": 0, "max": 30},
+    ),
+    Key(
+        "usage.warn_at_minutes",
+        "json",
+        [10, 2],
+        "Remaining minutes at which the player warns the viewer.",
+        public=True,
+        validation={
+            "schema": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": 600}}
+        },
+    ),
+    Key(
+        "usage.count_trailers",
+        "bool",
+        False,
+        "Count trailers opened in the player against limits.",
     ),
 ]
 

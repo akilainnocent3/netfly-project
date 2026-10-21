@@ -21,17 +21,31 @@ from .models import VideoAsset
 SALT = "netfly.playback"
 
 
-def issue_token(asset_id: str, user_id: int) -> str:
-    return signing.dumps({"a": str(asset_id), "u": user_id}, salt=SALT, compress=True)
+def issue_token(
+    asset_id: str, user_id: int, *, session: str | None = None, max_height: int | None = None
+) -> str:
+    """`session` = a metered playback session (playlists stop once the allowance is spent);
+    `max_height` caps a preview token, whatever the URL asks for."""
+    payload: dict = {"a": str(asset_id), "u": user_id}
+    if session:
+        payload["s"] = session
+    if max_height:
+        payload["h"] = max_height
+    return signing.dumps(payload, salt=SALT, compress=True)
 
 
-def check_token(token: str, asset_id: str) -> int | None:
+def token_claims(token: str, asset_id: str) -> dict | None:
     ttl = config.get_int("storage.signed_url_ttl_seconds", 21600)
     try:
         payload = signing.loads(token, salt=SALT, max_age=ttl)
     except signing.BadSignature:
         return None
-    return payload["u"] if payload.get("a") == str(asset_id) else None
+    return payload if payload.get("a") == str(asset_id) else None
+
+
+def check_token(token: str, asset_id: str) -> int | None:
+    claims = token_claims(token, asset_id)
+    return claims["u"] if claims else None
 
 
 def _key_from_full(full_key: str) -> str:

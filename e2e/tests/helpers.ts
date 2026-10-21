@@ -35,8 +35,15 @@ export async function signUp(page: Page, username = uniqueName()): Promise<strin
   return username;
 }
 
-/** Walk the signup steps from step 1 (wherever the visitor was sent from). */
-export async function completeSignupSteps(page: Page, username = uniqueName()): Promise<string> {
+/**
+ * Walk the signup steps from step 1 (wherever the visitor was sent from), then keep the
+ * preselected free plan ("Start watching") unless `plan: false`.
+ */
+export async function completeSignupSteps(
+  page: Page,
+  username = uniqueName(),
+  opts: { plan?: boolean } = {},
+): Promise<string> {
   await page.waitForURL(/\/signup\/name/);
   await page.locator("input[name=name]").fill("E2E Viewer");
   await page.getByRole("button", { name: "Next" }).click();
@@ -47,7 +54,15 @@ export async function completeSignupSteps(page: Page, username = uniqueName()): 
   await page.waitForURL(/\/signup\/password/);
   await page.locator("input[name=password]").fill(PASSWORD);
   await page.getByRole("button", { name: "Finish" }).click();
+  if (opts.plan !== false) await chooseFreePlan(page);
   return username;
+}
+
+/** Plan picker after signup: Free is preselected, so "Start watching" keeps it. */
+export async function chooseFreePlan(page: Page): Promise<void> {
+  await page.waitForURL(/\/signup\/plan/);
+  await expect(page.getByRole("radio", { checked: true })).toContainText("Bure");
+  await page.getByRole("button", { name: "Start watching" }).click();
 }
 
 const CLIENT_URL = process.env.NETFLY_CLIENT_URL ?? "http://localhost:3000";

@@ -1,6 +1,6 @@
 "use client";
 
-import { unwrap } from "@netfly/api-client";
+import { unwrap, type Schemas } from "@netfly/api-client";
 import {
   keepPreviousData,
   useIsMutating,
@@ -483,4 +483,38 @@ export function useHideFromContinueWatching(title: ReminderRef) {
     if (claim(`cw:${title.id}`)) mutation.mutate();
   };
   return { ...mutation, hideNow };
+}
+
+// -- plans, membership, usage ------------------------------------------------------------
+export type Plan = Schemas["Plan"];
+export type Membership = Schemas["Membership"];
+export type { UsageSnapshot } from "./usage";
+
+export function usePlans() {
+  return useQuery({
+    queryKey: ["plans"],
+    queryFn: () => unwrap(api.GET("/api/v1/billing/plans")),
+    staleTime: 60_000,
+  });
+}
+
+export function useMembership(enabled = true) {
+  return useQuery({
+    queryKey: ["membership"],
+    enabled,
+    queryFn: () => unwrap(api.GET("/api/v1/billing/membership")),
+    staleTime: 15_000,
+  });
+}
+
+/** Usage snapshot, re-synced from the server every 30 s (and from every player heartbeat). */
+export function useUsage(enabled = true) {
+  return useQuery({
+    queryKey: ["usage"],
+    enabled,
+    queryFn: () => unwrap(api.GET("/api/v1/billing/usage")),
+    staleTime: 10_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+  });
 }

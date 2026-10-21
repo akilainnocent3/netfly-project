@@ -3,7 +3,21 @@
 import { unwrap } from "@netfly/api-client";
 import { cn, formatBytes } from "@netfly/ui";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Activity, Clock, Cpu, HardDrive, Play, Radio, Timer, TriangleAlert } from "lucide-react";
+import {
+  Activity,
+  BadgeCheck,
+  CalendarClock,
+  Clock,
+  Cpu,
+  CreditCard,
+  HardDrive,
+  Hourglass,
+  Play,
+  Radio,
+  Timer,
+  TriangleAlert,
+  Wallet,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { BarsChart, TrendChart } from "@/components/dashboard/charts";
@@ -41,6 +55,13 @@ export default function DashboardPage() {
     .map(([label, value]) => ({ label, value, h: Number.parseInt(label) || 0 }))
     .sort((a, b) => b.h - a.h);
   const tc = d?.transcoding ?? {};
+  const billing = useQuery({
+    queryKey: ["billing-stats"],
+    queryFn: () => unwrap(api.GET("/api/v1/admin/billing/stats")),
+    refetchInterval: 60_000,
+  });
+  const b = billing.data;
+  const paidTotal = b?.paid_by_plan.reduce((sum, p) => sum + p.count, 0) ?? 0;
 
   return (
     <>
@@ -127,6 +148,47 @@ export default function DashboardPage() {
             label="Storage used"
             value={d ? (d.storage_bytes != null ? formatBytes(d.storage_bytes) : "—") : null}
             sub={d?.storage_bytes == null ? "S3 listing unavailable" : "Media bucket prefix"}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5" data-testid="billing-tiles">
+          <Stat
+            icon={BadgeCheck}
+            label="Active paid members"
+            value={b ? n(paidTotal) : null}
+            sub={
+              b
+                ? b.paid_by_plan.length
+                  ? b.paid_by_plan.map((p) => `${p.plan} ${n(p.count)}`).join(" · ")
+                  : "No paid members yet"
+                : undefined
+            }
+            href="/subscribers?status=active"
+          />
+          <Stat
+            icon={Hourglass}
+            label="Trials running"
+            value={b ? n(b.trials_running) : null}
+            href="/subscribers?status=trialing"
+          />
+          <Stat
+            icon={Wallet}
+            label="MRR"
+            value={b ? `TSh ${n(b.mrr_tzs)}` : null}
+            sub="Monthly recurring revenue"
+          />
+          <Stat
+            icon={CalendarClock}
+            label="Renewals in 48 h"
+            value={b ? n(b.renewals_due_48h) : null}
+            sub="Auto-renew on"
+          />
+          <Stat
+            icon={CreditCard}
+            label="Failed payments"
+            value={b ? n(b.failed_payments_7d) : null}
+            sub="Last 7 days"
+            warn={(b?.failed_payments_7d ?? 0) > 0}
           />
         </div>
 

@@ -76,6 +76,8 @@ class PlaybackSerializer(serializers.Serializer):
     renditions = RenditionInfoSerializer(many=True)
     subtitles = SubtitleInfoSerializer(many=True)
     is_preview = serializers.BooleanField()
+    # Counted against the viewer's plan limits (previews and, by default, trailers aren't).
+    metered = serializers.BooleanField()
 
 
 def _episode_data(e: Episode) -> dict:
@@ -152,7 +154,29 @@ class PlaybackView(APIView):
         if asset is None or not asset.is_ready:
             raise APIError("This title isn't available to play yet.", "not_available", 404)
 
+        session_id = uuid.uuid4().hex
+        metered = False
         if not preview:
+            # Viewing time is metered server-side: no allowance, no session.
+            from apps.billing import usage
+
+            snap = usage.snapshot(request.user)
+            if not snap["allowed"]:
+                raise APIError(
+                    "You've reached your viewing limit.",
+                    "usage_limit_reached",
+                    403,
+                    extra={"usage": snap},
+                )
+            is_trailer = title.trailer_id is not None and asset.pk == title.trailer_id
+            metered = not is_trailer or config.get_bool("usage.count_trailers")
+            usage.open_session(
+                session_id,
+                user_id=request.user.pk,
+                title_id=title.pk,
+                episode_id=episode.pk if episode else None,
+                metered=metered,
+            )
             progress = WatchProgress.objects.filter(
                 **who.scope, title=title, episode=episode
             ).first()
@@ -160,11 +184,16 @@ class PlaybackView(APIView):
                 start_at = progress.position_seconds
 
         nxt = next_episode(episode) if episode else None
-        token = delivery.issue_token(str(asset.pk), request.user.pk)
         max_height = 720 if preview else None
+        token = delivery.issue_token(
+            str(asset.pk),
+            request.user.pk,
+            session=session_id if metered else None,
+            max_height=max_height,
+        )
         base = f"/api/v1/stream/{asset.pk}"
         data = {
-            "session_id": uuid.uuid4().hex,
+            "session_id": session_id,
             "asset_id": asset.pk,
             "master_url": f"{base}/master.m3u8?t={token}"
             + (f"&max_height={max_height}" if max_height else ""),
@@ -202,6 +231,7 @@ class PlaybackView(APIView):
                 for s in asset.subtitles.all()
             ],
             "is_preview": preview,
+            "metered": metered,
         }
         response = Response(PlaybackSerializer(data).data)
         response["Cache-Control"] = "private, no-store"

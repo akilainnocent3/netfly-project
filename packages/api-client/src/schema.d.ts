@@ -108,6 +108,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/billing/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin_billing_stats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/brand/intro": {
         parameters: {
             query?: never;
@@ -441,6 +457,61 @@ export interface paths {
         patch: operations["admin_legal_update"];
         trace?: never;
     };
+    "/api/v1/admin/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Plans differ only in limits. Exactly one active, free, default plan always exists. */
+        get: operations["admin_plans_list"];
+        put?: never;
+        /** @description Plans differ only in limits. Exactly one active, free, default plan always exists. */
+        post: operations["admin_plans_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Plans differ only in limits. Exactly one active, free, default plan always exists. */
+        get: operations["admin_plans_retrieve"];
+        /** @description Plans differ only in limits. Exactly one active, free, default plan always exists. */
+        put: operations["admin_plans_update"];
+        post?: never;
+        /** @description Plans differ only in limits. Exactly one active, free, default plan always exists. */
+        delete: operations["admin_plans_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Plans differ only in limits. Exactly one active, free, default plan always exists. */
+        patch: operations["admin_plans_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/plans/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Plans differ only in limits. Exactly one active, free, default plan always exists. */
+        post: operations["admin_plans_reorder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/related/{id}": {
         parameters: {
             query?: never;
@@ -609,6 +680,142 @@ export interface paths {
         put?: never;
         /** @description Verify S3 credentials *before* saving: unsaved form values override stored ones. */
         post: operations["admin_storage_test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/subscribers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Members with their plan, status, period and usage; staff actions are audited. */
+        get: operations["admin_subscribers_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/subscribers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Members with their plan, status, period and usage; staff actions are audited. */
+        get: operations["admin_subscribers_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/subscribers/{id}/bonus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Members with their plan, status, period and usage; staff actions are audited. */
+        post: operations["admin_subscriber_bonus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/subscribers/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Members with their plan, status, period and usage; staff actions are audited. */
+        post: operations["admin_subscriber_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/subscribers/{id}/change-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Members with their plan, status, period and usage; staff actions are audited. */
+        post: operations["admin_subscriber_change_plan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/subscribers/{id}/end-trial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Members with their plan, status, period and usage; staff actions are audited. */
+        post: operations["admin_subscriber_end_trial"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/subscribers/{id}/extend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Members with their plan, status, period and usage; staff actions are audited. */
+        post: operations["admin_subscriber_extend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/subscribers/{id}/reset-usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Members with their plan, status, period and usage; staff actions are audited. */
+        post: operations["admin_subscriber_reset_usage"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1140,6 +1347,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/billing/auto-renew": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["billing_auto_renew"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/membership": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["billing_membership"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Free applies at once. Paid plans / trials return the steps still needed (verify, pay);
+         *     a downgrade from a paid plan waits for the end of the paid period.
+         */
+        post: operations["billing_choose_plan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Public plan list for the plan picker (cached; Studio edits clear it). */
+        get: operations["billing_plans"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lightweight usage snapshot (profile menu, Play button, re-sync every 30 s). */
+        get: operations["billing_usage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/browse/billboard": {
         parameters: {
             query?: never;
@@ -1390,6 +1683,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/playback/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description The player reports viewing time; the server decides what counts (see usage.heartbeat). */
+        post: operations["playback_heartbeat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/playback/progress": {
         parameters: {
             query?: never;
@@ -1601,6 +1911,45 @@ export interface components {
         AdminImageRequest: {
             crop?: unknown;
         };
+        AdminPlan: {
+            readonly id: number;
+            slug: string;
+            name: string;
+            tagline?: string;
+            price_tzs?: number;
+            period_days?: number;
+            daily_limit_minutes?: number | null;
+            weekly_limit_minutes?: number | null;
+            monthly_limit_minutes?: number | null;
+            trial_eligible?: boolean;
+            is_free?: boolean;
+            is_default?: boolean;
+            highlight_label?: string;
+            order?: number;
+            feature_bullets?: string[];
+            is_active?: boolean;
+            /** @default 0 */
+            readonly subscribers: number;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        AdminPlanRequest: {
+            slug: string;
+            name: string;
+            tagline?: string;
+            price_tzs?: number;
+            period_days?: number;
+            daily_limit_minutes?: number | null;
+            weekly_limit_minutes?: number | null;
+            monthly_limit_minutes?: number | null;
+            trial_eligible?: boolean;
+            is_free?: boolean;
+            is_default?: boolean;
+            highlight_label?: string;
+            order?: number;
+            feature_bullets?: string[];
+            is_active?: boolean;
+        };
         AdminUser: {
             readonly id: number;
             readonly username: string;
@@ -1681,6 +2030,9 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        AutoRenewRequest: {
+            on: boolean;
+        };
         /**
          * @description * `avatar-1` - avatar-1
          *     * `avatar-2` - avatar-2
@@ -1737,6 +2089,14 @@ export interface components {
             use_trailer: boolean;
             title: components["schemas"]["TitleCard"];
         };
+        BillingStats: {
+            paid_by_plan: components["schemas"]["PaidByPlan"][];
+            trials_running: number;
+            mrr_tzs: number;
+            renewals_due_48h: number;
+            failed_payments_7d: number;
+            plans: components["schemas"]["Plan"][];
+        };
         /** @enum {unknown} */
         BlankEnum: "";
         /**
@@ -1778,6 +2138,23 @@ export interface components {
             current_password: string;
             new_password: string;
         };
+        ChoosePlanRequest: {
+            plan: string;
+            /** @default false */
+            trial: boolean;
+        };
+        ChoosePlanResult: {
+            status: components["schemas"]["ChoosePlanResultStatusEnum"];
+            steps: string[];
+            subscription: components["schemas"]["Subscription"];
+        };
+        /**
+         * @description * `applied` - applied
+         *     * `scheduled` - scheduled
+         *     * `needs` - needs
+         * @enum {string}
+         */
+        ChoosePlanResultStatusEnum: "applied" | "scheduled" | "needs";
         CollectionAdmin: {
             readonly id: number;
             name: string;
@@ -2006,6 +2383,33 @@ export interface components {
         Health: {
             ok: boolean;
         };
+        HeartbeatRequestRequest: {
+            session_id: string;
+            /**
+             * Format: double
+             * @default 0
+             */
+            watched: number;
+            /** @default true */
+            playing: boolean;
+        };
+        HeartbeatResponse: {
+            plan: components["schemas"]["UsagePlan"];
+            exempt: boolean;
+            allowed: boolean;
+            limit_reached: (components["schemas"]["UsageScopeEnum"] | components["schemas"]["NullEnum"]) | null;
+            limits: components["schemas"]["UsageWindows"];
+            used: components["schemas"]["UsageWindows"];
+            remaining: components["schemas"]["UsageWindows"];
+            remaining_seconds: number | null;
+            resets_at: components["schemas"]["Resets"];
+            warn_at_minutes: number[];
+            heartbeat_seconds: number;
+            /** Format: date-time */
+            server_time: string;
+            /** Format: double */
+            credited: number;
+        };
         HistoryItem: {
             title_id: number;
             title: string;
@@ -2117,6 +2521,11 @@ export interface components {
             /** @default true */
             remember: boolean;
         };
+        Membership: {
+            subscription: components["schemas"]["Subscription"];
+            usage: components["schemas"]["UsageSnapshot"];
+            trial: components["schemas"]["TrialInfo"];
+        };
         NewAndPopular: {
             coming_soon: components["schemas"]["Upcoming"][];
             everyone_watching: components["schemas"]["TitleCard"][];
@@ -2182,6 +2591,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["AuditLog"][];
         };
+        PaginatedSubscriberList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Subscriber"][];
+        };
         PaginatedTitleAdminListList: {
             /** @example 123 */
             count: number;
@@ -2212,6 +2636,11 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["VideoJob"][];
         };
+        PaidByPlan: {
+            plan: string;
+            slug: string;
+            count: number;
+        };
         Part: {
             number: number;
             etag: string;
@@ -2224,6 +2653,23 @@ export interface components {
         };
         PatchedAdminImageRequest: {
             crop?: unknown;
+        };
+        PatchedAdminPlanRequest: {
+            slug?: string;
+            name?: string;
+            tagline?: string;
+            price_tzs?: number;
+            period_days?: number;
+            daily_limit_minutes?: number | null;
+            weekly_limit_minutes?: number | null;
+            monthly_limit_minutes?: number | null;
+            trial_eligible?: boolean;
+            is_free?: boolean;
+            is_default?: boolean;
+            highlight_label?: string;
+            order?: number;
+            feature_bullets?: string[];
+            is_active?: boolean;
         };
         PatchedBillboardAdminRequest: {
             title?: number;
@@ -2356,6 +2802,32 @@ export interface components {
             autoplay_previews?: boolean;
             subtitles_language?: string;
         };
+        Plan: {
+            readonly id: number;
+            readonly slug: string;
+            readonly name: string;
+            readonly tagline: string;
+            readonly price_tzs: number;
+            readonly period_days: number;
+            readonly daily_limit_minutes: number | null;
+            readonly weekly_limit_minutes: number | null;
+            readonly monthly_limit_minutes: number | null;
+            readonly trial_eligible: boolean;
+            readonly is_free: boolean;
+            readonly is_default: boolean;
+            readonly highlight_label: string;
+            readonly order: number;
+            feature_bullets: string[];
+        };
+        PlanReorderRequestRequest: {
+            ids: number[];
+        };
+        PlansResponse: {
+            plans: components["schemas"]["Plan"][];
+            trial_enabled: boolean;
+            trial_days: number;
+            currency: string;
+        };
         /** @description What the smart Play button does. */
         PlayTarget: {
             action: components["schemas"]["PlayTargetActionEnum"];
@@ -2390,6 +2862,7 @@ export interface components {
             renditions: components["schemas"]["RenditionInfo"][];
             subtitles: components["schemas"]["SubtitleInfo"][];
             is_preview: boolean;
+            metered: boolean;
         };
         PlaybackEpisode: {
             id: number;
@@ -2545,6 +3018,14 @@ export interface components {
         ResetPasswordResult: {
             temporary_password: string;
         };
+        Resets: {
+            /** Format: date-time */
+            day: string;
+            /** Format: date-time */
+            week: string;
+            /** Format: date-time */
+            month: string;
+        };
         /**
          * @description * `superadmin` - Super admin
          *     * `content_manager` - Content manager
@@ -2653,6 +3134,94 @@ export interface components {
             message: string;
             steps?: string[];
         };
+        Subscriber: {
+            readonly id: number;
+            username: string;
+            full_name: string;
+            /** Format: email */
+            email?: string | null;
+            readonly email_verified: boolean;
+            phone?: string | null;
+            readonly phone_verified: boolean;
+            is_staff?: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+            plan?: string;
+            plan_slug?: string;
+            /** @default free */
+            status: string;
+            /** Format: date-time */
+            current_period_end?: string;
+            /** Format: date-time */
+            trial_end?: string;
+            /** @default true */
+            auto_renew: boolean;
+            /** @default  */
+            payment_phone: string;
+        };
+        SubscriberActionRequest: {
+            plan?: string;
+            days?: number;
+            minutes?: number;
+            scope?: components["schemas"]["UsageScopeEnum"];
+            reason?: string;
+        };
+        SubscriberDetail: {
+            readonly id: number;
+            username: string;
+            full_name: string;
+            /** Format: email */
+            email?: string | null;
+            readonly email_verified: boolean;
+            phone?: string | null;
+            readonly phone_verified: boolean;
+            is_staff?: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+            plan?: string;
+            plan_slug?: string;
+            /** @default free */
+            status: string;
+            /** Format: date-time */
+            current_period_end?: string;
+            /** Format: date-time */
+            trial_end?: string;
+            /** @default true */
+            auto_renew: boolean;
+            /** @default  */
+            payment_phone: string;
+            readonly usage: components["schemas"]["UsageSnapshot"];
+        };
+        Subscription: {
+            plan: components["schemas"]["Plan"];
+            readonly status: components["schemas"]["SubscriptionStatusEnum"];
+            /** Format: date-time */
+            readonly current_period_start: string | null;
+            /** Format: date-time */
+            readonly current_period_end: string | null;
+            /** Format: date-time */
+            readonly trial_start: string | null;
+            /** Format: date-time */
+            readonly trial_end: string | null;
+            readonly auto_renew: boolean;
+            readonly cancel_at_period_end: boolean;
+            scheduled_plan: components["schemas"]["Plan"] | null;
+            readonly payment_phone_masked: string;
+            readonly payment_network: string | null;
+            /** Format: date-time */
+            readonly grace_until: string | null;
+        };
+        /**
+         * @description * `free` - Free
+         *     * `trialing` - Trialing
+         *     * `active` - Active
+         *     * `past_due` - Past Due
+         *     * `grace` - Grace
+         *     * `canceled` - Canceled
+         *     * `expired` - Expired
+         * @enum {string}
+         */
+        SubscriptionStatusEnum: "free" | "trialing" | "active" | "past_due" | "grace" | "canceled" | "expired";
         Subtitle: {
             readonly id: number;
             language: string;
@@ -2922,6 +3491,11 @@ export interface components {
          * @enum {string}
          */
         TranslationStatusEnum: "translated" | "not_translated";
+        TrialInfo: {
+            enabled: boolean;
+            days: number;
+            eligible: boolean;
+        };
         /** @description A Coming Soon card: when it lands and whether this viewer asked to be reminded. */
         Upcoming: {
             readonly id: number;
@@ -2982,6 +3556,38 @@ export interface components {
             /** @default feature */
             kind: components["schemas"]["VideoKindEnum"];
             fingerprint: string;
+        };
+        UsagePlan: {
+            slug: string;
+            name: string;
+            is_free: boolean;
+        };
+        /**
+         * @description * `day` - Day
+         *     * `week` - Week
+         *     * `month` - Month
+         * @enum {string}
+         */
+        UsageScopeEnum: "day" | "week" | "month";
+        UsageSnapshot: {
+            plan: components["schemas"]["UsagePlan"];
+            exempt: boolean;
+            allowed: boolean;
+            limit_reached: (components["schemas"]["UsageScopeEnum"] | components["schemas"]["NullEnum"]) | null;
+            limits: components["schemas"]["UsageWindows"];
+            used: components["schemas"]["UsageWindows"];
+            remaining: components["schemas"]["UsageWindows"];
+            remaining_seconds: number | null;
+            resets_at: components["schemas"]["Resets"];
+            warn_at_minutes: number[];
+            heartbeat_seconds: number;
+            /** Format: date-time */
+            server_time: string;
+        };
+        UsageWindows: {
+            day: number | null;
+            week: number | null;
+            month: number | null;
         };
         User: {
             readonly id: number;
@@ -3331,6 +3937,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    admin_billing_stats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingStats"];
+                };
             };
         };
     };
@@ -4175,6 +4800,170 @@ export interface operations {
             };
         };
     };
+    admin_plans_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminPlan"][];
+                };
+            };
+        };
+    };
+    admin_plans_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminPlanRequest"];
+                "multipart/form-data": components["schemas"]["AdminPlanRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminPlan"];
+                };
+            };
+        };
+    };
+    admin_plans_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this plan. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminPlan"];
+                };
+            };
+        };
+    };
+    admin_plans_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this plan. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminPlanRequest"];
+                "multipart/form-data": components["schemas"]["AdminPlanRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminPlan"];
+                };
+            };
+        };
+    };
+    admin_plans_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this plan. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_plans_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this plan. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAdminPlanRequest"];
+                "multipart/form-data": components["schemas"]["PatchedAdminPlanRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminPlan"];
+                };
+            };
+        };
+    };
+    admin_plans_reorder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanReorderRequestRequest"];
+                "multipart/form-data": components["schemas"]["PlanReorderRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminPlan"][];
+                };
+            };
+        };
+    };
     admin_related_destroy: {
         parameters: {
             query?: {
@@ -4534,6 +5323,217 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StorageTestResult"];
+                };
+            };
+        };
+    };
+    admin_subscribers_list: {
+        parameters: {
+            query?: {
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                plan?: string;
+                q?: string;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedSubscriberList"];
+                };
+            };
+        };
+    };
+    admin_subscribers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this user. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriberDetail"];
+                };
+            };
+        };
+    };
+    admin_subscriber_bonus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this user. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SubscriberActionRequest"];
+                "multipart/form-data": components["schemas"]["SubscriberActionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriberDetail"];
+                };
+            };
+        };
+    };
+    admin_subscriber_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this user. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SubscriberActionRequest"];
+                "multipart/form-data": components["schemas"]["SubscriberActionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriberDetail"];
+                };
+            };
+        };
+    };
+    admin_subscriber_change_plan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this user. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SubscriberActionRequest"];
+                "multipart/form-data": components["schemas"]["SubscriberActionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriberDetail"];
+                };
+            };
+        };
+    };
+    admin_subscriber_end_trial: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this user. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SubscriberActionRequest"];
+                "multipart/form-data": components["schemas"]["SubscriberActionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriberDetail"];
+                };
+            };
+        };
+    };
+    admin_subscriber_extend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this user. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SubscriberActionRequest"];
+                "multipart/form-data": components["schemas"]["SubscriberActionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriberDetail"];
+                };
+            };
+        };
+    };
+    admin_subscriber_reset_usage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this user. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SubscriberActionRequest"];
+                "multipart/form-data": components["schemas"]["SubscriberActionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriberDetail"];
                 };
             };
         };
@@ -5407,6 +6407,111 @@ export interface operations {
             };
         };
     };
+    billing_auto_renew: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AutoRenewRequest"];
+                "multipart/form-data": components["schemas"]["AutoRenewRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Subscription"];
+                };
+            };
+        };
+    };
+    billing_membership: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Membership"];
+                };
+            };
+        };
+    };
+    billing_choose_plan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChoosePlanRequest"];
+                "multipart/form-data": components["schemas"]["ChoosePlanRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChoosePlanResult"];
+                };
+            };
+        };
+    };
+    billing_plans: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlansResponse"];
+                };
+            };
+        };
+    };
+    billing_usage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageSnapshot"];
+                };
+            };
+        };
+    };
     browse_billboard: {
         parameters: {
             query?: {
@@ -5742,6 +6847,30 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    playback_heartbeat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HeartbeatRequestRequest"];
+                "multipart/form-data": components["schemas"]["HeartbeatRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeartbeatResponse"];
+                };
             };
         };
     };

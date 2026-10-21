@@ -21,6 +21,7 @@ app.conf.beat_schedule = {
         "task": "apps.recommendations.tasks.refresh_popularity",
         "schedule": 600.0,
     },
+    "purge-usage-keys": {"task": "apps.billing.tasks.purge_usage_keys", "schedule": 3600.0},
     "cleanup-refresh-tokens": {
         "task": "apps.accounts.tasks.cleanup_refresh_tokens",
         "schedule": 86400.0,
