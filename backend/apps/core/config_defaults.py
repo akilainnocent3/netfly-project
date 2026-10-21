@@ -15,6 +15,7 @@ GROUPS: list[tuple[str, str, str]] = [
     ("content", "Content", "Catalog, home feed and licensing behaviour."),
     ("ux", "Interface", "Timings for interface behaviour (hover, hero)."),
     ("playback", "Playback", "Player defaults and adaptive streaming tuning."),
+    ("intro", "Brand intro", "The NETFLY ident shown on app open and before playback."),
     ("transcoding", "Transcoding", "FFmpeg encoding ladder and outputs."),
     ("storage", "Storage & CDN", "Amazon S3 bucket, credentials and CDN delivery."),
     ("upload", "Uploads", "Upload limits and validation."),
@@ -67,6 +68,15 @@ LADDER_SCHEMA = {
 STRING_LIST_SCHEMA = {"type": "array", "items": {"type": "string"}}
 RATE_RE = {"regex": r"^\d+/(sec|min|hour|day)$"}
 COLOR_RE = {"regex": r"^#[0-9a-fA-F]{6}$"}
+# Same-origin path (built-in files, our redirect endpoints) or an absolute https URL; empty = default.
+MEDIA_URL_RE = {
+    "regex": r"^$|^/(?!/)[A-Za-z0-9._~/-]*$"
+    r"|^https://[A-Za-z0-9.-]+(:\d{1,5})?(/[A-Za-z0-9._~/%-]*)?(\?[A-Za-z0-9._~=&%-]*)?$"
+}
+
+# Versioned file names: they are served with an immutable, one-year cache.
+INTRO_DEFAULT_1080 = "/brand/netfly-intro-1080p.v1.mp4"
+INTRO_DEFAULT_720 = "/brand/netfly-intro-720p.v1.mp4"
 
 KEYS: list[Key] = [
     # ---- branding (public) -------------------------------------------------
@@ -832,6 +842,61 @@ KEYS: list[Key] = [
         validation={"min": 0, "max": 6},
     ),
     Key("recommendations.cache_seconds", "int", 900, "Per-user row cache lifetime.", unit="s"),
+    # ---- brand intro (public) ------------------------------------------------
+    Key("intro.enabled", "bool", True, "Master switch for the brand intro.", public=True),
+    Key(
+        "intro.video_url_1080",
+        "string",
+        INTRO_DEFAULT_1080,
+        "Intro clip for large screens (H.264 + AAC MP4). Upload a replacement in this section, "
+        "or enter a URL. Empty restores the built-in clip.",
+        label="Intro video (1080p)",
+        public=True,
+        validation=MEDIA_URL_RE,
+    ),
+    Key(
+        "intro.video_url_720",
+        "string",
+        INTRO_DEFAULT_720,
+        "Intro clip for phones, narrow windows and Save-Data. Empty restores the built-in clip.",
+        label="Intro video (720p)",
+        public=True,
+        validation=MEDIA_URL_RE,
+    ),
+    Key("intro.on_app_open", "bool", True, "Play the intro as the app-open splash.", public=True),
+    Key(
+        "intro.app_open_frequency",
+        "enum",
+        "once_per_session",
+        "How often the app-open splash plays.",
+        public=True,
+        validation={"choices": ["once_per_session", "once_per_day", "every_visit"]},
+    ),
+    Key(
+        "intro.before_playback",
+        "enum",
+        "always",
+        "Play the intro (with sound) before titles start.",
+        public=True,
+        validation={"choices": ["always", "once_per_title_per_session", "off"]},
+    ),
+    Key(
+        "intro.on_autoplay_next_episode",
+        "bool",
+        False,
+        "Also play it before autoplayed next episodes (off keeps binges uninterrupted).",
+        public=True,
+    ),
+    Key("intro.skippable", "bool", True, "Show a Skip button on the intro.", public=True),
+    Key(
+        "intro.skip_after_ms",
+        "int",
+        0,
+        "Delay before the Skip button appears.",
+        public=True,
+        unit="ms",
+        validation={"min": 0, "max": 10000},
+    ),
 ]
 
 KEY_INDEX: dict[str, Key] = {k.key: k for k in KEYS}

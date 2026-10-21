@@ -1,5 +1,4 @@
-import { expect, test } from "@playwright/test";
-import { signUp } from "./helpers";
+import { expect, signUp, test } from "./helpers";
 
 test("phone layout: tab bar and compact switcher", async ({ page }) => {
   await signUp(page);

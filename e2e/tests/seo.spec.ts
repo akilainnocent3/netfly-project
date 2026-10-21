@@ -1,5 +1,4 @@
-import { expect, test } from "@playwright/test";
-import { signUp } from "./helpers";
+import { expect, signUp, test } from "./helpers";
 
 type LdNode = Record<string, unknown>;
 

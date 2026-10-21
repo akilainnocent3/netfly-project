@@ -103,6 +103,39 @@ class ConfigEntryView(APIView):
         )
 
 
+class IntroUploadView(APIView):
+    """Replace the brand intro clip (validated MP4, stored content-addressed in the bucket)."""
+
+    permission_classes = [SuperadminOnly]
+
+    @extend_schema(
+        request={
+            "multipart/form-data": inline_serializer(
+                "IntroUploadRequest",
+                {
+                    "file": serializers.FileField(),
+                    "variant": serializers.ChoiceField(choices=["1080", "720"]),
+                },
+            )
+        },
+        responses=inline_serializer("IntroUploadResult", {"url": serializers.CharField()}),
+        operation_id="admin_intro_upload",
+    )
+    def post(self, request):
+        from apps.core.brand import store_intro
+
+        upload = request.FILES.get("file")
+        if upload is None:
+            raise APIError("Choose an MP4 file.", "validation_error", fields={"file": "Required."})
+        url = store_intro(
+            upload,
+            str(request.data.get("variant", "")),
+            actor=request.user,
+            ip=client_ip(request),
+        )
+        return Response({"url": url})
+
+
 class ConfigHistoryView(APIView):
     permission_classes = [SuperadminOnly]
 

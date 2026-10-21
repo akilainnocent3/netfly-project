@@ -14,9 +14,15 @@ const config: NextConfig = {
   images: { loader: "custom", loaderFile: "./src/lib/image-loader.ts" },
   experimental: { optimizePackageImports: ["lucide-react", "framer-motion"] },
   async headers() {
+    // Brand files are versioned by name (…v1.mp4): cache them for a year.
+    const brand = {
+      source: "/brand/:path*",
+      headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+    };
     // HSTS only in production builds (served over HTTPS behind the edge proxy).
-    if (process.env.NODE_ENV !== "production") return [];
+    if (process.env.NODE_ENV !== "production") return [brand];
     return [
+      brand,
       {
         source: "/:path*",
         headers: [

@@ -1,5 +1,4 @@
-import { expect, test } from "@playwright/test";
-import { homeRows, signUp } from "./helpers";
+import { expect, homeRows, signUp, test } from "./helpers";
 
 test("an offline banner appears and clears when the connection returns", async ({ page, context }) => {
   await signUp(page);

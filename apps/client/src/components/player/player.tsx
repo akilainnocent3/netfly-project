@@ -32,6 +32,14 @@ import {
   type TrackInfo,
 } from "@/lib/player/engine";
 import { parseThumbnails, type ThumbCue } from "@/lib/player/thumbnails";
+import {
+  DEFAULT_INTRO_1080,
+  DEFAULT_INTRO_720,
+  markPreroll,
+  pickIntroVariant,
+  prerollDue,
+  type BeforePlayback,
+} from "@/lib/intro";
 import { PlaybackTracker } from "@/lib/player/tracker";
 import { getPlayback, warmManifest, type PlaybackInfo } from "@/lib/playback";
 import { useAuth } from "../providers/auth";
@@ -39,6 +47,7 @@ import { useConfig } from "../providers/config";
 import { Button, IconButton as UiIconButton } from "../ui/button";
 import { NetflyImage } from "../ui/netfly-image";
 import { EpisodeDrawer } from "./episode-drawer";
+import { IntroPreroll } from "./intro-preroll";
 import { EndScreen, NextEpisodeCard, StillWatching } from "./overlays";
 import { Scrubber } from "./scrubber";
 
@@ -55,6 +64,14 @@ function storedQuality(fallback: string): QualityPref {
 }
 
 type TrackOption = TrackInfo;
+
+function sessionStore(): Storage | null {
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
 
 export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: boolean }) {
   const config = useConfig();
@@ -98,6 +115,32 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
   const [ended, setEnded] = useState(false);
   const [fatal, setFatal] = useState<string | null>(null);
   const [stillWatching, setStillWatching] = useState(false);
+  // Brand pre-roll: decided once per playback session; the title buffers paused underneath.
+  const [preroll, setPreroll] = useState(() =>
+    prerollDue(
+      config.bool("intro.enabled", true),
+      config.str("intro.before_playback", "always") as BeforePlayback,
+      {
+        slug: info.title.slug,
+        autoplayed,
+        onAutoplayNext: config.bool("intro.on_autoplay_next_episode", false),
+        session: sessionStore(),
+      },
+    ),
+  );
+  const prerollActive = useRef(preroll);
+  const engineReady = useRef(false);
+  const holdForStillWatching = useRef(false);
+  const introSrc = useMemo(() => {
+    const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
+    return pickIntroVariant(window.innerWidth, !!nav.connection?.saveData) === "720"
+      ? config.str("intro.video_url_720", DEFAULT_INTRO_720)
+      : config.str("intro.video_url_1080", DEFAULT_INTRO_1080);
+  }, [config]);
+  const reducedMotion = useMemo(
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    [],
+  );
 
   const ep = info.episode;
   const seekStep = config.num("playback.seek_step_seconds", 10);
@@ -128,7 +171,12 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
       /* ignore */
     }
     const askStill = autoplayed && chain >= config.num("playback.still_watching_after_episodes", 3);
-    if (askStill) setStillWatching(true);
+    holdForStillWatching.current = askStill;
+    if (askStill) {
+      setStillWatching(true);
+      prerollActive.current = false;
+      setPreroll(false);
+    }
 
     const t = new PlaybackTracker(
       {
@@ -181,7 +229,9 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
     });
     engine.current = e;
     void e.start().then(() => {
-      if (!askStill) void el.play().catch(() => setPlaying(false));
+      engineReady.current = true;
+      // While the pre-roll plays, the title only buffers; `startContent` plays it.
+      if (!askStill && !prerollActive.current) void el.play().catch(() => setPlaying(false));
     });
 
     const onPageHide = () => t.stop();
@@ -214,6 +264,18 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
     if (showNext && info.next)
       void getPlayback(info.title.slug, { episode: info.next.id }).then(warmManifest);
   }, [showNext, info.next, info.title.slug]);
+
+  /** Pre-roll ended or skipped: start the (already buffered) title right away. */
+  const startContent = useCallback(() => {
+    if (!prerollActive.current) return;
+    prerollActive.current = false;
+    markPreroll({ slug: info.title.slug, session: sessionStore() });
+    setPreroll(false);
+    // Startup time is measured from here: the intro is never analytics time.
+    loadStarted.current = performance.now();
+    if (engineReady.current && !holdForStillWatching.current)
+      void video.current?.play().catch(() => setPlaying(false));
+  }, [info.title.slug]);
 
   // -- controls visibility ---------------------------------------------------------
   const poke = useCallback(() => {
@@ -319,6 +381,7 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
   // -- keyboard ---------------------------------------------------------------------
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (prerollActive.current) return; // the pre-roll handles its own keys
       if (e.target instanceof HTMLInputElement || e.metaKey || e.ctrlKey || e.altKey) return;
       const key = e.key.toLowerCase();
       if (key === " " || key === "k") togglePlay();
@@ -357,6 +420,7 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
 
   // -- touch gestures: double-tap sides to seek, horizontal swipe to scrub -----------------
   const onPointerUp = (e: React.PointerEvent) => {
+    if (prerollActive.current) return;
     if (e.pointerType === "mouse") {
       togglePlay();
       return;
@@ -432,7 +496,10 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
     >
       <video
         ref={video}
-        className="absolute inset-0 h-full w-full object-contain"
+        className={cn(
+          "absolute inset-0 h-full w-full object-contain transition-opacity duration-200 ease-out",
+          preroll && "opacity-0",
+        )}
         playsInline
         preload="auto"
         crossOrigin="anonymous"
@@ -499,7 +566,7 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
 
       {/* Buffering */}
       <AnimatePresence>
-        {waiting && !fatal && (
+        {waiting && !fatal && !preroll && (
           <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -539,14 +606,24 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
         )}
       </AnimatePresence>
 
+      {preroll && (
+        <IntroPreroll
+          src={introSrc}
+          reduced={reducedMotion}
+          skippable={config.bool("intro.skippable", true)}
+          skipAfterMs={config.num("intro.skip_after_ms", 0)}
+          onDone={startContent}
+        />
+      )}
+
       {/* Chrome */}
       <m.div
         initial={false}
-        animate={{ opacity: controls || !playing ? 1 : 0 }}
+        animate={{ opacity: !preroll && (controls || !playing) ? 1 : 0 }}
         transition={{ duration: 0.25 }}
         className={cn(
           "pointer-events-none absolute inset-0",
-          (controls || !playing) && "[&>*]:pointer-events-auto",
+          !preroll && (controls || !playing) && "[&>*]:pointer-events-auto",
         )}
       >
         <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/80 to-transparent" />
@@ -834,7 +911,7 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
           currentEpisode={ep.id}
         />
       )}
-      {!playing && current < 1 && info.title.backdrop && waiting && (
+      {!preroll && !playing && current < 1 && info.title.backdrop && waiting && (
         <div className="pointer-events-none absolute inset-0 -z-0 opacity-30">
           <NetflyImage
             image={info.title.backdrop}

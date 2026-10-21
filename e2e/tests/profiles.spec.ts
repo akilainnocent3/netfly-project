@@ -1,5 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-import { setConfig, signUp } from "./helpers";
+import type { Page } from "@playwright/test";
+import { expect, setConfig, signUp, test } from "./helpers";
 
 // Profiles are behind a global flag: this file turns it on and always turns it back off.
 test.describe.configure({ mode: "serial" });

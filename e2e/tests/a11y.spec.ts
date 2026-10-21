@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
-import { homeRows, signUp } from "./helpers";
+import type { Page } from "@playwright/test";
+import { expect, homeRows, signUp, test } from "./helpers";
 
 /** WCAG 2.1 A/AA via axe. Failures list the rule and the first offending selectors. */
 async function audit(page: Page, include?: string) {

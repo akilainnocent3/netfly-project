@@ -392,6 +392,42 @@
                 }
             }
         },
+        "/api/v1/admin/brand/intro": {
+            "post": {
+                "operationId": "admin_intro_upload",
+                "description": "Replace the brand intro clip (validated MP4, stored content-addressed in the bucket).",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IntroUploadRequestRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IntroUploadResult"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/admin/cdn/test": {
             "post": {
                 "operationId": "admin_cdn_test",
@@ -6874,6 +6910,33 @@
                     "kind"
                 ]
             },
+            "IntroUploadRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary"
+                    },
+                    "variant": {
+                        "$ref": "#/components/schemas/VariantEnum"
+                    }
+                },
+                "required": [
+                    "file",
+                    "variant"
+                ]
+            },
+            "IntroUploadResult": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "url"
+                ]
+            },
             "Landing": {
                 "type": "object",
                 "properties": {
@@ -10397,6 +10460,14 @@
                 ],
                 "type": "string",
                 "description": "* `string` - String\n* `text` - Text\n* `int` - Int\n* `float` - Float\n* `bool` - Bool\n* `json` - Json\n* `secret` - Secret\n* `color` - Color\n* `url` - Url\n* `enum` - Enum"
+            },
+            "VariantEnum": {
+                "enum": [
+                    "1080",
+                    "720"
+                ],
+                "type": "string",
+                "description": "* `1080` - 1080\n* `720` - 720"
             },
             "VideoJob": {
                 "type": "object",

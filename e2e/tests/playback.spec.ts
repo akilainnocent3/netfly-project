@@ -1,5 +1,4 @@
-import { expect, test } from "@playwright/test";
-import { canPlayH264, playableSlug, signUp } from "./helpers";
+import { canPlayH264, expect, playableSlug, signUp, test } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await signUp(page);

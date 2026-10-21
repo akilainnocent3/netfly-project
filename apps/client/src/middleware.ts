@@ -76,7 +76,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     {
-      source: "/((?!api|_next/static|_next/image|favicon|icons).*)",
+      source: "/((?!api|_next/static|_next/image|favicon|icons|brand/|manifest.webmanifest).*)",
       missing: [{ type: "header", key: "next-router-prefetch" }],
     },
   ],

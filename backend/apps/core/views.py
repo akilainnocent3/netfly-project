@@ -1,3 +1,5 @@
+import re
+
 from django.db import connection
 from django.utils.cache import patch_cache_control
 from drf_spectacular.utils import extend_schema, inline_serializer
@@ -23,6 +25,14 @@ def media_origins() -> list[str]:
     domain = config.get_str("storage.cdn.domain")
     if config.get_bool("storage.cdn.enabled") and domain:
         origins.append(domain if domain.startswith("http") else f"https://{domain}")
+    # An operator may point the intro at an external https URL: the CSP must allow it.
+    for key in ("intro.video_url_1080", "intro.video_url_720"):
+        url = config.get_str(key)
+        if url.startswith("https://"):
+            parts = urlsplit(url)
+            origin = f"https://{parts.netloc}"
+            if re.fullmatch(r"[A-Za-z0-9.-]+(:\d{1,5})?", parts.netloc) and origin not in origins:
+                origins.append(origin)
     return origins
 
 

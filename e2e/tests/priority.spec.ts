@@ -1,5 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-import { adminToken, PASSWORD, signUp } from "./helpers";
+import type { Page } from "@playwright/test";
+import { adminToken, expect, PASSWORD, signUp, skipAppIntro, test } from "./helpers";
 
 // Changes a title's global recommendation priority: runs in its own project after the rest.
 const CLIENT = process.env.NETFLY_CLIENT_URL ?? "http://localhost:3000";
@@ -88,6 +88,7 @@ test("Studio +3 boost reaches Top picks for existing and new viewers without the
 
   // A brand-new viewer gets it too (cold start).
   const other = await browser.newPage();
+  await skipAppIntro(other);
   const fresh = await viewerToken(await signUp(other));
   expect((await topPicks(fresh)).slice(0, 2).map((t) => t.id)).toContain(target.id);
 });

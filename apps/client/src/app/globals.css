@@ -112,6 +112,26 @@ body {
   border-radius: 6px;
 }
 
+/* App-open splash: the inline boot script sets data-intro before first paint, so the page
+   never flashes before the intro covers it. Failsafe: the cover fades on its own after
+   5.5 s even if JavaScript never hydrates. */
+html[data-intro] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: #000;
+  pointer-events: none;
+  animation: intro-cover-out 300ms ease-out 5.5s forwards;
+}
+
+@keyframes intro-cover-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 .no-scrollbar {
   scrollbar-width: none;
 }

@@ -85,6 +85,15 @@ export default function SettingsPage() {
               </div>
               {group.key === "storage" ? (
                 <StorageForm entries={group.entries} />
+              ) : group.key === "intro" ? (
+                <>
+                  <IntroUpload />
+                  <ul className="divide-line border-line divide-y border-t">
+                    {group.entries.map((e) => (
+                      <EntryRow key={e.key} entry={e} />
+                    ))}
+                  </ul>
+                </>
               ) : (
                 <ul className="divide-line divide-y">
                   {group.entries.map((e) => (
@@ -658,6 +667,66 @@ function StorageForm({ entries }: { entries: Entry[] }) {
           <EntryRow key={e.key} entry={e} />
         ))}
       </ul>
+    </div>
+  );
+}
+
+/** Upload a replacement intro clip (MP4, H.264 + AAC, ≤ 15 s, ≤ 20 MB). */
+function IntroUpload() {
+  const toast = useToast();
+  const queryClient = useQueryClient();
+  const [busy, setBusy] = useState<"1080" | "720" | null>(null);
+  const upload = async (variant: "1080" | "720", file: File | undefined) => {
+    if (!file || busy) return;
+    setBusy(variant);
+    try {
+      await unwrap(
+        api.POST("/api/v1/admin/brand/intro", {
+          body: { file: file as unknown as string, variant },
+          bodySerializer: (body) => {
+            const form = new FormData();
+            form.append("variant", body.variant);
+            form.append("file", file);
+            return form;
+          },
+        }),
+      );
+      await queryClient.invalidateQueries({ queryKey: ["config"] });
+      toast(`${variant}p intro replaced ✓`);
+    } catch (e) {
+      toast(e instanceof ApiError ? e.message : "Upload failed", "error");
+    } finally {
+      setBusy(null);
+    }
+  };
+  return (
+    <div className="flex flex-wrap items-center gap-3 px-5 py-4">
+      <p className="text-muted mr-auto text-[12.5px]">
+        Replace a clip with an MP4 (H.264 + AAC, at most 15 s and 20 MB). Clear a URL below to go
+        back to the built-in NETFLY ident.
+      </p>
+      {(["1080", "720"] as const).map((variant) => (
+        <label key={variant} className="relative">
+          <input
+            type="file"
+            accept="video/mp4"
+            className="peer sr-only"
+            disabled={busy !== null}
+            onChange={(e) => {
+              void upload(variant, e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+          <span
+            aria-hidden
+            className="border-line bg-panel hover:bg-hover peer-focus-visible:ring-accent inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border px-3 text-[13px] font-medium peer-focus-visible:ring-2 peer-disabled:pointer-events-none peer-disabled:opacity-50"
+          >
+            {busy === variant && <Loader2 className="size-3.5 animate-spin" />}
+            Upload {variant}p intro
+          </span>
+          <span className="sr-only">Upload {variant}p intro</span>
+        </label>
+      ))}
     </div>
   );
 }

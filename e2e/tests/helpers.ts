@@ -1,4 +1,25 @@
-import { expect, type Page } from "@playwright/test";
+import { test as base, expect, type BrowserContext, type Page } from "@playwright/test";
+
+export { expect };
+
+/** Mark the app-open splash as already seen (intro.spec.ts covers the splash itself). */
+export async function skipAppIntro(target: Page | BrowserContext): Promise<void> {
+  await target.addInitScript(() => {
+    try {
+      sessionStorage.setItem("netfly-intro-app", "1");
+    } catch {
+      /* ignore */
+    }
+  });
+}
+
+/** `test` for specs that aren't about the splash: every page starts with it already seen. */
+export const test = base.extend({
+  context: async ({ context }, use) => {
+    await skipAppIntro(context);
+    await use(context);
+  },
+});
 
 export const PASSWORD = "stream-all-night-42";
 

@@ -31,6 +31,7 @@ urlpatterns = [
     path("config/<str:key>/history", cfg.ConfigHistoryView.as_view(), name="admin-config-history"),
     path("storage/test", cfg.StorageTestView.as_view(), name="admin-storage-test"),
     path("storage/apply-cors", cfg.StorageCorsView.as_view(), name="admin-storage-cors"),
+    path("brand/intro", cfg.IntroUploadView.as_view(), name="admin-intro-upload"),
     path("cdn/test", cfg.CdnTestView.as_view(), name="admin-cdn-test"),
     path("legal", cfg.LegalPagesView.as_view(), name="admin-legal"),
     path("legal/<slug:slug>", cfg.LegalPageView.as_view(), name="admin-legal-page"),

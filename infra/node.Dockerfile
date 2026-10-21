@@ -30,6 +30,8 @@ WORKDIR /app
 RUN addgroup -S netfly && adduser -S netfly -G netfly
 COPY --from=build --chown=netfly:netfly /repo/apps/${APP}/.next/standalone ./
 COPY --from=build --chown=netfly:netfly /repo/apps/${APP}/.next/static ./apps/${APP}/.next/static
+# Brand assets (logos, icons, intro clips) are served from public/.
+COPY --from=build --chown=netfly:netfly /repo/apps/${APP}/public ./apps/${APP}/public
 USER netfly
 ENV APP_DIR=apps/${APP}
 CMD ["sh", "-c", "node $APP_DIR/server.js"]

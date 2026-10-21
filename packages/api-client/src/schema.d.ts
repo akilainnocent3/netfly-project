@@ -108,6 +108,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/brand/intro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Replace the brand intro clip (validated MP4, stored content-addressed in the bucket). */
+        post: operations["admin_intro_upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/cdn/test": {
         parameters: {
             query?: never;
@@ -2063,6 +2080,14 @@ export interface components {
             file: string;
             kind: components["schemas"]["ImageKindEnum"];
         };
+        IntroUploadRequestRequest: {
+            /** Format: binary */
+            file: string;
+            variant: components["schemas"]["VariantEnum"];
+        };
+        IntroUploadResult: {
+            url: string;
+        };
         Landing: {
             trending: components["schemas"]["TitleCard"][];
             genres: components["schemas"]["GenreLink"][];
@@ -2998,6 +3023,12 @@ export interface components {
          * @enum {string}
          */
         ValueTypeEnum: "string" | "text" | "int" | "float" | "bool" | "json" | "secret" | "color" | "url" | "enum";
+        /**
+         * @description * `1080` - 1080
+         *     * `720` - 720
+         * @enum {string}
+         */
+        VariantEnum: "1080" | "720";
         VideoJob: {
             /** Format: uuid */
             readonly id: string;
@@ -3290,6 +3321,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    admin_intro_upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["IntroUploadRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntroUploadResult"];
+                };
             };
         };
     };

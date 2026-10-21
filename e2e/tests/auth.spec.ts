@@ -1,5 +1,4 @@
-import { expect, test } from "@playwright/test";
-import { PASSWORD, signUp, uniqueName } from "./helpers";
+import { expect, PASSWORD, signUp, test, uniqueName } from "./helpers";
 
 test("sign up never submits on its own; the button does", async ({ page }) => {
   let posts = 0;

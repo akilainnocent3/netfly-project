@@ -1,5 +1,4 @@
-import { expect, test } from "@playwright/test";
-import { countRequests, homeRows, PASSWORD, signUp } from "./helpers";
+import { countRequests, expect, homeRows, PASSWORD, signUp, test } from "./helpers";
 
 const CLIENT = process.env.NETFLY_CLIENT_URL ?? "http://localhost:3000";
 let currentUser = "";
