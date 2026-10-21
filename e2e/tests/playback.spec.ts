@@ -1,15 +1,16 @@
 import { expect, test } from "@playwright/test";
-import { playableSlug, signUp } from "./helpers";
+import { canPlayH264, playableSlug, signUp } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await signUp(page);
+  test.skip(!(await canPlayH264(page)), "This browser has no H.264/AAC (bundled Chromium): run with NETFLY_E2E_CHANNEL=chrome.");
 });
 
 test("plays a movie at high quality, then resumes where it stopped", async ({ page }) => {
   const slug = await playableSlug(page, "movie");
   test.skip(!slug, "No transcoded movie yet (configure S3 and run seed_demo).");
   await page.goto(`/watch/${slug}`);
-  const video = page.locator("video");
+  const video = page.locator("video:not([aria-hidden=true])");
   await expect.poll(async () => video.evaluate((v: HTMLVideoElement) => v.currentTime), { timeout: 30_000 }).toBeGreaterThan(3);
   expect(await video.evaluate((v: HTMLVideoElement) => v.videoHeight)).toBeGreaterThanOrEqual(720);
   await video.evaluate((v: HTMLVideoElement) => {
@@ -21,14 +22,14 @@ test("plays a movie at high quality, then resumes where it stopped", async ({ pa
   await page.goto(`/title/${slug}`);
   await expect(page.getByRole("link", { name: /Resume/ })).toBeVisible();
   await page.getByRole("link", { name: /Resume/ }).click();
-  await expect.poll(async () => page.locator("video").evaluate((v: HTMLVideoElement) => v.currentTime), { timeout: 30_000 }).toBeGreaterThan(15);
+  await expect.poll(async () => page.locator("video:not([aria-hidden=true])").evaluate((v: HTMLVideoElement) => v.currentTime), { timeout: 30_000 }).toBeGreaterThan(15);
 });
 
 test("binges a series: Skip Intro, then the Next Episode countdown", async ({ page }) => {
   const slug = await playableSlug(page, "series");
   test.skip(!slug, "No transcoded series yet (configure S3 and run seed_demo).");
   await page.goto(`/watch/${slug}`);
-  const video = page.locator("video");
+  const video = page.locator("video:not([aria-hidden=true])");
   await expect.poll(async () => video.evaluate((v: HTMLVideoElement) => v.currentTime), { timeout: 30_000 }).toBeGreaterThan(3.2);
   await page.getByRole("button", { name: /Skip Intro/ }).click();
   await expect.poll(async () => video.evaluate((v: HTMLVideoElement) => v.currentTime)).toBeGreaterThan(10);

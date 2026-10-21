@@ -1,11 +1,11 @@
 """Query helpers shared by every viewer endpoint (one place enforces visibility + translation)."""
 
 from django.core.cache import cache
-from django.db.models import Count, Max, Prefetch, Q, QuerySet
+from django.db.models import Count, Exists, Max, OuterRef, Prefetch, Q, QuerySet
 
 from apps.core.config import config
 
-from .models import Genre, Title
+from .models import Episode, Genre, Title
 
 MODES = {"translated", "not_translated", "all"}
 
@@ -63,6 +63,10 @@ def card_queryset(qs: QuerySet[Title] | None = None) -> QuerySet[Title]:
         .annotate(
             season_count=Count("seasons", filter=Q(seasons__episodes__isnull=False), distinct=True),
             latest_episode_at=Max("seasons__episodes__created_at"),
+            # Series without a trailer preview their first ready episode (see playback.py).
+            has_ready_episode=Exists(
+                Episode.objects.filter(season__title=OuterRef("pk"), video__status="ready")
+            ),
         )
     )
 

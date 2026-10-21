@@ -13,13 +13,27 @@ export interface ApiErrorBody {
   fields?: Record<string, string>;
 }
 
+/** Human messages for failures that never reached the API (proxy errors, timeouts, HTML pages). */
+export function fallbackMessage(status: number): string {
+  if (status === 0) return "You're offline. Check your connection.";
+  if (status === 401) return "Your session has ended. Please sign in again.";
+  if (status === 403) return "You don't have access to that.";
+  if (status === 404) return "We couldn't find that.";
+  if (status === 408 || status === 504) return "That took too long. Please try again.";
+  if (status === 413) return "That file is too large.";
+  if (status === 429) return "You're going a little fast. Wait a moment and try again.";
+  if (status === 502 || status === 503)
+    return "We're having trouble connecting. Please try again shortly.";
+  return "Something went wrong on our side. Please try again.";
+}
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
   readonly fields: Record<string, string>;
 
   constructor(status: number, body: Partial<ApiErrorBody> | undefined) {
-    super(body?.message ?? "Something went wrong. Please try again.");
+    super(body?.message ?? fallbackMessage(status));
     this.status = status;
     this.code = body?.code ?? "error";
     this.fields = body?.fields ?? {};

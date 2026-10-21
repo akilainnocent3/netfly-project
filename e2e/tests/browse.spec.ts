@@ -8,11 +8,15 @@ test.beforeEach(async ({ page }) => {
 test("switching Translated / Not Translated re-filters everything without a reload", async ({ page }) => {
   await homeRows(page);
   const hero = page.locator("section[aria-label='Featured'] h1").first();
-  const before = await hero.innerText();
+  // The heading is either text or the title's logo art (whose alt is the title).
+  const heroName = () =>
+    hero.evaluate((el) => (el as HTMLElement).innerText.trim() || el.querySelector("img")?.alt || "");
+  const before = await heroName();
+  expect(before).not.toBe("");
   await page.evaluate(() => Object.assign(window, { __noReload: true }));
   await page.getByRole("radio", { name: "Not Translated" }).click();
   await expect(page).toHaveURL(/translation=not_translated/);
-  await expect(hero).not.toHaveText(before);
+  await expect.poll(heroName).not.toBe(before);
   const statuses = await page.evaluate(async () => {
     const r = await fetch("/api/v1/browse/billboard?translation=not_translated");
     return ((await r.json()) as Array<{ title: { translation_status: string } }>).map((i) => i.title.translation_status);

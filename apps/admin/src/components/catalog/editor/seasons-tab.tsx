@@ -173,7 +173,9 @@ function SeasonPanel({
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-  useEffect(() => setOrder(season.episodes.map((e) => e.id)), [season.episodes]);
+  useEffect(() => {
+    setOrder(season.episodes.map((e) => e.id));
+  }, [season.episodes]);
   const byId = new Map(season.episodes.map((e) => [e.id, e]));
 
   const saveSeasonAction = useAction(

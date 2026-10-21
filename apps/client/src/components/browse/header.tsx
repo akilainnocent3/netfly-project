@@ -202,9 +202,11 @@ function SearchBox() {
               }}
               onBlur={() => !value && !onSearchPage && setOpen(false)}
               onKeyDown={(e) => e.key === "Escape" && (setValue(""), setOpen(false))}
+              type="search"
+              enterKeyHint="search"
               placeholder="Titles, people, genres"
               aria-label="Search"
-              className="text-body min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-white/45"
+              className="text-body min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-white/45 [&::-webkit-search-cancel-button]:hidden"
             />
             {value && (
               <IconButton

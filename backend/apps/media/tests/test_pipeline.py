@@ -256,3 +256,25 @@ def test_srt_to_vtt():
     assert (
         vtt.startswith("WEBVTT") and "00:00:01.000 --> 00:00:02.500" in vtt and "\n1\n" not in vtt
     )
+
+
+def test_long_ladder_stage_text_never_fails_the_job(s3, sample_video):
+    # Regression: "Encoding 6 renditions (2160p, 1080p-high, …)" overflowed VideoAsset.stage.
+    config.set(
+        "transcoding.ladder",
+        [
+            {"name": f"240p-variant-{i}", "height": 240, "video_kbps": 200 + i, "codec": "h264"}
+            for i in range(6)
+        ],
+    )
+    config.set("transcoding.preset", "ultrafast")
+    asset = VideoAsset.objects.create(status="uploaded", source_key="netfly/sources/long.mp4")
+    s3.put_object(
+        Bucket="netfly-test", Key="netfly/sources/long.mp4", Body=sample_video.read_bytes()
+    )
+    from apps.media.tasks import queue_transcode
+
+    queue_transcode(asset)
+    asset.refresh_from_db()
+    assert asset.status == "ready", asset.error
+    assert len(asset.renditions) >= 1

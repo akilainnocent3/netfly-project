@@ -105,3 +105,55 @@ even though every URL is signed.
 * Every API response carries `Server-Timing: app;dur=…`.
 * Playback quality (startup time, rebuffer ratio, rendition mix) is on the Studio dashboard, fed by
   batched client events.
+
+## 9. Search engines
+
+* Set `seo.site_url` (*Settings → Search & sharing*) to the public origin, e.g. `https://watch.example.com`.
+  It is used for canonical links, Open Graph URLs, `robots.txt` and `sitemap.xml`. When empty the request
+  host is used, which is fine behind a single edge but wrong behind a CDN that rewrites `Host`.
+* Make sure the edge preserves `Host` and sets `X-Forwarded-Proto` for the client app (the bundled
+  `infra/nginx.conf` does), and that `/robots.txt` and `/sitemap.xml` reach the **client** app.
+* Submit `https://<site>/sitemap.xml` in Google Search Console / Bing Webmaster Tools.
+* On staging set `seo.indexing_enabled = false`: every page becomes `noindex` and robots.txt disallows all.
+
+## 10. Upgrading to this release
+
+Run `python manage.py migrate` then `python manage.py seed_config` (both run automatically in the
+`migrate` service). All migrations are additive and safe to run before the new code is live.
+
+| Migration | What it does |
+|---|---|
+| `catalog.0003_title_boost` | `Title.boost` (−2…+5, default 0), `boost_starts_at`, `boost_ends_at`; index on `(status, boost)` |
+| `catalog.0004_title_moods` | `Title.moods` ("This title is…" tags, max 3) |
+| `core.0002_netflix_palette_defaults` | Data: moves branding colours/font to the new defaults **only** where they still hold the old defaults |
+| `core.0003_remove_autosubmit_delay` | Data: deletes the obsolete `ux.autosubmit_delay_ms` key |
+| `accounts.0002_…` | `notifications_seen_at` on users and profiles; per-profile `translation_mode` |
+| `engagement.0002_…` | Continue Watching "Remove from row" flag on progress; `Reminder` (Remind me) |
+
+New configuration keys (seeded with these defaults; edit in *Studio → Settings*):
+
+| Key | Default | Purpose |
+|---|---|---|
+| `recommendations.weight_boost` | 0.6 | Score added per boost level |
+| `recommendations.boost_pin_top_picks` | 2 | Highest-boost titles guaranteed in the first Top picks slots |
+| `recommendations.cold_start_popularity` | 1.0 | Popularity weight for viewers without history |
+| `recommendations.row_dedupe_window` | 3 | Max rows a title may appear in on one home page |
+| `features.max_profiles` | 5 | Profiles per account (when `features.profiles_enabled`) |
+| `content.kids_ratings` | G, PG, TV-Y, TV-PG | Maturity ratings visible to kids profiles |
+| `content.badge_days` | 14 | Window for "Recently added" / "New episodes" / "Leaving soon" badges |
+| `content.upcoming_days` | 60 | How far ahead Coming Soon looks |
+| `content.client_app_url` | — | Viewer app URL used for links from the Studio |
+| `security.rate_profiles` | 30/min | Profile create/edit/delete per user |
+| `security.rate_engagement` | 120/min | My List, ratings, reminders, Continue Watching, notifications per user |
+| `security.rate_public` | 240/min | Signed-out landing, sitemap and Coming Soon per IP |
+| `seo.indexing_enabled` | true | Allow search engines to index public pages |
+| `seo.site_url` | — | Canonical public origin |
+| `seo.default_description` | — | Landing page description (falls back to the tagline) |
+
+Removed: `ux.autosubmit_delay_ms` (no form submits itself any more).
+
+Behaviour changes to note:
+
+* Signed-out visitors to `/` now see a landing page instead of a redirect to `/signup`, and `/title/<slug>`
+  and `/genre/<slug>` render public pages instead of redirecting to `/login`.
+* Admin edits are visible to viewers immediately (catalog cache version); no 15-minute wait.

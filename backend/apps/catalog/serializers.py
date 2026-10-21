@@ -154,7 +154,7 @@ class TitleCardSerializer(serializers.ModelSerializer):
         return getattr(obj, "season_count", None) if obj.type == Title.Type.SERIES else None
 
     def get_has_preview(self, obj) -> bool:
-        return bool(obj.trailer_id or obj.video_id)
+        return bool(obj.trailer_id or obj.video_id or getattr(obj, "has_ready_episode", False))
 
     def get_match(self, obj) -> int | None:
         scores = self.context.get("match") or {}

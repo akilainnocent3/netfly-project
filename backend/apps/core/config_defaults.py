@@ -10,9 +10,10 @@ from typing import Any
 
 GROUPS: list[tuple[str, str, str]] = [
     ("branding", "Branding", "Site name, logo, colors and copy shown to viewers."),
+    ("seo", "Search & sharing", "How public pages appear in search engines and social cards."),
     ("features", "Features", "Feature flags."),
     ("content", "Content", "Catalog, home feed and licensing behaviour."),
-    ("ux", "Interface", "Timings for interface behaviour (auto-submit, hover, hero)."),
+    ("ux", "Interface", "Timings for interface behaviour (hover, hero)."),
     ("playback", "Playback", "Player defaults and adaptive streaming tuning."),
     ("transcoding", "Transcoding", "FFmpeg encoding ladder and outputs."),
     ("storage", "Storage & CDN", "Amazon S3 bucket, credentials and CDN delivery."),
@@ -170,6 +171,29 @@ KEYS: list[Key] = [
         public=True,
         validation=COLOR_RE,
     ),
+    # ---- seo (public) -------------------------------------------------------
+    Key(
+        "seo.indexing_enabled",
+        "bool",
+        True,
+        "Let search engines index the public landing, title and genre pages. Turn off on staging.",
+        public=True,
+    ),
+    Key(
+        "seo.site_url",
+        "url",
+        "",
+        "Canonical public origin for sitemaps, canonical links and social cards "
+        "(e.g. https://watch.example.com). Empty uses the request's host.",
+        public=True,
+    ),
+    Key(
+        "seo.default_description",
+        "string",
+        "",
+        "Search and social description of the landing page. Empty uses the tagline.",
+        public=True,
+    ),
     # ---- features -----------------------------------------------------------
     Key(
         "features.signup_enabled",
@@ -314,7 +338,7 @@ KEYS: list[Key] = [
         "content.client_app_url",
         "url",
         "http://localhost:3000",
-        "Public URL of the viewer app (Preview as viewer, sitemap and canonical links).",
+        "Public URL of the viewer app, used for Studio links such as Preview as viewer.",
         public=True,
     ),
     Key(
@@ -711,6 +735,13 @@ KEYS: list[Key] = [
         "string",
         "120/min",
         "My List, ratings, reminders and Continue Watching edits per user.",
+        validation=RATE_RE,
+    ),
+    Key(
+        "security.rate_public",
+        "string",
+        "240/min",
+        "Signed-out catalog requests (landing, sitemap, Coming Soon) per IP.",
         validation=RATE_RE,
     ),
     Key(

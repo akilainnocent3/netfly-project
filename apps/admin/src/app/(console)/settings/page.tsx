@@ -190,17 +190,15 @@ function Editor({
         ? ""
         : String(value),
   );
-  useEffect(
-    () =>
-      setDraft(
-        entry.value_type === "json"
-          ? JSON.stringify(entry.value, null, 2)
-          : entry.value == null
-            ? ""
-            : String(entry.value),
-      ),
-    [entry.value, entry.value_type],
-  );
+  useEffect(() => {
+    setDraft(
+      entry.value_type === "json"
+        ? JSON.stringify(entry.value, null, 2)
+        : entry.value == null
+          ? ""
+          : String(entry.value),
+    );
+  }, [entry.value, entry.value_type]);
   const blur = () => {
     const original =
       entry.value_type === "json"

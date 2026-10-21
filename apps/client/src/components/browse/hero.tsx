@@ -36,8 +36,12 @@ export function Hero({
   const seconds = config.num("ux.billboard_rotate_seconds", 12);
   const desktop = useMedia("(min-width: 768px)");
 
-  useEffect(() => setIndex(0), [mode, kind]);
-  useEffect(() => setPreview("idle"), [index, mode]);
+  useEffect(() => {
+    setIndex(0);
+  }, [mode, kind]);
+  useEffect(() => {
+    setPreview("idle");
+  }, [index, mode]);
   useEffect(() => {
     if (index !== 0 || items.length === 0) setFirst(false);
   }, [index, items.length, mode]);

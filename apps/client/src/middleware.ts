@@ -1,17 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { matchesPath, PRIVATE_PATHS } from "@/lib/routes";
 
-const PROTECTED = [
-  "/browse",
-  "/series",
-  "/films",
-  "/new-and-popular",
-  "/title",
-  "/watch",
-  "/my-list",
-  "/account",
-  "/search",
-  "/categories",
-];
 const API = process.env.NETFLY_API_URL ?? "http://localhost:8000";
 
 let mediaOrigins: { value: string; at: number } = { value: "", at: 0 };
@@ -33,10 +22,16 @@ async function getMediaOrigins(): Promise<string> {
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const signedIn = request.cookies.has("netfly_csrf_client");
-  if (!signedIn && PROTECTED.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+  // /title/* and /genre/* stay public: signed-out visitors get crawlable, server-rendered pages.
+  if (!signedIn && matchesPath(pathname, PRIVATE_PATHS)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = `?next=${encodeURIComponent(pathname + search)}`;
+    return NextResponse.redirect(url);
+  }
+  if (signedIn && pathname.startsWith("/genre/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.replace(/^\/genre\//, "/categories/");
     return NextResponse.redirect(url);
   }
   if (signedIn && (pathname === "/login" || pathname === "/signup" || pathname === "/")) {
@@ -72,6 +67,9 @@ export async function middleware(request: NextRequest) {
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  // Belt and braces next to robots.txt: private pages must never show up in search results.
+  if (matchesPath(pathname, PRIVATE_PATHS))
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
   return response;
 }
 

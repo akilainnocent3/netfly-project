@@ -88,7 +88,11 @@ function TitleContent({
         : ""
       : formatRuntime(title.runtime_minutes);
   const top = useRef<HTMLDivElement>(null);
-  useEffect(() => top.current?.scrollIntoView({ block: "start" }), [title.slug]);
+  // Braces matter: scrollIntoView returns a Promise in current Chrome, and an effect that returns a
+  // non-function crashes React when the modal unmounts.
+  useEffect(() => {
+    top.current?.scrollIntoView({ block: "start" });
+  }, [title.slug]);
 
   return (
     <article ref={top} aria-labelledby="title-heading">

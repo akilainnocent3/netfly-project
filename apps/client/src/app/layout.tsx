@@ -1,21 +1,29 @@
 import { themeVariables } from "@netfly/ui";
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
+import { preconnect } from "react-dom";
 import { Providers } from "@/components/providers";
 import { fontFor, fontVariables } from "@/lib/fonts";
+import { indexingEnabled, siteName, siteUrl } from "@/lib/seo";
 import { getPublicConfig } from "@/lib/server-config";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getPublicConfig();
-  const name =
-    typeof config["branding.site_name"] === "string" ? config["branding.site_name"] : "NETFLY";
+  const name = siteName(config);
   const tagline = typeof config["branding.tagline"] === "string" ? config["branding.tagline"] : "";
   const favicon = config["branding.favicon_url"];
+  const index = indexingEnabled(config);
   return {
+    metadataBase: new URL(await siteUrl(config)),
     title: { default: name, template: `%s · ${name}` },
     description: tagline,
+    applicationName: name,
     icons: typeof favicon === "string" && favicon ? [{ url: favicon }] : undefined,
+    robots: { index, follow: index },
+    openGraph: { siteName: name, type: "website", locale: "en" },
+    twitter: { card: "summary_large_image" },
+    formatDetection: { telephone: false },
   };
 }
 
@@ -42,6 +50,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     typeof config["branding.font_family"] === "string"
       ? config["branding.font_family"]
       : "Inter Tight";
+  // Images and video redirect to the S3/CDN origin: warm that connection before the hero asks.
+  const media = Array.isArray(config["media_origins"]) ? config["media_origins"] : [];
+  for (const origin of media.slice(0, 2)) {
+    if (typeof origin === "string" && origin.startsWith("https://")) preconnect(origin);
+  }
   const style = { ...themeVariables(config), "--brand-font": fontFor(font) } as React.CSSProperties;
   return (
     <html lang="en" className={fontVariables} style={style} suppressHydrationWarning>

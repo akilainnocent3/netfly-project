@@ -5,7 +5,7 @@ import { AnimatePresence, m } from "framer-motion";
 import { ChevronDown, Play } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { TitleCard } from "@/lib/types";
 import { useConfig } from "../providers/config";
@@ -139,7 +139,9 @@ export function Card({
   const router = useRouter();
   const ref = useRef<HTMLAnchorElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [rect, setRect] = useState<DOMRect | null>(null);
+  // Viewport rect plus the scroll offset at open: the panel keeps its document position even if
+  // the page scrolls while its menu is open (focusing a menu near the bottom edge scrolls).
+  const [anchor, setAnchor] = useState<{ rect: DOMRect; scrollY: number } | null>(null);
   const progress = title.context?.progress;
   const label = title.context?.label;
   const hoverEnabled = config.bool("features.hover_previews", true);
@@ -153,15 +155,15 @@ export function Card({
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
     menuOpen.current = false;
-    setRect(null);
+    setAnchor(null);
   }, []);
 
   useEffect(() => {
-    if (!rect) return;
+    if (!anchor) return;
     const onScroll = () => !menuOpen.current && close();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [rect, close]);
+  }, [anchor, close]);
   const armHover = () => {
     if (!hoverEnabled || !canHover()) return;
     if (scrolledSinceMove) return;
@@ -171,7 +173,8 @@ export function Card({
     timer.current = setTimeout(() => {
       timer.current = null;
       if (lastScrollAt >= armedAt) return; // the page scrolled during the intent delay
-      if (ref.current) setRect(ref.current.getBoundingClientRect());
+      if (ref.current)
+        setAnchor({ rect: ref.current.getBoundingClientRect(), scrollY: window.scrollY });
     }, delay);
   };
   useEffect(
@@ -190,7 +193,7 @@ export function Card({
         prefetch={false}
         aria-label={`${title.title}${label ? `, continue ${label}` : ""}`}
         onMouseEnter={armHover}
-        onMouseMove={() => !timer.current && !rect && armHover()}
+        onMouseMove={() => !timer.current && !anchor && armHover()}
         onMouseLeave={() => {
           if (timer.current) clearTimeout(timer.current);
           timer.current = null;
@@ -263,11 +266,12 @@ export function Card({
       {typeof document !== "undefined" &&
         createPortal(
           <AnimatePresence>
-            {rect && (
+            {anchor && (
               <HoverPanel
                 key="panel"
                 title={title}
-                rect={rect}
+                rect={anchor.rect}
+                scrollY={anchor.scrollY}
                 onClose={close}
                 onDislike={onDislike}
                 continuing={continuing}
@@ -289,6 +293,7 @@ export function Card({
 function HoverPanel({
   title,
   rect,
+  scrollY,
   onClose,
   onOpen,
   onDislike,
@@ -298,6 +303,7 @@ function HoverPanel({
 }: {
   title: TitleCard;
   rect: DOMRect;
+  scrollY: number;
   onClose: () => void;
   onOpen: () => void;
   onDislike?: () => void;
@@ -312,12 +318,24 @@ function HoverPanel({
   const centerLeft = rect.left + rect.width / 2 - width / 2;
   const left = Math.min(Math.max(margin, centerLeft), window.innerWidth - width - margin);
   const mediaHeight = (width * 9) / 16;
-  const top = Math.max(margin, rect.top + rect.height / 2 - mediaHeight / 2 - 10) + window.scrollY;
-  const origin = `${((rect.left + rect.width / 2 - left) / width) * 100}% ${(rect.height / 2 / mediaHeight) * 100}%`;
+  const top = Math.max(margin, rect.top + rect.height / 2 - mediaHeight / 2 - 10) + scrollY;
+  // Keep the whole panel on screen (like Netflix): a card on the bottom edge opens upwards, so its
+  // buttons never need a scroll — and scrolling closes the panel.
+  const panel = useRef<HTMLDivElement>(null);
+  const [lift, setLift] = useState(0);
+  useLayoutEffect(() => {
+    const height = panel.current?.offsetHeight ?? 0; // layout size, unaffected by the zoom-in
+    const viewportTop = top - scrollY;
+    const overflow = viewportTop + height - (window.innerHeight - margin);
+    setLift(Math.max(0, Math.min(overflow, viewportTop - margin)));
+  }, [top, scrollY]);
+  const originY = rect.top + rect.height / 2 + scrollY - (top - lift);
+  const origin = `${((rect.left + rect.width / 2 - left) / width) * 100}% ${originY}px`;
   const meta = metaLine(title);
 
   return (
     <m.div
+      ref={panel}
       role="dialog"
       aria-label={`${title.title} preview`}
       initial={{ opacity: 0, scale: 1 / scale }}
@@ -325,7 +343,7 @@ function HoverPanel({
       exit={{ opacity: 0, scale: 1 / scale, transition: { duration: 0.15 } }}
       transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
       onMouseLeave={() => !isMenuOpen() && onClose()}
-      style={{ position: "absolute", top, left, width, transformOrigin: origin }}
+      style={{ position: "absolute", top: top - lift, left, width, transformOrigin: origin }}
       className="bg-surface z-[60] overflow-hidden rounded-lg shadow-[0_24px_70px_-10px_rgb(0_0_0/0.85)] ring-1 ring-white/8"
     >
       <Link

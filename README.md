@@ -11,7 +11,7 @@ docker compose up            # postgres, redis, backend, workers, beat, client, 
 
 | URL | What |
 |---|---|
-| http://localhost:3000 | Viewer app (sign up — the form submits itself) |
+| http://localhost:3000 | Viewer app: public landing page; sign up / sign in to browse |
 | http://localhost:3001 | Studio (admin). Local superadmin: `admin` / `netfly-dev-admin` (override with `NETFLY_DEV_ADMIN_PASSWORD`) |
 | http://localhost:8000/api/schema | OpenAPI schema |
 
@@ -23,6 +23,18 @@ videos (pushed through the real image + transcode pipeline):
 ```bash
 docker compose exec backend python manage.py seed_demo --reset
 ```
+
+## What's inside
+
+* **Viewer app** — Netflix-style browsing: personalised home feed (Top picks, Because you liked, genre rows,
+  Continue Watching), billboard with muted trailer, hover cards, title modal with episodes and More Like
+  This, New & Popular with Remind me, Series / Films pages, instant search, custom HLS player (Skip Intro,
+  Next Episode, keyboard shortcuts), optional profiles (`features.profiles_enabled`), mobile tab bar.
+* **Public, crawlable pages** for signed-out visitors: landing page, `/title/<slug>` and `/genre/<slug>`
+  with JSON-LD, Open Graph, `robots.txt` and `sitemap.xml` (see *docs/DECISIONS.md → Search engines*).
+* **Studio** — catalog editor, uploads and transcoding monitor, home layout, settings, users, audit log, and a
+  per-title **recommendation priority** (boost −2…+5 with an optional campaign window) that reaches every
+  viewer immediately.
 
 ## Configuration
 
@@ -57,8 +69,11 @@ sh backend/scripts/export_openapi.sh && pnpm api:generate
 # frontends
 pnpm install && pnpm typecheck && pnpm lint && pnpm build
 
-# end-to-end (stack running)
-pnpm e2e
+# end-to-end (stack running, demo catalog seeded)
+pnpm e2e        # includes axe accessibility checks, SEO contract, Studio boost → viewer, profiles
+
+# Optional local S3 for media (moto): pip install "moto[server]" && moto_server -p 5005,
+# then set storage.s3.endpoint_url=http://localhost:5005 (+ bucket/keys) and run seed_demo --reset
 ```
 
 See `docs/DEPLOY.md` for production and `docs/DECISIONS.md` for design decisions.

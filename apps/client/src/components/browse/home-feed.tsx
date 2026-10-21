@@ -4,6 +4,7 @@ import { AnimatePresence, m } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { useHome, useMode } from "@/lib/queries";
 import type { BillboardItem } from "@/lib/types";
+import { ErrorBoundary } from "../ui/error-boundary";
 import { StateMessage } from "../ui/state-message";
 import { Hero } from "./hero";
 import { Row, RowSkeleton } from "./row";
@@ -45,7 +46,9 @@ export function HomeFeed({
           {heading}
         </h1>
       )}
-      <Hero initial={initialBillboard} kind={kind} />
+      <ErrorBoundary fallback={() => <div className="h-[56vh] md:h-[80vh]" />}>
+        <Hero initial={initialBillboard} kind={kind} />
+      </ErrorBoundary>
       <div className="relative z-10 -mt-[11vh] space-y-[clamp(18px,2.4vw,40px)] md:-mt-[13vh]">
         {home.isPending &&
           Array.from({ length: 4 }, (_, i) => <RowSkeleton key={i} titleWidth={140 + i * 30} />)}
@@ -75,7 +78,9 @@ export function HomeFeed({
             className="space-y-[clamp(18px,2.4vw,40px)]"
           >
             {rows.map((row, i) => (
-              <Row key={`${row.key}-${i}`} row={row} index={i} lazy={i >= 3} />
+              <ErrorBoundary key={`${row.key}-${i}`} resetKey={row}>
+                <Row row={row} index={i} lazy={i >= 3} />
+              </ErrorBoundary>
             ))}
           </m.div>
         </AnimatePresence>

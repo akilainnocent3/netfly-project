@@ -53,7 +53,9 @@ export default function CategoriesPage() {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-  useEffect(() => setOrder(genres.data?.map((g) => g.id) ?? []), [genres.data]);
+  useEffect(() => {
+    setOrder(genres.data?.map((g) => g.id) ?? []);
+  }, [genres.data]);
   const refresh = () => void queryClient.invalidateQueries({ queryKey: ["genres"] });
 
   const create = useMutation({

@@ -45,8 +45,13 @@ def transcode_asset(self, asset_id: str) -> None:
         return
     max_retries = config.get_int("transcoding.max_retries", 3)
 
+    stage_max = VideoAsset._meta.get_field("stage").max_length
+
     def update(**fields):
         fields.setdefault("updated_at", timezone.now())
+        if "stage" in fields and len(fields["stage"]) > stage_max:
+            # A long ladder ("Encoding 6 renditions (2160p, 1080p-high, …)") must never fail a job.
+            fields["stage"] = fields["stage"][: stage_max - 1] + "…"
         VideoAsset.objects.filter(pk=asset_id).update(**fields)
 
     update(

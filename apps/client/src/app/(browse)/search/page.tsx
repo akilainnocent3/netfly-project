@@ -23,13 +23,17 @@ function SearchScreen() {
   const suggestions = useSearchSuggestions();
   const popular = useNewAndPopular();
   const [recent, setRecent] = useState<string[]>([]);
-  useEffect(() => setRecent(readRecent()), []);
+  useEffect(() => {
+    setRecent(readRecent());
+  }, []);
   // Remember searches that found something (on this device, per profile).
   useEffect(() => {
     if (query && results.data?.length && !results.isPlaceholderData) setRecent(pushRecent(query));
   }, [query, results.data, results.isPlaceholderData]);
 
-  useEffect(() => setValue(urlQuery), [urlQuery]);
+  useEffect(() => {
+    setValue(urlQuery);
+  }, [urlQuery]);
   // Instant results: debounce keystrokes, keep the URL shareable.
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -51,9 +55,11 @@ function SearchScreen() {
           autoFocus
           value={value}
           onChange={(e) => setValue(e.target.value)}
+          type="search"
+          enterKeyHint="search"
           placeholder="Titles, people, genres"
           aria-label="Search"
-          className="text-body flex-1 bg-transparent outline-none placeholder:text-white/40"
+          className="text-body flex-1 bg-transparent outline-none placeholder:text-white/40 [&::-webkit-search-cancel-button]:hidden"
         />
         {value && (
           <IconButton variant="ghost" size="sm" label="Clear search" onClick={() => setValue("")}>

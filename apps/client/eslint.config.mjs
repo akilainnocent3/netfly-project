@@ -11,6 +11,16 @@ const config = [
     rules: {
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/consistent-type-imports": "error",
+      // An expression-bodied effect returns whatever the call returns (scrollIntoView and play()
+      // return Promises), and React then crashes calling it as the cleanup on unmount.
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.name=/^use(Layout|Insertion)?Effect$/] > ArrowFunctionExpression.arguments:first-child[body.type!='BlockStatement'][body.type!='ArrowFunctionExpression']",
+          message: "Use a block body: an effect must return nothing or a cleanup function.",
+        },
+      ],
     },
   },
 ];

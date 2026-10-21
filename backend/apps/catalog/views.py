@@ -616,6 +616,8 @@ def _coming_soon(who: Viewer | None, limit: int = 30) -> tuple[list[Title], set[
 class UpcomingView(APIView):
     """Public Coming Soon list (scheduled titles only). `reminded` is set when signed in."""
 
+    throttle_classes = [throttle("security.rate_public", per_user=True)]
+
     @extend_schema(responses=s.UpcomingSerializer(many=True), operation_id="browse_upcoming")
     def get(self, request):
         who = viewer_for(request)

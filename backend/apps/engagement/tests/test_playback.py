@@ -33,6 +33,19 @@ def test_preview_is_capped_and_starts_mid_title(auth_api):
     assert info["start_at"] == pytest.approx(90)  # 15% of 600 s
 
 
+def test_series_without_trailer_advertises_its_episode_preview(auth_api):
+    series = SeriesFactory(trailer=None)
+    pending = SeriesFactory(trailer=None)
+    EpisodeFactory(season=SeasonFactory(title=series, number=1), number=1)
+    EpisodeFactory(
+        season=SeasonFactory(title=pending, number=1), number=1, video=VideoFactory(status="queued")
+    )
+    detail = auth_api.get(f"/api/v1/titles/{series.slug}").json()["title"]
+    assert detail["has_preview"] is True  # the card agrees with what playback will serve
+    assert auth_api.get(f"/api/v1/playback/{series.slug}?preview=true").json()["is_preview"]
+    assert auth_api.get(f"/api/v1/titles/{pending.slug}").json()["title"]["has_preview"] is False
+
+
 def test_episode_playback_has_markers_and_next(auth_api):
     series = SeriesFactory()
     season = SeasonFactory(title=series, number=1)

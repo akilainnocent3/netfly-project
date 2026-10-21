@@ -280,3 +280,22 @@ def test_title_quality_label(api):
     t.video.renditions = [{"height": 480}, {"height": 1080}]
     t.video.save()
     assert api.get(f"/api/v1/titles/{t.slug}").json()["title"]["quality"] == "HD"
+
+
+@pytest.mark.parametrize(
+    "method,url",
+    [
+        ("put", "/api/v1/my-list/{pk}"),
+        ("put", "/api/v1/ratings/{pk}"),
+        ("get", "/api/v1/notifications"),
+    ],
+)
+def test_engagement_endpoints_are_rate_limited(auth_api, method, url):
+    config.set("security.rate_engagement", "2/min")
+    title = TitleFactory()
+    body = {"value": 1} if "ratings" in url else None
+    codes = [
+        getattr(auth_api, method)(url.format(pk=title.pk), body, format="json").status_code
+        for _ in range(3)
+    ]
+    assert 429 not in codes[:2] and codes[2] == 429

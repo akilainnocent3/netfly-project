@@ -179,7 +179,9 @@ function NameField({
   onSave: (name: string) => void;
 }) {
   const [name, setName] = useState(user.full_name);
-  useEffect(() => setName(user.full_name), [user.full_name]);
+  useEffect(() => {
+    setName(user.full_name);
+  }, [user.full_name]);
   const commit = () => {
     if (name.trim() && name.trim() !== user.full_name) onSave(name.trim());
   };

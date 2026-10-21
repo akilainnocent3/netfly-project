@@ -34,7 +34,9 @@ export function Episodes({
     return candidates.find((n) => n !== null && seasons.some((s) => s.number === n)) ?? null;
   }, [preferredSeason, seasons, title.slug]);
   const [season, setSeason] = useState<number | null>(initial);
-  useEffect(() => setSeason(initial), [initial]);
+  useEffect(() => {
+    setSeason(initial);
+  }, [initial]);
   const episodes = useEpisodes(title.slug, season);
   const items = episodes.data?.pages.flatMap((p) => p.results) ?? [];
   const current = seasons.find((s) => s.number === season);

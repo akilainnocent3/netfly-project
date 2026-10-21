@@ -1419,6 +1419,40 @@ export interface paths {
         patch: operations["profiles_update"];
         trace?: never;
     };
+    "/api/v1/public/landing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Signed-out landing page: today's Top 10 and the genre directory (crawl paths). */
+        get: operations["public_landing"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/sitemap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every public URL's slug and last-modified time (the client renders sitemap.xml). */
+        get: operations["public_sitemap"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ratings/{title_id}": {
         parameters: {
             query?: never;
@@ -1936,6 +1970,10 @@ export interface components {
             name: string;
             slug: string;
         };
+        GenreLink: {
+            name: string;
+            slug: string;
+        };
         GenreTile: {
             readonly id: number;
             name: string;
@@ -2024,6 +2062,10 @@ export interface components {
             /** Format: binary */
             file: string;
             kind: components["schemas"]["ImageKindEnum"];
+        };
+        Landing: {
+            trending: components["schemas"]["TitleCard"][];
+            genres: components["schemas"]["GenreLink"][];
         };
         LegalPage: {
             slug: string;
@@ -2545,6 +2587,22 @@ export interface components {
             password: string;
             /** @default client */
             app: components["schemas"]["AppEnum"];
+        };
+        Sitemap: {
+            titles: components["schemas"]["SitemapTitle"][];
+            genres: components["schemas"]["SitemapGenre"][];
+        };
+        SitemapGenre: {
+            slug: string;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        SitemapTitle: {
+            slug: string;
+            type: string;
+            /** Format: date-time */
+            updated_at: string;
+            image: string | null;
         };
         StaffInputRequest: {
             username: string;
@@ -5732,6 +5790,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Profile"];
+                };
+            };
+        };
+    };
+    public_landing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Landing"];
+                };
+            };
+        };
+    };
+    public_sitemap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sitemap"];
                 };
             };
         };

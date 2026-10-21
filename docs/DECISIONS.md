@@ -33,8 +33,9 @@ Ambiguities in the build brief, the option chosen, and why.
    Rotation on every refresh; replaying a rotated token revokes the whole token family.
 7. **Separate sessions per app.** Cookies are suffixed `_client` / `_admin`, so a staff member can be
    signed in to the viewer app and the studio as different accounts on the same domain.
-8. **Login auto-submit requires the password to reach the configured minimum length.** No valid
-   password is shorter, so auto-submit never spends a lockout attempt on a half-typed password.
+8. **No form submits itself.** Login, sign-up and password change submit only on the button or Enter
+   (live validation and the username availability check stay). Auto-submit could save a half-typed
+   password and sign every device out; `useAutoSubmit` and `ux.autosubmit_delay_ms` were removed.
 9. **Password change bumps `token_version`**, invalidating every outstanding access token immediately.
 
 ## Media
@@ -67,6 +68,70 @@ Ambiguities in the build brief, the option chosen, and why.
     finds the open multipart upload and only missing parts are sent. Browsers can't reopen a file by
     themselves, so the UI says "Select <file> again to resume".
 22. **Charts** use one hue per measure and never dual axes (startup time and rebuffers are separate charts).
+
+## Recommendations: priority, dedupe, caching
+
+23. **Recommendation priority is a per-title `boost` (−2…+5) with an optional campaign window.** Outside
+    `boost_starts_at`/`boost_ends_at` it counts as 0 (`Title.effective_boost(now)`). The engine adds
+    `recommendations.weight_boost × boost` to both the cold-start and the personalised score, pins up to
+    `recommendations.boost_pin_top_picks` positively boosted titles into the first Top picks slots (never
+    a completed or disliked one), uses boost as a secondary sort in genre rows / new releases, and orders
+    the billboard by Billboard rows → effective boost → featured → trending. **Top 10 and Trending ignore
+    boost** — they are claims about what people watch, and boosting them would make them untrue.
+    Boost changes are audit-logged.
+24. **Cold start is popularity-led, not random:** `cold_start_popularity × popularity/max + featured + new +
+    boost + 0.35 × daily-stable noise`. Noise is seeded per viewer per day (`engine._daily_rng`), so a
+    viewer's rows are stable within a day and rotate across days; the same applies to the "Hidden gems",
+    "Something different" and "You might have missed" rows, which are now real queries.
+25. **Dislikes are excluded from every row and the billboard**; Continue Watching is the only exception
+    (the viewer is mid-way through it).
+26. **Cross-row de-duplication:** a title appears in at most `recommendations.row_dedupe_window` rows per
+    home page. Continue Watching, My List and Top 10 are exempt (they are lists the viewer recognises),
+    and dedupe never shrinks a row below 4 items.
+27. **A global catalog version instead of TTL waits.** Every per-viewer feed key and the billboard key
+    include `recs:catalog:v`, bumped on commit of any admin write that changes what viewers should see
+    (title status/featured/boost/genres/publish, related titles, collections, home rows, billboard,
+    genres). Admin edits show up on the next request instead of after `recommendations.cache_seconds`.
+    Old keys simply expire.
+
+## Profiles
+
+28. **Profiles are behind `features.profiles_enabled` (default off).** When on, an account has up to
+    `features.max_profiles` (5) `ViewerProfile`s; the client sends `X-Profile`, the API resolves a
+    `Viewer(user, profile)` and **every** engagement row (progress, ratings, My List, reminders) and every
+    recommendation cache key is scoped to it. Profile endpoints only ever query `request.user`'s profiles
+    (another account's id is a 404). Kids profiles filter to `content.kids_ratings` everywhere, including
+    deep links.
+
+## Search engines (SEO)
+
+29. **The app is not a client-only SPA for crawlers.** Every content route used to redirect signed-out
+    visitors to /login, so search engines saw a login form. Signed-out visitors now get server-rendered
+    public pages — the landing page (`/`), title pages (`/title/<slug>`, same URL as the in-app deep link)
+    and genre pages (`/genre/<slug>`) — with real HTML content, canonical URLs, Open Graph/Twitter cards
+    and JSON-LD (`Movie`/`TVSeries`, `BreadcrumbList`, `ItemList`, `Organization`/`WebSite`/`FAQPage`).
+    Signed-in viewers keep the app experience on the same URLs (modal over the feed; `/genre` →
+    `/categories`).
+30. **`robots.txt` and `sitemap.xml` are generated from the catalog** (`/api/v1/public/sitemap`, cached under
+    the catalog version, so publishing shows up immediately). App routes are disallowed and also send
+    `X-Robots-Tag: noindex`; `/api/v1/img/` stays crawlable for images. Unknown titles return a real 404.
+    `seo.indexing_enabled = false` turns everything to `noindex` + `Disallow: /` for staging.
+31. **Public pages use plain `<a>` links for titles and genres.** `/title/*` lives beside an intercepting
+    route (`(.)title`) that opens the in-app modal; full document loads keep signed-out navigation on the
+    public pages. For the same reason the translation mode is reflected in the URL with
+    `history.replaceState`, not `router.replace` (a soft navigation re-ran the interceptor and mounted a
+    second title modal on deep links).
+
+## Resilience
+
+32. **Errors are contained where they happen:** each home row and the hero have their own error boundary
+    (a broken row never blanks the feed), route segments have `error.tsx` with a "Try again" that
+    refreshes server data, `global-error.tsx` covers a failing root layout, and API errors are always
+    `{code, message}` with status-based human fallbacks for responses that never reached Django
+    (proxy 502s, timeouts). An offline banner appears while disconnected and refetches on reconnect.
+33. **Rate limits on every new endpoint**: `security.rate_profiles`, `security.rate_engagement` (My List,
+    ratings, reminders, Continue Watching, notifications) per user, and `security.rate_public`
+    (landing, sitemap, Coming Soon) per IP.
 
 ## Status at hand-off
 

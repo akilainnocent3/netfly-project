@@ -17,7 +17,9 @@ export function UploadDock() {
   const queryClient = useQueryClient();
   const list = Object.values(items);
 
-  useEffect(() => loadPending(), [loadPending]);
+  useEffect(() => {
+    loadPending();
+  }, [loadPending]);
   useEffect(() => {
     if (completedVersion) {
       void queryClient.invalidateQueries({ queryKey: ["title"] });

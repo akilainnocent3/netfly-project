@@ -89,6 +89,14 @@ test("Continue Watching ⋯ → Remove from row", async ({ page }) => {
   await expect(row).toBeVisible();
   await row.locator("[data-card] a[href='/title/neon-tide']").first().hover();
   const panel = page.getByRole("dialog", { name: /preview$/ });
+  // A card on the bottom edge opens upwards: every button is reachable without scrolling.
+  const viewport = page.viewportSize()!;
+  await expect
+    .poll(async () => {
+      const box = await panel.boundingBox();
+      return box ? box.y + box.height <= viewport.height && box.y >= 0 : false;
+    })
+    .toBe(true);
   await panel.getByRole("button", { name: /More options for/ }).click();
   await page.getByRole("menuitem", { name: "Remove from row" }).click();
   await expect(page.getByText("Removed Neon Tide from Continue Watching")).toBeVisible();

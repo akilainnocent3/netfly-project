@@ -79,3 +79,13 @@ export async function countRequests(
   page.off("request", listener);
   return n;
 }
+
+/** HLS renditions are H.264/AAC; Playwright's bundled Chromium can't decode them (use NETFLY_E2E_CHANNEL=chrome). */
+export async function canPlayH264(page: Page): Promise<boolean> {
+  return page.evaluate(
+    () =>
+      typeof MediaSource !== "undefined" &&
+      MediaSource.isTypeSupported('video/mp4; codecs="avc1.640028"') &&
+      MediaSource.isTypeSupported('audio/mp4; codecs="mp4a.40.2"'),
+  );
+}

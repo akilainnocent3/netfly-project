@@ -4740,6 +4740,54 @@
                 }
             }
         },
+        "/api/v1/public/landing": {
+            "get": {
+                "operationId": "public_landing",
+                "description": "Signed-out landing page: today's Top 10 and the genre directory (crawl paths).",
+                "tags": [
+                    "public"
+                ],
+                "security": [
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Landing"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/public/sitemap": {
+            "get": {
+                "operationId": "public_sitemap",
+                "description": "Every public URL's slug and last-modified time (the client renders sitemap.xml).",
+                "tags": [
+                    "public"
+                ],
+                "security": [
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Sitemap"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/ratings/{title_id}": {
             "put": {
                 "operationId": "rate_title",
@@ -6536,6 +6584,21 @@
                     "slug"
                 ]
             },
+            "GenreLink": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "slug"
+                ]
+            },
             "GenreTile": {
                 "type": "object",
                 "properties": {
@@ -6809,6 +6872,27 @@
                 "required": [
                     "file",
                     "kind"
+                ]
+            },
+            "Landing": {
+                "type": "object",
+                "properties": {
+                    "trending": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TitleCard"
+                        }
+                    },
+                    "genres": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/GenreLink"
+                        }
+                    }
+                },
+                "required": [
+                    "genres",
+                    "trending"
                 ]
             },
             "LegalPage": {
@@ -8628,6 +8712,69 @@
                     "full_name",
                     "password",
                     "username"
+                ]
+            },
+            "Sitemap": {
+                "type": "object",
+                "properties": {
+                    "titles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SitemapTitle"
+                        }
+                    },
+                    "genres": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SitemapGenre"
+                        }
+                    }
+                },
+                "required": [
+                    "genres",
+                    "titles"
+                ]
+            },
+            "SitemapGenre": {
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "slug",
+                    "updated_at"
+                ]
+            },
+            "SitemapTitle": {
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "image": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "image",
+                    "slug",
+                    "type",
+                    "updated_at"
                 ]
             },
             "StaffInputRequest": {

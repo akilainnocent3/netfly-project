@@ -58,6 +58,7 @@ class MyListView(APIView):
 
 class MyListItemView(APIView):
     permission_classes = [IsViewer]
+    throttle_classes = [throttle("security.rate_engagement", per_user=True)]
 
     @extend_schema(request=None, responses={204: None}, operation_id="my_list_add")
     def put(self, request, title_id: int):
@@ -91,6 +92,7 @@ class RatingView(APIView):
     """One tap: 👎 -1 · 👍 1 · 👍👍 2. Recommendations react on the next request."""
 
     permission_classes = [IsViewer]
+    throttle_classes = [throttle("security.rate_engagement", per_user=True)]
 
     @extend_schema(
         request=RatingInputSerializer, responses=RatingResultSerializer, operation_id="rate_title"
@@ -179,6 +181,7 @@ class NotificationsView(APIView):
     """The bell: reminded titles that are out, new episodes of saved series, recent arrivals."""
 
     permission_classes = [IsViewer]
+    throttle_classes = [throttle("security.rate_engagement", per_user=True)]
 
     @extend_schema(responses=NotificationListSerializer, operation_id="notifications")
     def get(self, request):
@@ -235,6 +238,7 @@ class NotificationsView(APIView):
 
 class NotificationsSeenView(APIView):
     permission_classes = [IsViewer]
+    throttle_classes = [throttle("security.rate_engagement", per_user=True)]
 
     @extend_schema(request=None, responses={204: None}, operation_id="notifications_seen")
     def post(self, request):

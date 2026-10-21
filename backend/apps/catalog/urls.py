@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import seo, views
 
 urlpatterns = [
     path("browse/home", views.HomeView.as_view(), name="browse-home"),
@@ -9,6 +9,8 @@ urlpatterns = [
     path(
         "browse/new-and-popular", views.NewAndPopularView.as_view(), name="browse-new-and-popular"
     ),
+    path("public/landing", seo.LandingView.as_view(), name="public-landing"),
+    path("public/sitemap", seo.SitemapView.as_view(), name="public-sitemap"),
     path("catalog/poster-wall", views.PosterWallView.as_view(), name="poster-wall"),
     path("titles/<slug:slug>", views.TitlePageView.as_view(), name="title-detail"),
     path(

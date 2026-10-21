@@ -62,7 +62,9 @@ function useSortList<T extends { id: number }>(
   reorder: (ids: number[]) => Promise<unknown>,
 ) {
   const [order, setOrder] = useState<number[]>([]);
-  useEffect(() => setOrder(items?.map((i) => i.id) ?? []), [items]);
+  useEffect(() => {
+    setOrder(items?.map((i) => i.id) ?? []);
+  }, [items]);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
