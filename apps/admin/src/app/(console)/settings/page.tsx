@@ -395,8 +395,10 @@ function JsonEditor({
         </table>
       ) : null}
       <p className="text-subtle mt-1 text-[11.5px]">
-        Validated against the schema when you leave the field. New uploads use the new ladder; rungs
-        above a source&apos;s height are skipped.
+        Validated against the schema when you leave the field.
+        {entryKey === "transcoding.ladder"
+          ? " New uploads use the new ladder; rungs above a source's height are skipped."
+          : null}
       </p>
     </div>
   );

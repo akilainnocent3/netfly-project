@@ -75,7 +75,10 @@ even though every URL is signed.
   size of local disk. `--max-tasks-per-child` keeps memory flat. Long jobs are `acks_late`, so a lost
   worker re-queues its job; failures retry with exponential backoff up to `transcoding.max_retries`.
 * **default** queue (`worker`): image renders, event flushing, popularity refresh — light; 2–4 concurrency.
-* **beat**: exactly **one** instance.
+* **beat**: exactly **one** instance. Besides catalog jobs it runs `run_renewals` (every 5 min: renewal
+  reminders and pushes, trial conversions, retries, grace, downgrades), `reconcile_payments` (every 2 min:
+  polls Snippe for pending payments in case a webhook was lost) and `purge_usage_keys` (hourly). They are
+  idempotent and lock per subscription, but two beats would still double the provider traffic.
 * Ladder/preset changes in Settings apply to new jobs immediately. Use *Transcoding → Retry* to re-encode.
 
 ## 6. Backups & data
@@ -98,6 +101,15 @@ even though every URL is signed.
 * Review rate limits under *Settings → Security* and the edge `limit_req` in `infra/nginx.conf`.
 * Studio should be reachable only on `studio.` (optionally behind VPN/IP allow-list).
 * The audit log records every staff write; ship it to your SIEM if required.
+* **Payments webhook:** `POST /api/v1/payments/webhook/snippe` must be reachable from the internet (the
+  bundled `infra/nginx.conf` routes it without the per-IP rate limit). Set *Settings → Payments → Webhook
+  public URL* to that address (renewals run in Celery and have no request to derive it from), register
+  it with Snippe, and save the `whsec_…` secret. Requests without a valid, ≤ 5-minute-old signature are
+  rejected and logged as rejected `PaymentEvent`s.
+* **Test mode** (`testing.mock_providers`) must be **off** in production: with it on no SMS, email or
+  payment is real. Studio shows a warning banner while it's on.
+* Secrets (SMTP password, Beem keys, Snippe key and webhook secret) are write-only in Studio and
+  Fernet-encrypted with `CONFIG_ENCRYPTION_KEY`; codes and message bodies never reach the logs.
 
 ## 8. Health & observability
 
@@ -117,6 +129,21 @@ even though every URL is signed.
 * On staging set `seo.indexing_enabled = false`: every page becomes `noindex` and robots.txt disallows all.
 
 ## 10. Upgrading to this release
+
+### Plans, verification, payments and search (this release)
+
+Migrations (additive): `billing.0001_initial` (plans, subscriptions, usage ledger and adjustments,
+trial claims), `billing.0002_seed_plans_and_free_subscriptions` (data: the four default plans — Bure
+free/default, Mwanzo, Pendwa, Kinara — and a free subscription for every existing account),
+`billing.0003_payments` (payments, webhook events, subscription notices), `accounts.0003_…` (email,
+phone, verified timestamps, remember-me), `accounts.0004_verification_codes`.
+
+New settings groups (seeded; edit in *Studio → Settings*): **Brand intro** (`intro.*`), **Usage limits**
+(`usage.*`), **Email** (`email.*`: SMTP + code email), **SMS (Beem Africa)** (`sms.*`), **Payments
+(Snippe)** (`payments.*`), **Test mode** (`testing.mock_providers`), and rate limits
+`security.rate_otp_send`, `security.rate_otp_check`, `security.rate_payment`. Go-live order: SMTP → *Send
+test email*; Beem keys + approved sender ID → *Send test SMS* / *Check balance*; Snippe key + webhook secret
++ public webhook URL → *Test API key*, then one small real payment to confirm `payments.amount_multiplier`.
 
 Run `python manage.py migrate` then `python manage.py seed_config` (both run automatically in the
 `migrate` service). All migrations are additive and safe to run before the new code is live.

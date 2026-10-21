@@ -244,3 +244,24 @@ test("Studio: Plans (live preview) and Subscribers", async ({ page }) => {
   await page.goto(`${ADMIN}/`);
   await expect(page.getByTestId("billing-tiles")).toContainText("MRR");
 });
+
+test("Studio: Settings has the usage, email, SMS, payments and test-mode groups", async ({ page }) => {
+  await studioLogin(page);
+  await page.goto(`${ADMIN}/settings`);
+  const nav = page.getByRole("navigation", { name: "Settings sections" });
+  for (const [group, file, check] of [
+    ["Usage limits", "studio-settings-usage", "Timezone"],
+    ["Email", "studio-settings-email", "Send test email"],
+    ["SMS (Beem Africa)", "studio-settings-sms", "Check balance"],
+    ["Payments (Snippe)", "studio-settings-payments", "Test API key"],
+    ["Test mode", "studio-settings-test-mode", "Show outbox"],
+  ] as const) {
+    await nav.getByRole("button", { name: group }).click();
+    await expect(page.getByText(check, { exact: false }).first()).toBeVisible();
+    if (group === "Payments (Snippe)") {
+      await page.getByRole("button", { name: "Show webhook URL" }).click();
+      await expect(page.getByText(/\/api\/v1\/payments\/webhook\/snippe/)).toBeVisible();
+    }
+    await page.screenshot({ path: `../docs/screenshots/${file}.png`, fullPage: true });
+  }
+});

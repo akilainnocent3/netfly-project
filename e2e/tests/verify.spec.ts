@@ -1,10 +1,10 @@
-import type { Page } from "@playwright/test";
 import {
   completeSignupSteps,
   createAccount,
   expect,
   outboxCode,
   signUp,
+  stubWebOtp,
   submitSignIn,
   test,
   uniqueName,
@@ -13,35 +13,6 @@ import {
 
 // Providers are simulated for the run (global-setup): codes are read from Studio's test outbox.
 test.describe.configure({ mode: "serial" });
-
-/** Android Chrome's WebOTP, simulated: the page's request resolves when the "SMS" arrives. */
-async function stubWebOtp(page: Page) {
-  await page.addInitScript(() => {
-    const w = window as unknown as {
-      OTPCredential?: unknown;
-      __deliverOtp?: (code: string) => void;
-      __otpRequested?: boolean;
-    };
-    w.OTPCredential ??= function OTPCredential() {};
-    let deliver: ((code: string) => void) | null = null;
-    w.__deliverOtp = (code) => deliver?.(code);
-    const original = navigator.credentials?.get?.bind(navigator.credentials);
-    Object.defineProperty(navigator, "credentials", {
-      configurable: true,
-      value: {
-        ...navigator.credentials,
-        get: (options: CredentialRequestOptions & { otp?: unknown }) => {
-          if (!options?.otp) return original?.(options);
-          w.__otpRequested = true;
-          return new Promise((resolve, reject) => {
-            deliver = (code) => resolve({ code, type: "otp" });
-            options.signal?.addEventListener("abort", () => reject(new DOMException("", "AbortError")));
-          });
-        },
-      },
-    });
-  });
-}
 
 test("trial: plan → email code (paste) → phone code (auto-filled by WebOTP) → payment step", async ({
   page,

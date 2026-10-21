@@ -202,6 +202,22 @@ Ambiguities in the build brief, the option chosen, and why.
     real public endpoint, and Studio can settle simulated payments and run the renewal job "as of" a
     later time. None of this is reachable with test mode off.
 
+## Brand intro & open browsing
+
+49. **The NETFLY ident is a separate pre-roll, never part of the HLS transcodes.** Concatenating it would
+    mean re-transcoding the whole catalog, shifting resume positions, intro/credits markers, thumbnails
+    and analytics, and freezing the ident. The player shows the clip (with sound — Play is a user gesture)
+    while the title buffers paused underneath, then crossfades in. It never counts as progress, usage or
+    startup time; a clip that hasn't loaded in 1.5 s is skipped. Previews and hero trailers never get it;
+    autoplayed next episodes follow `intro.on_autoplay_next_episode` (off, like a binge). On app open a
+    muted splash (an inline, nonce'd boot script decides before first paint) doubles as the loading
+    screen, once per session / day / visit (`intro.app_open_frequency`), never for bots.
+50. **Signed-out visitors browse the real app; an action opens the gate.** One design for everyone (crawlers
+    get the same pages server-rendered). Play / My List / Rate / Remind store a validated intent in
+    sessionStorage and the `next` URL; after sign-in, signup + plan, or verification + payment the app
+    resumes it (Play → the player with the intro; the others run, toast and restore scroll). A URL-only
+    intent needs a click, so a crafted link can't act for a signed-in viewer.
+
 ## Resilience
 
 32. **Errors are contained where they happen:** each home row and the hero have their own error boundary

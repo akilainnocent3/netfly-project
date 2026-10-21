@@ -201,3 +201,27 @@ def test_errors_have_consistent_shape(api):
     body = api.post("/api/v1/auth/signup", {}, format="json").json()
     assert set(body) == {"code", "message", "fields"}
     assert body["code"] == "validation_error"
+
+
+def test_cookie_setting_auth_endpoints_accept_json_only(api, user):
+    """A cross-site HTML form (urlencoded / multipart) can't sign anyone in (login CSRF)."""
+    for path, body in [
+        ("/api/v1/auth/login", {"username": "viewer_one", "password": "correct-horse"}),
+        (
+            "/api/v1/auth/signup",
+            {"username": "csrf_x", "full_name": "X", "password": "pw-123456789"},
+        ),
+        (
+            "/api/v1/auth/password-reset/confirm",
+            {"reset_token": "t", "code": "1", "new_password": "x"},
+        ),
+    ]:
+        assert api.post(path, body, format="multipart").status_code == 415
+    assert (
+        api.post(
+            "/api/v1/auth/login",
+            {"username": "viewer_one", "password": "correct-horse", "app": "client"},
+            format="json",
+        ).status_code
+        == 200
+    )

@@ -1,4 +1,6 @@
+import { createHmac } from "node:crypto";
 import { test as base, expect, type BrowserContext, type Page } from "@playwright/test";
+import { E2E_WEBHOOK_SECRET } from "../global-setup";
 
 export { expect };
 
@@ -235,4 +237,85 @@ export async function adminApi(path: string, init: RequestInit = {}): Promise<Re
       ...(init.headers ?? {}),
     },
   });
+}
+
+/** Android Chrome's WebOTP, simulated: the page's request resolves when the "SMS" arrives. */
+export async function stubWebOtp(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as {
+      OTPCredential?: unknown;
+      __deliverOtp?: (code: string) => void;
+      __otpRequested?: boolean;
+    };
+    w.OTPCredential ??= function OTPCredential() {};
+    let deliver: ((code: string) => void) | null = null;
+    w.__deliverOtp = (code) => deliver?.(code);
+    const original = navigator.credentials?.get?.bind(navigator.credentials);
+    Object.defineProperty(navigator, "credentials", {
+      configurable: true,
+      value: {
+        ...navigator.credentials,
+        get: (options: CredentialRequestOptions & { otp?: unknown }) => {
+          if (!options?.otp) return original?.(options);
+          w.__otpRequested = true;
+          return new Promise((resolve, reject) => {
+            deliver = (code) => resolve({ code, type: "otp" });
+            options.signal?.addEventListener("abort", () => reject(new DOMException("", "AbortError")));
+          });
+        },
+      },
+    });
+  });
+}
+
+export type AdminPayment = { id: string; reference: string; status: string; purpose: string; amount: number };
+
+export async function subscriberId(username: string): Promise<number> {
+  const res = await adminApi(`subscribers?q=${username}`);
+  const body = (await res.json()) as { results: Array<{ id: number; username: string }> };
+  return body.results.find((s) => s.username === username)!.id;
+}
+
+export async function latestPayment(username: string): Promise<AdminPayment> {
+  const id = await subscriberId(username);
+  for (let i = 0; i < 20; i++) {
+    const rows = (await (await adminApi(`subscribers/${id}/payments`)).json()) as AdminPayment[];
+    if (rows[0]) return rows[0];
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  throw new Error("no payment");
+}
+
+/** Snippe's webhook: HMAC-SHA256 of "{timestamp}.{raw body}" with the whsec_ secret. */
+export async function snippeWebhook(
+  reference: string,
+  type: "payment.completed" | "payment.failed",
+  extra: Record<string, unknown> = {},
+) {
+  const body = JSON.stringify({
+    id: `evt_${reference}_${type}`,
+    type,
+    api_version: "2026-01-25",
+    created_at: new Date().toISOString(),
+    data: {
+      reference,
+      status: type.split(".")[1],
+      amount: { value: 0, currency: "TZS" },
+      channel: { type: "mobile", provider: "mixx" },
+      ...extra,
+    },
+  });
+  const ts = String(Math.floor(Date.now() / 1000));
+  const signature = createHmac("sha256", E2E_WEBHOOK_SECRET).update(`${ts}.${body}`).digest("hex");
+  const res = await fetch(`${CLIENT_URL}/api/v1/payments/webhook/snippe`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Webhook-Timestamp": ts,
+      "X-Webhook-Signature": signature,
+    },
+    body,
+  });
+  expect(res.status).toBe(200);
+  expect(await res.text()).toBe("OK");
 }

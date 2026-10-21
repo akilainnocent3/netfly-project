@@ -1,64 +1,18 @@
-import { createHmac } from "node:crypto";
 import type { Page } from "@playwright/test";
-import { E2E_WEBHOOK_SECRET } from "../global-setup";
-import { adminApi, expect, signUp, test, verifyContacts } from "./helpers";
+import {
+  adminApi,
+  expect,
+  latestPayment,
+  signUp,
+  snippeWebhook,
+  subscriberId,
+  test,
+  verifyContacts,
+} from "./helpers";
 
 // Mobile money is simulated for the run (global-setup): Snippe's side is played by signed webhooks
 // sent to the real public endpoint, exactly as Snippe would send them.
-const CLIENT = process.env.NETFLY_CLIENT_URL ?? "http://localhost:3000";
 test.describe.configure({ mode: "serial" });
-
-type AdminPayment = { id: string; reference: string; status: string; purpose: string; amount: number };
-
-async function subscriberId(username: string): Promise<number> {
-  const res = await adminApi(`subscribers?q=${username}`);
-  const body = (await res.json()) as { results: Array<{ id: number; username: string }> };
-  return body.results.find((s) => s.username === username)!.id;
-}
-
-async function latestPayment(username: string): Promise<AdminPayment> {
-  const id = await subscriberId(username);
-  for (let i = 0; i < 20; i++) {
-    const rows = (await (await adminApi(`subscribers/${id}/payments`)).json()) as AdminPayment[];
-    if (rows[0]) return rows[0];
-    await new Promise((r) => setTimeout(r, 250));
-  }
-  throw new Error("no payment");
-}
-
-/** Snippe's webhook: HMAC-SHA256 of "{timestamp}.{raw body}" with the whsec_ secret. */
-async function snippeWebhook(
-  reference: string,
-  type: "payment.completed" | "payment.failed",
-  extra: Record<string, unknown> = {},
-) {
-  const body = JSON.stringify({
-    id: `evt_${reference}_${type}`,
-    type,
-    api_version: "2026-01-25",
-    created_at: new Date().toISOString(),
-    data: {
-      reference,
-      status: type.split(".")[1],
-      amount: { value: 0, currency: "TZS" },
-      channel: { type: "mobile", provider: "mixx" },
-      ...extra,
-    },
-  });
-  const ts = String(Math.floor(Date.now() / 1000));
-  const signature = createHmac("sha256", E2E_WEBHOOK_SECRET).update(`${ts}.${body}`).digest("hex");
-  const res = await fetch(`${CLIENT}/api/v1/payments/webhook/snippe`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Webhook-Timestamp": ts,
-      "X-Webhook-Signature": signature,
-    },
-    body,
-  });
-  expect(res.status).toBe(200);
-  expect(await res.text()).toBe("OK");
-}
 
 async function verifiedMember(page: Page): Promise<string> {
   const username = await signUp(page);

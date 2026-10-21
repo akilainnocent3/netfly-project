@@ -5,6 +5,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.db import IntegrityError, transaction
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
+from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -120,6 +121,8 @@ def _clear_cookies(response: Response, app: str) -> None:
 
 
 class SignupView(APIView):
+    # JSON only: a cross-site HTML form can't send it (no login CSRF).
+    parser_classes = [JSONParser]
     authentication_classes: list = []
     throttle_classes = [throttle("security.rate_signup")]
 
@@ -151,6 +154,8 @@ class SignupView(APIView):
 
 
 class LoginView(APIView):
+    # JSON only: a cross-site HTML form can't send it (no login CSRF).
+    parser_classes = [JSONParser]
     authentication_classes: list = []
     throttle_classes = [throttle("security.rate_login")]
 

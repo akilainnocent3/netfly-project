@@ -142,14 +142,15 @@ export default function PlanPage() {
             >
               Start free trial
             </Button>
-            <button
-              type="button"
+            <Button
+              variant="ghost-light"
+              loading={busy === "plan"}
               disabled={busy !== null}
               onClick={() => void choose(false)}
-              className="text-body rounded text-[#333] underline underline-offset-2 hover:text-black focus-visible:outline-2 focus-visible:outline-[#0071eb] disabled:opacity-50"
+              className="text-body font-normal underline underline-offset-2"
             >
               Skip the trial — pay {plan ? priceLabel(plan) : ""} now
-            </button>
+            </Button>
           </>
         ) : (
           <Button

@@ -4773,11 +4773,6 @@
                             "schema": {
                                 "$ref": "#/components/schemas/LoginRequest"
                             }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/LoginRequest"
-                            }
                         }
                     },
                     "required": true
@@ -4944,11 +4939,6 @@
                             "schema": {
                                 "$ref": "#/components/schemas/ResetConfirmRequest"
                             }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ResetConfirmRequest"
-                            }
                         }
                     },
                     "required": true
@@ -4980,11 +4970,6 @@
                 "requestBody": {
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ResetStartRequest"
-                            }
-                        },
-                        "multipart/form-data": {
                             "schema": {
                                 "$ref": "#/components/schemas/ResetStartRequest"
                             }
@@ -5055,11 +5040,6 @@
                 "requestBody": {
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/SignupRequest"
-                            }
-                        },
-                        "multipart/form-data": {
                             "schema": {
                                 "$ref": "#/components/schemas/SignupRequest"
                             }

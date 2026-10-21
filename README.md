@@ -32,7 +32,13 @@ docker compose exec backend python manage.py seed_demo --reset
   Next Episode, keyboard shortcuts), optional profiles (`features.profiles_enabled`), mobile tab bar.
 * **Public, crawlable pages** for signed-out visitors: landing page, `/title/<slug>` and `/genre/<slug>`
   with JSON-LD, Open Graph, `robots.txt` and `sitemap.xml` (see *docs/DECISIONS.md → Search engines*).
-* **Studio** — catalog editor, uploads and transcoding monitor, home layout, settings, users, audit log, and a
+* **Membership** — plans that differ only in viewing time (hours per day / week / month; every plan
+  streams at the same top quality), a free default plan, free trials, server-side usage metering with
+  live countdowns in Account, email + phone verification (SMS codes with automatic fill) for paid plans
+  and trials, and Snippe mobile-money payments (M-Pesa, Airtel Money, Mixx by Yas, Halotel) with
+  renewals, retries, grace and automatic downgrade. The NETFLY ident plays on app open and before
+  every playback.
+* **Studio** — plans, subscribers, billing tiles, catalog editor, uploads and transcoding monitor, home layout, settings, users, audit log, and a
   per-title **recommendation priority** (boost −2…+5 with an optional campaign window) that reaches every
   viewer immediately.
 
@@ -45,10 +51,24 @@ branding, feature flags, JWT lifetimes, rate limits, the bitrate ladder, recomme
 database, is edited in *Studio → Settings*, and applies within ~1 s without a restart. Secrets are
 Fernet-encrypted and write-only.
 
+Going live with membership (all in *Studio → Settings*):
+
+* **Email** — SMTP host/port/user/password, sender, the code email template → *Send test email*.
+* **SMS (Beem Africa)** — API key + secret key, an approved sender ID (≤ 11 chars), OTP settings; keep
+  `sms.otp_provider = own` so phones can fill codes in automatically (the SMS ends with `@domain #code`;
+  set `sms.webotp_domain` to the viewer site's domain) → *Send test SMS*, *Check balance*.
+* **Payments (Snippe)** — API key (`snp_…`), webhook secret (`whsec_…`) and **Webhook public URL**
+  (`https://<site>/api/v1/payments/webhook/snippe`, register the same URL with Snippe) → *Test API key*,
+  then one small payment to confirm `payments.amount_multiplier`. Trial length, renewal lead time, retry
+  schedule and grace days live here too; prices and limits are edited under *Studio → Plans*.
+* **Test mode** — simulates SMS, email and payments for staging and the e2e suite. Keep it **off** in
+  production.
+
 ## Layout
 
 ```
-backend/            Django 5 + DRF (apps: core, accounts, catalog, media, engagement, recommendations, adminapi)
+backend/            Django 5 + DRF (apps: core, accounts, catalog, media, engagement, recommendations,
+                    billing, messaging, adminapi)
 apps/client/        Next.js viewer app      apps/admin/   Next.js studio
 packages/api-client Typed client generated from OpenAPI   packages/ui   shared tokens, hooks
 infra/              node image, nginx edge  e2e/          Playwright suite
@@ -70,7 +90,8 @@ sh backend/scripts/export_openapi.sh && pnpm api:generate
 pnpm install && pnpm typecheck && pnpm lint && pnpm build
 
 # end-to-end (stack running, demo catalog seeded)
-pnpm e2e        # includes axe accessibility checks, SEO contract, Studio boost → viewer, profiles
+pnpm e2e        # includes axe checks, SEO contract, signup → plan → verify → pay journeys, search
+                # (global setup turns test mode on; global teardown turns it off again)
 NETFLY_E2E_CHANNEL=chrome pnpm e2e   # also runs the video specs (Playwright's Chromium has no H.264)
 
 # Optional local S3 for media (moto): pip install "moto[server]" && moto_server -p 5005,

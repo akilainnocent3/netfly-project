@@ -6975,7 +6975,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["LoginRequest"];
-                "multipart/form-data": components["schemas"]["LoginRequest"];
             };
         };
         responses: {
@@ -7089,7 +7088,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ResetConfirmRequest"];
-                "multipart/form-data": components["schemas"]["ResetConfirmRequest"];
             };
         };
         responses: {
@@ -7113,7 +7111,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ResetStartRequest"];
-                "multipart/form-data": components["schemas"]["ResetStartRequest"];
             };
         };
         responses: {
@@ -7161,7 +7158,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["SignupRequest"];
-                "multipart/form-data": components["schemas"]["SignupRequest"];
             };
         };
         responses: {

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
+from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -164,6 +165,8 @@ class ResetConfirmSerializer(serializers.Serializer):
 class PasswordResetStartView(APIView):
     """Same answer whether or not the account exists (no account enumeration)."""
 
+    # JSON only: a cross-site HTML form can't send it (no login CSRF).
+    parser_classes = [JSONParser]
     authentication_classes: list = []
     throttle_classes = [throttle("security.rate_otp_send")]
 
@@ -193,6 +196,8 @@ class PasswordResetStartView(APIView):
 class PasswordResetConfirmView(APIView):
     """A correct code sets the new password, signs out every device and signs this one in."""
 
+    # JSON only: a cross-site HTML form can't send it (no login CSRF).
+    parser_classes = [JSONParser]
     authentication_classes: list = []
     throttle_classes = [throttle("security.rate_otp_check")]
 
