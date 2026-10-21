@@ -134,9 +134,8 @@ function ComingSoon({ items }: { items?: Upcoming[] }) {
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <h2 className="text-h3 mr-auto font-bold">{t.title}</h2>
-                {t.reminded !== null && t.reminded !== undefined && (
-                  <RemindButton title={t} reminded={t.reminded} />
-                )}
+                {/* Signed out (`reminded` null): still offered — it opens the sign-in gate. */}
+                <RemindButton title={t} reminded={!!t.reminded} />
               </div>
               {date && <p className="text-body mt-1 text-white/85">Coming {date.weekday}</p>}
               <p className="text-body mt-2 text-[#b3b3b3]">{t.synopsis || t.short_synopsis}</p>

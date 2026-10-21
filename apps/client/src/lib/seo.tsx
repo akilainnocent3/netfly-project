@@ -61,8 +61,10 @@ async function get<T>(path: string, revalidate = 60): Promise<T | null> {
 
 export const publicLanding = () => get<Schemas["Landing"]>("/api/v1/public/landing");
 export const publicSitemap = () => get<Schemas["Sitemap"]>("/api/v1/public/sitemap", 600);
-export const publicTitle = (slug: string) =>
-  get<TitlePage>(`/api/v1/titles/${encodeURIComponent(slug)}`);
+export const publicTitle = (slug: string, mode?: string) =>
+  get<TitlePage>(
+    `/api/v1/titles/${encodeURIComponent(slug)}${mode ? `?translation=${encodeURIComponent(mode)}` : ""}`,
+  );
 export const publicEpisodes = (slug: string, season: number) =>
   get<Schemas["EpisodePage"]>(
     `/api/v1/titles/${encodeURIComponent(slug)}/seasons/${season}/episodes?limit=50`,

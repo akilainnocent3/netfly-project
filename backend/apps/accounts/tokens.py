@@ -93,6 +93,26 @@ def rotate_refresh_token(
         now = timezone.now()
         if record is None or record.app != app:
             raise RefreshError("invalid_refresh", "Your session has ended. Please log in again.")
+        grace = config.get_int("auth.refresh_reuse_grace_seconds", 20)
+        if (
+            record.used_at
+            and not record.revoked_at
+            and grace > 0
+            and (now - record.used_at).total_seconds() <= grace
+            and record.user_agent == user_agent[:255]
+            and record.expires_at > now
+            and record.user.is_active
+            and not RefreshToken.objects.filter(
+                family=record.family, revoked_at__isnull=False
+            ).exists()
+        ):
+            # The same browser presenting a token it rotated seconds ago: the response carrying
+            # the new cookie was lost (navigation aborted it, or two tabs refreshed at once).
+            # Not theft — issue another token in the same family instead of revoking it.
+            issued = issue_refresh_token(
+                record.user, app, family=record.family, user_agent=user_agent, ip=ip
+            )
+            return record.user, issued
         if record.used_at or record.revoked_at:
             reused_family = record.family
         elif record.expires_at <= now or not record.user.is_active:

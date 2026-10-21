@@ -4,7 +4,6 @@ import { ProfileGate } from "@/components/profiles/profile-gate";
 import { TabBar } from "@/components/browse/tab-bar";
 import { TranslationSync } from "@/components/browse/translation-sync";
 import { InitialModeProvider } from "@/components/providers/initial-mode";
-import { isSignedIn } from "@/lib/seo";
 import { serverMode } from "@/lib/server-mode";
 
 export default async function BrowseLayout({
@@ -14,9 +13,8 @@ export default async function BrowseLayout({
   children: React.ReactNode;
   modal: React.ReactNode;
 }) {
-  // Signed-out visitors only reach /title/* (middleware): it renders its own public, crawlable
-  // page, so none of the app chrome (profile gate, header, modal slot) applies.
-  if (!(await isSignedIn())) return children;
+  // One design for everyone: signed-out visitors get the same chrome (Sign In instead of the
+  // profile menu); actions that need an account open the sign-in gate.
   const mode = await serverMode();
   return (
     <InitialModeProvider value={mode}>

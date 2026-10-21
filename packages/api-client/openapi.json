@@ -4048,7 +4048,7 @@
         "/api/v1/browse/home": {
             "get": {
                 "operationId": "browse_home",
-                "description": "One page of the infinite home feed (rows of cards).",
+                "description": "One page of the infinite home feed. Signed out: the shared, non-personalised feed.",
                 "parameters": [
                     {
                         "in": "query",
@@ -4087,7 +4087,8 @@
                 "security": [
                     {
                         "bearerAuth": []
-                    }
+                    },
+                    {}
                 ],
                 "responses": {
                     "200": {
@@ -4106,7 +4107,7 @@
         "/api/v1/browse/new-and-popular": {
             "get": {
                 "operationId": "browse_new_and_popular",
-                "description": "New & Popular tabs: Coming soon, Everyone's watching, Top 10 series, Top 10 films.",
+                "description": "New & Popular tabs: Coming soon, Everyone's watching, Top 10 series, Top 10 films.\nSigned out: the same lists without My List / ratings / reminders, cached publicly.",
                 "parameters": [
                     {
                         "in": "query",
@@ -4127,7 +4128,8 @@
                 "security": [
                     {
                         "bearerAuth": []
-                    }
+                    },
+                    {}
                 ],
                 "responses": {
                     "200": {

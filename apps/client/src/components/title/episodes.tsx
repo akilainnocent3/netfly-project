@@ -4,10 +4,10 @@ import { cn, formatRuntime } from "@netfly/ui";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Check, ChevronDown, Play } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useEpisodes } from "@/lib/queries";
 import type { Episode, TitleDetail } from "@/lib/types";
+import { PlayLink } from "../auth/auth-gate";
 import { Button } from "../ui/button";
 import { NetflyImage } from "../ui/netfly-image";
 
@@ -97,13 +97,14 @@ export function Episodes({
         <VirtualList
           items={items}
           slug={title.slug}
+          titleName={title.title}
           scrollParent={scrollParent}
           onEnd={() => episodes.hasNextPage && void episodes.fetchNextPage()}
         />
       ) : (
         <ol className="divide-y divide-white/8 border-y border-white/8">
           {items.map((ep) => (
-            <EpisodeRow key={ep.id} episode={ep} slug={title.slug} />
+            <EpisodeRow key={ep.id} episode={ep} slug={title.slug} titleName={title.title} />
           ))}
         </ol>
       )}
@@ -125,11 +126,13 @@ export function Episodes({
 function VirtualList({
   items,
   slug,
+  titleName,
   scrollParent,
   onEnd,
 }: {
   items: Episode[];
   slug: string;
+  titleName: string;
   scrollParent: React.RefObject<HTMLElement | null>;
   onEnd: () => void;
 }) {
@@ -160,15 +163,22 @@ function VirtualList({
           className="absolute inset-x-0 border-b border-white/8"
           style={{ transform: `translateY(${v.start - virtualizer.options.scrollMargin}px)` }}
         >
-          <EpisodeRow episode={items[v.index]!} slug={slug} />
+          <EpisodeRow episode={items[v.index]!} slug={slug} titleName={titleName} />
         </div>
       ))}
     </ol>
   );
 }
 
-function EpisodeRow({ episode, slug }: { episode: Episode; slug: string }) {
-  const href = `/watch/${slug}?episode=${episode.id}`;
+function EpisodeRow({
+  episode,
+  slug,
+  titleName,
+}: {
+  episode: Episode;
+  slug: string;
+  titleName: string;
+}) {
   const content = (
     <>
       <span className="text-h3 w-6 shrink-0 text-center font-semibold text-white/60">
@@ -208,12 +218,14 @@ function EpisodeRow({ episode, slug }: { episode: Episode; slug: string }) {
   return (
     <li className="list-none">
       {episode.available ? (
-        <Link
-          href={href}
+        <PlayLink
+          slug={slug}
+          episode={episode.id}
+          titleName={`${titleName}: ${episode.name}`}
           className="group/ep flex items-center gap-4 rounded-md px-2 py-4 transition-colors hover:bg-white/5 md:px-4"
         >
           {content}
-        </Link>
+        </PlayLink>
       ) : (
         <div className="flex items-center gap-4 px-2 py-4 opacity-50 md:px-4">{content}</div>
       )}

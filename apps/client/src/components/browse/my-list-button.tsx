@@ -4,6 +4,7 @@ import { AnimatePresence, m } from "framer-motion";
 import { Check, Plus } from "lucide-react";
 import { useInList, useMyListToggle, usePendingFor } from "@/lib/queries";
 import type { TitleCard } from "@/lib/types";
+import { useAuthGate } from "../auth/auth-gate";
 import { IconButton } from "../ui/button";
 
 export function MyListButton({
@@ -18,6 +19,7 @@ export function MyListButton({
   const local = useInList();
   const toggle = useMyListToggle(title);
   const pending = usePendingFor("mylist", title.id);
+  const gate = useAuthGate();
   const inList =
     (local.data && title.id in local.data ? local.data[title.id] : (initial ?? title.in_my_list)) ??
     false;
@@ -27,7 +29,10 @@ export function MyListButton({
       label={inList ? "Remove from My List" : "Add to My List"}
       aria-pressed={inList}
       loading={pending}
-      onClick={() => toggle.toggleNow(!inList)}
+      onClick={() =>
+        gate({ action: "my_list", slug: title.slug, titleId: title.id, titleName: title.title }) &&
+        toggle.toggleNow(!inList)
+      }
       className={inList ? "border-white bg-white/15" : undefined}
     >
       <AnimatePresence mode="wait" initial={false}>

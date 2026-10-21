@@ -3,7 +3,7 @@
 import { ApiError, unwrap } from "@netfly/api-client";
 import { cn, passwordStrength } from "@netfly/ui";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { useAuth } from "@/components/providers/auth";
@@ -11,6 +11,7 @@ import { useConfig } from "@/components/providers/config";
 import { Button } from "@/components/ui/button";
 import { Field, type FieldIndicator } from "@/components/ui/field";
 import { api } from "@/lib/api";
+import { goAfterAuth } from "@/lib/after-auth";
 import { safeNext } from "@/lib/safe-next";
 
 const USERNAME_RE = /^[A-Za-z0-9_]{3,30}$/;
@@ -32,7 +33,6 @@ function localUsernameError(value: string): string {
 /** Live validation + availability check while typing; submits only on the button or Enter. */
 export function SignupForm() {
   const config = useConfig();
-  const router = useRouter();
   const next = safeNext(useSearchParams().get("next"));
   const { signIn } = useAuth();
   const minLength = config.num("auth.password_min_length", 8);
@@ -114,7 +114,7 @@ export function SignupForm() {
           }),
         ),
       );
-      router.replace(next);
+      goAfterAuth(next);
     } catch (error) {
       const e = error instanceof ApiError ? error : new ApiError(0, undefined);
       setErrors(Object.keys(e.fields).length ? e.fields : { form: e.message });

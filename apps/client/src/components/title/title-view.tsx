@@ -8,6 +8,7 @@ import { useTitlePage } from "@/lib/queries";
 import { getPlayback, warmManifest } from "@/lib/playback";
 import type { TitleCard, TitlePage } from "@/lib/types";
 import { CardArt } from "../browse/card";
+import { PlayLink } from "../auth/auth-gate";
 import { MyListButton } from "../browse/my-list-button";
 import { PreviewVideo } from "../browse/preview-video";
 import { RatingButton } from "../browse/rating-button";
@@ -21,12 +22,18 @@ export function TitleView({
   slug,
   onClose,
   scrollParent,
+  initial,
+  asPage = false,
 }: {
   slug: string;
   onClose: () => void;
   scrollParent: React.RefObject<HTMLElement | null>;
+  /** Server-fetched data: the deep-link page renders the full content in its HTML. */
+  initial?: { mode: string; data: TitlePage };
+  /** The title is the page's main heading (deep link), not a dialog over another page. */
+  asPage?: boolean;
 }) {
-  const page = useTitlePage(slug);
+  const page = useTitlePage(slug, initial);
 
   // Opening a title warms its manifest so Play starts instantly.
   useEffect(() => {
@@ -49,7 +56,9 @@ export function TitleView({
       </div>
     );
   }
-  return <TitleContent data={page.data} onClose={onClose} scrollParent={scrollParent} />;
+  return (
+    <TitleContent data={page.data} onClose={onClose} scrollParent={scrollParent} asPage={asPage} />
+  );
 }
 
 function CloseButton({ onClose }: { onClose: () => void }) {
@@ -70,17 +79,17 @@ function TitleContent({
   data,
   onClose,
   scrollParent,
+  asPage,
 }: {
   data: TitlePage;
   onClose: () => void;
   scrollParent: React.RefObject<HTMLElement | null>;
+  asPage: boolean;
 }) {
+  const Heading = asPage ? "h1" : "h2";
   const { title, viewer, more_like_this } = data;
   const play = viewer?.play;
   const card: TitleCard = title;
-  const playHref = play?.episode_id
-    ? `/watch/${title.slug}?episode=${play.episode_id}`
-    : `/watch/${title.slug}`;
   const meta =
     title.type === "series"
       ? title.seasons.length
@@ -126,7 +135,7 @@ function TitleContent({
               />
             </div>
           ) : null}
-          <h2
+          <Heading
             id="title-heading"
             className={cn(
               "text-shadow leading-[0.95] font-black tracking-tight uppercase",
@@ -134,7 +143,7 @@ function TitleContent({
             )}
           >
             {title.title}
-          </h2>
+          </Heading>
           <div className="flex flex-wrap items-center gap-2.5">
             {play ? (
               <Button
@@ -143,7 +152,9 @@ function TitleContent({
                 size="lg"
                 icon={play.action === "resume" ? <RotateCcw /> : <Play className="fill-current" />}
               >
-                <Link href={playHref}>{play.label}</Link>
+                <PlayLink slug={title.slug} episode={play.episode_id} titleName={title.title}>
+                  {play.label}
+                </PlayLink>
               </Button>
             ) : (
               <Button variant="secondary" size="lg" disabled>

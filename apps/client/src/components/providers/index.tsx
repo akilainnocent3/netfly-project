@@ -4,6 +4,7 @@ import type { PublicConfig } from "@netfly/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LazyMotion, MotionConfig } from "framer-motion";
 import { useState } from "react";
+import { AuthGateProvider } from "../auth/auth-gate";
 import { AuthProvider } from "./auth";
 import { ConfigProvider } from "./config";
 import { ProfileProvider } from "./profile";
@@ -43,7 +44,9 @@ export function Providers({
             <ToastProvider>
               <OfflineBanner />
               <AuthProvider>
-                <ProfileProvider>{children}</ProfileProvider>
+                <ProfileProvider>
+                  <AuthGateProvider>{children}</AuthGateProvider>
+                </ProfileProvider>
               </AuthProvider>
             </ToastProvider>
           </MotionConfig>

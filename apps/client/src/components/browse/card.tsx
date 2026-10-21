@@ -13,6 +13,7 @@ import { Badge, badgeFromApi } from "../ui/badge";
 import { IconButton } from "../ui/button";
 import { ContinueMenu } from "./continue-menu";
 import { NetflyImage } from "../ui/netfly-image";
+import { PlayLink } from "../auth/auth-gate";
 import { MyListButton } from "./my-list-button";
 import { PreviewVideo, prefetchPlayback } from "./preview-video";
 import { RatingButton } from "./rating-button";
@@ -359,9 +360,9 @@ function HoverPanel({
       <div className="space-y-3 p-4">
         <div className="flex items-center gap-2">
           <IconButton asChild variant="play" label={`Play ${title.title}`}>
-            <Link href={watchHref(title)}>
+            <PlayLink slug={title.slug} episode={title.context?.episode_id} titleName={title.title}>
               <Play className="translate-x-px fill-current" />
-            </Link>
+            </PlayLink>
           </IconButton>
           <MyListButton title={title} />
           <RatingButton

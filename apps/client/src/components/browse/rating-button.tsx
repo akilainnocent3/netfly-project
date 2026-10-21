@@ -7,6 +7,7 @@ import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { removeFromHome, usePendingFor, useRate, useRatings } from "@/lib/queries";
 import type { TitleCard } from "@/lib/types";
+import { useAuthGate } from "../auth/auth-gate";
 import { IconButton } from "../ui/button";
 import { useToast } from "../ui/toast";
 
@@ -46,6 +47,7 @@ export function RatingButton({
   const rate = useRate(title);
   const pending = usePendingFor("rate", title.id);
   const toast = useToast();
+  const gate = useAuthGate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [burst, setBurst] = useState(0);
@@ -77,6 +79,18 @@ export function RatingButton({
   const choose = (value: Value) => {
     if (pending) return;
     const next = current === value ? null : value;
+    if (
+      !gate({
+        action: "rate",
+        slug: title.slug,
+        titleId: title.id,
+        value,
+        titleName: title.title,
+      })
+    ) {
+      setOpen(false);
+      return;
+    }
     rate.rateNow({ value: next, previous: current });
     setOpen(false);
     if (next && next > 0) setBurst((b) => b + 1);

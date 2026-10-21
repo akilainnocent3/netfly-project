@@ -39,6 +39,44 @@ export async function signUp(page: Page, username = uniqueName()): Promise<strin
   return username;
 }
 
+const CLIENT_URL = process.env.NETFLY_CLIENT_URL ?? "http://localhost:3000";
+
+/** Create a viewer account through the API (Node side), for sign-in flows. */
+export async function createAccount(username = uniqueName()): Promise<string> {
+  const res = await fetch(`${CLIENT_URL}/api/v1/auth/signup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, full_name: "E2E Viewer", password: PASSWORD, app: "client" }),
+  });
+  if (!res.ok) throw new Error(`signup ${res.status}`);
+  return username;
+}
+
+/** A viewer's access token (Node side) for arranging or checking state through the API. */
+export async function viewerToken(username: string): Promise<string> {
+  const res = await fetch(`${CLIENT_URL}/api/v1/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password: PASSWORD, app: "client" }),
+  });
+  if (!res.ok) throw new Error(`login ${res.status}`);
+  return ((await res.json()) as { access: string }).access;
+}
+
+/** Fill the sign-in form that is already on screen (e.g. after the auth gate) and submit it. */
+export async function submitSignIn(page: Page, username: string): Promise<void> {
+  await page.locator("input[name=username]").fill(username);
+  await page.locator("input[name=password]").fill(PASSWORD);
+  await page.getByRole("button", { name: /^Sign in$/i }).click();
+}
+
+/** Public title data (id + name) by slug. */
+export async function titleBySlug(slug: string): Promise<{ id: number; title: string; slug: string }> {
+  const res = await fetch(`${CLIENT_URL}/api/v1/titles/${slug}`);
+  if (!res.ok) throw new Error(`title ${slug}: ${res.status}`);
+  return ((await res.json()) as { title: { id: number; title: string; slug: string } }).title;
+}
+
 export async function homeRows(page: Page) {
   await page.waitForSelector("section[aria-labelledby^='row-']");
   return page.locator("section[aria-labelledby^='row-'] h2").allInnerTexts();

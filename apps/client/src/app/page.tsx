@@ -125,7 +125,7 @@ export default async function Landing() {
               </Link>
             </Button>
             <Button asChild variant="secondary" size="lg">
-              <Link href="/login">Sign In</Link>
+              <Link href="/browse">Browse titles</Link>
             </Button>
           </div>
         </div>

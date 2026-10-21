@@ -700,6 +700,15 @@ KEYS: list[Key] = [
         "Mark auth cookies Secure (browsers accept these on http://localhost).",
     ),
     Key("auth.cookie_domain", "string", "", "Cookie domain. Empty = host-only."),
+    Key(
+        "auth.refresh_reuse_grace_seconds",
+        "int",
+        20,
+        "A refresh token reused this soon after rotation, by the same browser, is accepted "
+        "(lost response / two tabs). Any other reuse revokes the whole session. 0 = never.",
+        unit="s",
+        validation={"min": 0, "max": 60},
+    ),
     # ---- security -----------------------------------------------------------
     Key(
         "security.allowed_hosts",

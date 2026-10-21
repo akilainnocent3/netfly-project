@@ -1164,7 +1164,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description One page of the infinite home feed (rows of cards). */
+        /** @description One page of the infinite home feed. Signed out: the shared, non-personalised feed. */
         get: operations["browse_home"];
         put?: never;
         post?: never;
@@ -1181,7 +1181,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description New & Popular tabs: Coming soon, Everyone's watching, Top 10 series, Top 10 films. */
+        /**
+         * @description New & Popular tabs: Coming soon, Everyone's watching, Top 10 series, Top 10 films.
+         *     Signed out: the same lists without My List / ratings / reminders, cached publicly.
+         */
         get: operations["browse_new_and_popular"];
         put?: never;
         post?: never;

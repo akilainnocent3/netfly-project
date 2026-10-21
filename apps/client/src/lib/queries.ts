@@ -14,7 +14,7 @@ import { useInitialMode } from "@/components/providers/initial-mode";
 import { useToast } from "@/components/ui/toast";
 import { useTranslation } from "@/stores/translation";
 import { api } from "./api";
-import type { BillboardItem, HomePage, TitleCard, TranslationMode } from "./types";
+import type { BillboardItem, HomePage, TitleCard, TitlePage, TranslationMode } from "./types";
 
 export function useMode(): TranslationMode {
   const initial = useInitialMode();
@@ -68,11 +68,12 @@ export function useBillboard(
   });
 }
 
-export function useTitlePage(slug: string | null) {
+export function useTitlePage(slug: string | null, initial?: { mode: string; data: TitlePage }) {
   const mode = useMode();
   return useQuery({
     queryKey: keys.title(slug ?? "", mode),
     enabled: !!slug,
+    initialData: initial && initial.mode === mode ? initial.data : undefined,
     queryFn: () =>
       unwrap(
         api.GET("/api/v1/titles/{slug}", {

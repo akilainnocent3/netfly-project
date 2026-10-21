@@ -8,6 +8,10 @@ Disliked titles are excluded from every row except Continue Watching, and a
 title may appear in at most `row_dedupe_window` rows on one page.
 Continue Watching and My List are always computed live (cheap, and must
 reflect progress saved seconds ago).
+
+Signed-out visitors share one feed (`ANONYMOUS`): the same cold-start ranking,
+without Continue Watching, My List, "Because you liked" or match scores, cached
+once per translation mode + type under the catalog version.
 """
 
 from __future__ import annotations
@@ -35,6 +39,10 @@ class Row:
     extras: dict[int, dict] = field(default_factory=dict)
     seed: str | None = None
 
+
+# Signed-out visitors: a reserved viewer id (Postgres ids start at 1), so the cached rows are shared.
+ANONYMOUS = Viewer(0)
+PERSONAL_ONLY = ("continue_watching", "my_list", "because_you_liked")
 
 DEFAULT_LAYOUT = [
     "continue_watching",
@@ -202,6 +210,7 @@ class _Dedupe:
 def _personal_rows(who: Viewer | int, mode: str, kind: str | None = None) -> dict:
     """All non-live rows in layout order (ids only), cached per viewer + mode + type."""
     viewer = as_viewer(who)
+    anonymous = viewer == ANONYMOUS
     user_id = viewer.cache_id
     ck = cache_key(user_id, "rows", mode, kind or "all")
     cached = cache.get(ck)
@@ -246,6 +255,8 @@ def _personal_rows(who: Viewer | int, mode: str, kind: str | None = None) -> dic
 
     for spec in _layout():
         row_kind, heading = spec["kind"], spec.get("title") or ""
+        if anonymous and row_kind in PERSONAL_ONLY:
+            continue
         if row_kind in LIVE_KINDS:
             add(Row(row_kind, row_kind, heading or HomeRow.Kind(row_kind).label, []))
         elif row_kind == "because_you_liked":
@@ -261,7 +272,12 @@ def _personal_rows(who: Viewer | int, mode: str, kind: str | None = None) -> dic
                     )
                 )
         elif row_kind == "top_picks":
-            add(Row("top_picks", row_kind, heading or "Top picks for you", top_picks()))
+            default = (
+                f"Popular on {config.get_str('branding.site_name', 'NETFLY')}"
+                if anonymous
+                else "Top picks for you"
+            )
+            add(Row("top_picks", row_kind, heading or default, top_picks()))
         elif row_kind == "trending":
             add(
                 Row(
@@ -361,9 +377,12 @@ def _personal_rows(who: Viewer | int, mode: str, kind: str | None = None) -> dic
 
 
 def home_page(
-    user_id: Viewer | int, mode: str, page: int, kind: str | None = None
+    user_id: Viewer | int | None, mode: str, page: int, kind: str | None = None
 ) -> tuple[list[Row], dict[int, int], bool]:
-    """Rows for one page of the feed, plus match scores, plus whether more pages exist."""
+    """Rows for one page of the feed, plus match scores, plus whether more pages exist.
+    `None` = a signed-out visitor (the shared, non-personalised feed)."""
+    if user_id is None:
+        user_id = ANONYMOUS
     payload = _personal_rows(user_id, mode, kind)
     per_page = config.get_int("content.home_rows_per_page", 6)
     specs = payload["rows"]

@@ -2,7 +2,7 @@
 
 import { ApiError, unwrap } from "@netfly/api-client";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { useAuth } from "@/components/providers/auth";
@@ -10,12 +10,12 @@ import { useConfig } from "@/components/providers/config";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { api } from "@/lib/api";
+import { goAfterAuth } from "@/lib/after-auth";
 import { safeNext } from "@/lib/safe-next";
 
 /** Submits only on the button or Enter (never on its own). */
 export function LoginForm() {
   const config = useConfig();
-  const router = useRouter();
   const next = safeNext(useSearchParams().get("next"));
   const { signIn } = useAuth();
   const [username, setUsername] = useState("");
@@ -40,7 +40,7 @@ export function LoginForm() {
           }),
         ),
       );
-      router.replace(next);
+      goAfterAuth(next);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Something went wrong. Please try again.");
       setSubmitting(false);

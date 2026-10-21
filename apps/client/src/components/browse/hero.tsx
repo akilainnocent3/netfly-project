@@ -13,7 +13,8 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { NetflyImage } from "../ui/netfly-image";
 import { PageDots } from "../ui/page-dots";
-import { titleHref, watchHref } from "./card";
+import { PlayLink, useAuthGate } from "../auth/auth-gate";
+import { titleHref } from "./card";
 import { prefetchPlayback, PreviewVideo, type PreviewState } from "./preview-video";
 
 const TRAILER_DELAY_MS = 2000;
@@ -231,7 +232,13 @@ function HeroSlide({
               icon={<Play className="fill-current" />}
               onMouseEnter={() => prefetchPlayback(title)}
             >
-              <Link href={watchHref(title)}>Play</Link>
+              <PlayLink
+                slug={title.slug}
+                episode={title.context?.episode_id}
+                titleName={title.title}
+              >
+                Play
+              </PlayLink>
             </Button>
             <Button asChild variant="secondary" size="lg" icon={<Info />}>
               <Link href={titleHref(title)} scroll={false}>
@@ -301,7 +308,13 @@ function PosterHero({ item, priority }: { item: BillboardItem; priority: boolean
           )}
           <div className="grid grid-cols-2 gap-2.5">
             <Button asChild variant="play" size="md" icon={<Play className="fill-current" />}>
-              <Link href={watchHref(title)}>Play</Link>
+              <PlayLink
+                slug={title.slug}
+                episode={title.context?.episode_id}
+                titleName={title.title}
+              >
+                Play
+              </PlayLink>
             </Button>
             <MyListLabelled title={title} />
           </div>
@@ -315,6 +328,7 @@ function MyListLabelled({ title }: { title: TitleCard }) {
   const local = useInList();
   const toggle = useMyListToggle(title);
   const pending = usePendingFor("mylist", title.id);
+  const gate = useAuthGate();
   const inList =
     (local.data && title.id in local.data ? local.data[title.id] : title.in_my_list) ?? false;
   return (
@@ -324,7 +338,10 @@ function MyListLabelled({ title }: { title: TitleCard }) {
       loading={pending}
       aria-pressed={inList}
       icon={inList ? <Check strokeWidth={2.6} /> : <Plus strokeWidth={2.6} />}
-      onClick={() => toggle.toggleNow(!inList)}
+      onClick={() =>
+        gate({ action: "my_list", slug: title.slug, titleId: title.id, titleName: title.title }) &&
+        toggle.toggleNow(!inList)
+      }
     >
       My List
     </Button>

@@ -1,10 +1,11 @@
 "use client";
 
 import { cn } from "@netfly/ui";
-import { Bookmark, Flame, House, Search, UserRound } from "lucide-react";
+import { Bookmark, Flame, House, LogIn, Search, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar } from "../profiles/avatar";
+import { useAuth } from "../providers/auth";
 import { useProfiles } from "../providers/profile";
 
 const TABS = [
@@ -19,14 +20,28 @@ const TABS = [
 export function TabBar() {
   const pathname = usePathname();
   const { active } = useProfiles();
+  const { status } = useAuth();
+  // Signed out: My List and Profile need an account, so the last tab is Sign In.
+  const tabs =
+    status === "anonymous"
+      ? [
+          ...TABS.slice(0, 3),
+          {
+            href: `/login?next=${encodeURIComponent(pathname)}`,
+            label: "Sign In",
+            icon: LogIn,
+            also: [] as string[],
+          },
+        ]
+      : TABS;
   return (
     <nav
       aria-label="Primary"
       className="bg-bg/92 fixed inset-x-0 bottom-0 z-50 border-t border-white/8 backdrop-blur-xl lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="grid h-16 grid-cols-5">
-        {TABS.map(({ href, label, icon: Icon, also }) => {
+      <ul className={cn("grid h-16", tabs.length === 5 ? "grid-cols-5" : "grid-cols-4")}>
+        {tabs.map(({ href, label, icon: Icon, also }) => {
           const current = [href, ...also].some((h) => pathname.startsWith(h));
           return (
             <li key={href}>

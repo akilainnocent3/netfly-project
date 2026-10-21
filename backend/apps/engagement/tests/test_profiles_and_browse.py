@@ -246,8 +246,8 @@ def test_new_and_popular_tabs(auth_api):
 
 
 def test_new_endpoints_require_auth(api, upcoming):
+    # New & Popular is browsable signed out (see catalog/tests/test_anonymous.py); actions are not.
     for method, url in [
-        ("get", "/api/v1/browse/new-and-popular"),
         ("get", "/api/v1/notifications"),
         ("put", f"/api/v1/reminders/{upcoming.pk}"),
         ("delete", "/api/v1/continue-watching/1"),

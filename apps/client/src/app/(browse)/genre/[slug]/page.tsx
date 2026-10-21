@@ -1,8 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { PublicPoster, PublicShell } from "@/components/public/public-shell";
-import { Button } from "@/components/ui/button";
+import { PageShell, TitleGrid } from "@/components/browse/title-grid";
 import { getPublicConfig } from "@/lib/server-config";
 import { JsonLd, publicGenre, siteName, siteUrl } from "@/lib/seo";
 
@@ -36,7 +35,10 @@ export async function generateMetadata({
   };
 }
 
-/** Public, crawlable genre directory page (signed-in viewers are sent to /categories/<slug>). */
+/**
+ * Crawlable genre page in the app's own design (header, cards, hover cards), server-rendered.
+ * Signed-in viewers are sent to /categories/<slug> (same grid, with sorting) by middleware.
+ */
 export default async function GenrePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const data = await load(slug);
@@ -54,37 +56,26 @@ export default async function GenrePage({ params }: { params: Promise<{ slug: st
     })),
   };
   return (
-    <PublicShell next={`/categories/${slug}`}>
+    <>
       <JsonLd data={list} />
-      <div className="px-[max(4vw,16px)] py-10 md:py-14">
-        <nav aria-label="Breadcrumb" className="text-meta text-muted mb-3">
-          <Link href="/" className="hover:text-white">
+      <PageShell title={`${row.title} films & series`}>
+        <nav aria-label="Breadcrumb" className="text-meta text-muted -mt-4 mb-6">
+          <Link href="/browse" className="hover:text-white">
             Home
+          </Link>
+          <span className="mx-1.5" aria-hidden>
+            ›
+          </span>
+          <Link href="/categories" className="hover:text-white">
+            Categories
           </Link>
           <span className="mx-1.5" aria-hidden>
             ›
           </span>
           <span aria-current="page">{row.title}</span>
         </nav>
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-          <h1 className="text-h1 font-bold">{row.title} films &amp; series</h1>
-          <Button asChild variant="accent">
-            <a href={`/signup?next=${encodeURIComponent(`/categories/${slug}`)}`}>Join now</a>
-          </Button>
-        </div>
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-          {row.items.map((t) => (
-            <li key={t.id}>
-              <PublicPoster
-                href={`/title/${t.slug}`}
-                title={t.title}
-                image={t.poster}
-                rank={t.top10_rank ?? undefined}
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
-    </PublicShell>
+        <TitleGrid items={row.items} />
+      </PageShell>
+    </>
   );
 }

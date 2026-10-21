@@ -8,13 +8,12 @@ from django.db.models import CharField, Count, F, Func, Prefetch, Q, Value
 from django.db.models.functions import Greatest
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.utils.cache import patch_cache_control
+from django.utils.cache import patch_cache_control, patch_vary_headers
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.accounts.permissions import IsViewer
 from apps.accounts.viewer import Viewer, viewer_for
 from apps.core.config import config
 from apps.core.throttling import throttle
@@ -58,13 +57,21 @@ def _public_cache(response: Response) -> Response:
         max_age=config.get_int("content.public_cache_seconds", 60),
         stale_while_revalidate=300,
     )
+    # A shared cache must never hand a signed-out response to a signed-in viewer (or vice versa).
+    patch_vary_headers(response, ("Authorization", "X-Profile"))
+    return response
+
+
+def _private(response: Response) -> Response:
+    response["Cache-Control"] = "private, no-store"
+    patch_vary_headers(response, ("Authorization", "X-Profile"))
     return response
 
 
 class HomeView(APIView):
-    """One page of the infinite home feed (rows of cards)."""
+    """One page of the infinite home feed. Signed out: the shared, non-personalised feed."""
 
-    permission_classes = [IsViewer]
+    throttle_classes = [throttle("security.rate_public", per_user=True)]
 
     @extend_schema(
         parameters=[TRANSLATION, CURSOR, OpenApiParameter("type", str, enum=["movie", "series"])],
@@ -97,8 +104,7 @@ class HomeView(APIView):
                 }
             )
         response = Response({"rows": out, "next": _cursor(page + 1) if more else None})
-        response["Cache-Control"] = "private, no-store"
-        return response
+        return _private(response) if who else _public_cache(response)
 
 
 class BillboardView(APIView):
@@ -121,9 +127,7 @@ class BillboardView(APIView):
                 data = self._build(mode, None, kind)
                 cache.set(ck, data, 60)
             return _public_cache(Response(data))
-        response = Response(self._build(mode, who, kind))
-        response["Cache-Control"] = "private, no-store"
-        return response
+        return _private(Response(self._build(mode, who, kind)))
 
     @staticmethod
     def _build(mode: str, who: Viewer | None, kind: str | None = None) -> list[dict]:
@@ -291,7 +295,14 @@ class TitlePageView(APIView):
         title = qs.filter(slug=slug).first()
         if title is None:
             raise NotFound("We couldn't find that title.")
-        viewer = None
+        # Signed out: the same Play target (first episode / the film) with no personal state;
+        # pressing it opens the sign-in gate client-side.
+        viewer = {
+            "in_my_list": False,
+            "rating": None,
+            "play": play_target(None, title),
+            "last_season": None,
+        }
         user = who
         if who:
             rating = (
@@ -322,13 +333,7 @@ class TitlePageView(APIView):
                 context={"viewer": viewer_state(who, [t.pk for t in similar]), "badges": badges},
             ).data,
         }
-        response = Response(data)
-        response["Cache-Control"] = (
-            "private, max-age=0"
-            if user
-            else f"public, max-age={config.get_int('content.public_cache_seconds', 60)}"
-        )
-        return response
+        return _private(Response(data)) if user else _public_cache(Response(data))
 
 
 class EpisodesView(APIView):
@@ -625,16 +630,14 @@ class UpcomingView(APIView):
         response = Response(
             s.UpcomingSerializer(titles, many=True, context={"reminded": reminded}).data
         )
-        if who:
-            response["Cache-Control"] = "private, no-store"
-            return response
-        return _public_cache(response)
+        return _private(response) if who else _public_cache(response)
 
 
 class NewAndPopularView(APIView):
-    """New & Popular tabs: Coming soon, Everyone's watching, Top 10 series, Top 10 films."""
+    """New & Popular tabs: Coming soon, Everyone's watching, Top 10 series, Top 10 films.
+    Signed out: the same lists without My List / ratings / reminders, cached publicly."""
 
-    permission_classes = [IsViewer]
+    throttle_classes = [throttle("security.rate_public", per_user=True)]
 
     @extend_schema(
         parameters=[TRANSLATION],
@@ -644,7 +647,18 @@ class NewAndPopularView(APIView):
     def get(self, request):
         who = viewer_for(request)
         mode = translation_mode(request)
-        visible = visible_titles(mode, who.kids)
+        if who is None:
+            ck = f"new-and-popular:{catalog_version()}:{mode}"
+            data = cache.get(ck)
+            if data is None:
+                data = self._build(None, mode)
+                cache.set(ck, data, 60)
+            return _public_cache(Response(data))
+        return _private(Response(self._build(who, mode)))
+
+    @staticmethod
+    def _build(who: Viewer | None, mode: str) -> dict:
+        visible = visible_titles(mode, bool(who and who.kids))
         trending = ("-trending", "-popularity", "-published_at", "pk")
         everyone = list(visible.order_by(*trending).values_list("pk", flat=True)[:20])
         series = list(
@@ -671,19 +685,15 @@ class NewAndPopularView(APIView):
             return out
 
         upcoming, reminded = _coming_soon(who)
-        response = Response(
-            {
-                "coming_soon": s.UpcomingSerializer(
-                    upcoming, many=True, context={"reminded": reminded, "viewer": state}
-                ).data,
-                "everyone_watching": s.TitleCardSerializer(
-                    [cards[pk] for pk in everyone if pk in cards],
-                    many=True,
-                    context={"viewer": state, "badges": badges},
-                ).data,
-                "top10_series": ranked(series),
-                "top10_films": ranked(films),
-            }
-        )
-        response["Cache-Control"] = "private, no-store"
-        return response
+        return {
+            "coming_soon": s.UpcomingSerializer(
+                upcoming, many=True, context={"reminded": reminded, "viewer": state}
+            ).data,
+            "everyone_watching": s.TitleCardSerializer(
+                [cards[pk] for pk in everyone if pk in cards],
+                many=True,
+                context={"viewer": state, "badges": badges},
+            ).data,
+            "top10_series": ranked(series),
+            "top10_films": ranked(films),
+        }

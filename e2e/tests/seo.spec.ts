@@ -31,7 +31,10 @@ test("a public title page is crawlable without signing in", async ({ page }) => 
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/title\/neon-tide$/);
   const types = (await jsonLd(page)).map((n) => n["@type"]);
   expect(types).toEqual(expect.arrayContaining(["Movie", "BreadcrumbList"]));
-  await expect(page.getByRole("link", { name: "Join to watch" })).toHaveAttribute("href", /\/signup\?next=/);
+  // One design: the same title view as the app, server-rendered. Play is a real link (the
+  // player needs an account: middleware sends crawlers / no-JS visitors to sign in).
+  await expect(page.getByRole("link", { name: /^Play/ }).first()).toHaveAttribute("href", "/watch/neon-tide");
+  expect(await page.locator('a[href^="/title/"]').count()).toBeGreaterThan(0);
 });
 
 test("unknown titles are real 404s", async ({ request }) => {
@@ -50,10 +53,23 @@ test("robots.txt and sitemap.xml describe the public site", async ({ request }) 
   expect(sitemap).not.toContain("/browse");
 });
 
-test("private pages redirect signed-out visitors and are marked noindex", async ({ request }) => {
-  const res = await request.get("/browse", { maxRedirects: 0 });
+test("private pages redirect signed-out visitors; app pages are open but noindex", async ({ request }) => {
+  const res = await request.get("/account", { maxRedirects: 0 });
   expect(res.status()).toBe(307);
-  expect(res.headers()["location"]).toContain("/login?next=%2Fbrowse");
+  expect(res.headers()["location"]).toContain("/login?next=%2Faccount");
+  const browse = await request.get("/browse", { maxRedirects: 0 });
+  expect(browse.status()).toBe(200);
+  expect(browse.headers()["x-robots-tag"]).toBe("noindex, nofollow");
+});
+
+test("a public genre page is crawlable, in the app's design", async ({ page }) => {
+  await page.route("**/*.js", (route) => route.abort());
+  const res = await page.goto("/genre/drama");
+  expect(res?.status()).toBe(200);
+  await expect(page.getByRole("heading", { level: 1, name: /films & series/ })).toBeVisible();
+  expect(await page.locator('a[href^="/title/"]').count()).toBeGreaterThan(0);
+  const types = (await jsonLd(page)).map((n) => n["@type"]);
+  expect(types).toContain("ItemList");
 });
 
 test("signed-in viewers get the app, not the public pages", async ({ page }) => {

@@ -1,4 +1,7 @@
+import datetime as dt
+
 import pytest
+from django.utils import timezone
 
 from apps.accounts.models import RefreshToken, User
 from apps.core.config import config
@@ -6,17 +9,20 @@ from apps.core.config import config
 pytestmark = pytest.mark.django_db
 
 
-def signup(api, username="new_viewer", password="long-enough-pw", app="client"):
+def signup(api, username="new_viewer", password="long-enough-pw", app="client", **extra):
     return api.post(
         "/api/v1/auth/signup",
         {"username": username, "full_name": "New Viewer", "password": password, "app": app},
         format="json",
+        **extra,
     )
 
 
-def refresh(api, app="client"):
+def refresh(api, app="client", **extra):
     csrf = api.cookies[f"netfly_csrf_{app}"].value
-    return api.post("/api/v1/auth/refresh", {"app": app}, format="json", HTTP_X_CSRF_TOKEN=csrf)
+    return api.post(
+        "/api/v1/auth/refresh", {"app": app}, format="json", HTTP_X_CSRF_TOKEN=csrf, **extra
+    )
 
 
 def test_signup_sets_httponly_refresh_cookie(api):
@@ -100,6 +106,7 @@ def test_login_rate_limit(api, user):
 
 
 def test_refresh_rotation_and_reuse_detection(api):
+    config.set("auth.refresh_reuse_grace_seconds", 0)  # strict: any reuse is theft
     signup(api)
     old_refresh = api.cookies["netfly_rt_client"].value
     first = refresh(api)
@@ -111,6 +118,37 @@ def test_refresh_rotation_and_reuse_detection(api):
     replay = refresh(api)
     assert replay.status_code == 401 and replay.json()["code"] == "refresh_reused"
     assert not RefreshToken.objects.filter(revoked_at__isnull=True).exists()
+
+
+def test_lost_refresh_response_is_forgiven_for_the_same_browser(api):
+    signup(api, HTTP_USER_AGENT="Browser/1")
+    old_refresh = api.cookies["netfly_rt_client"].value
+    assert refresh(api, HTTP_USER_AGENT="Browser/1").status_code == 200
+    # The new cookie never arrived (navigation aborted the response): the old one comes back.
+    api.cookies["netfly_rt_client"] = old_refresh
+    again = refresh(api, HTTP_USER_AGENT="Browser/1")
+    assert again.status_code == 200
+    assert not RefreshToken.objects.filter(revoked_at__isnull=False).exists()
+
+
+def test_reuse_from_another_browser_or_after_the_grace_window_revokes(api):
+    signup(api, HTTP_USER_AGENT="Browser/1")
+    old_refresh = api.cookies["netfly_rt_client"].value
+    assert refresh(api, HTTP_USER_AGENT="Browser/1").status_code == 200
+    api.cookies["netfly_rt_client"] = old_refresh
+    stolen = refresh(api, HTTP_USER_AGENT="Attacker/9")
+    assert stolen.status_code == 401 and stolen.json()["code"] == "refresh_reused"
+    assert not RefreshToken.objects.filter(revoked_at__isnull=True).exists()
+
+    signup(api, username="viewer_two", HTTP_USER_AGENT="Browser/1")
+    old_refresh = api.cookies["netfly_rt_client"].value
+    assert refresh(api, HTTP_USER_AGENT="Browser/1").status_code == 200
+    RefreshToken.objects.filter(used_at__isnull=False).update(
+        used_at=timezone.now() - dt.timedelta(seconds=61)
+    )
+    api.cookies["netfly_rt_client"] = old_refresh
+    late = refresh(api, HTTP_USER_AGENT="Browser/1")
+    assert late.status_code == 401 and late.json()["code"] == "refresh_reused"
 
 
 def test_refresh_requires_csrf(api):

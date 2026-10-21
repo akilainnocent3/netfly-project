@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { matchesPath, PRIVATE_PATHS } from "@/lib/routes";
+import { matchesPath, NOINDEX_PATHS, PRIVATE_PATHS } from "@/lib/routes";
+import { safeNext } from "@/lib/safe-next";
 
 const API = process.env.NETFLY_API_URL ?? "http://localhost:8000";
 
@@ -22,7 +23,7 @@ async function getMediaOrigins(): Promise<string> {
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const signedIn = request.cookies.has("netfly_csrf_client");
-  // /title/* and /genre/* stay public: signed-out visitors get crawlable, server-rendered pages.
+  // Browsing is open to everyone; only account pages (and the player) need a session.
   if (!signedIn && matchesPath(pathname, PRIVATE_PATHS)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -35,10 +36,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
   if (signedIn && (pathname === "/login" || pathname === "/signup" || pathname === "/")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/browse";
-    url.search = "";
-    return NextResponse.redirect(url);
+    // Already signed in: go where the visitor was headed (validated), else home.
+    const target = safeNext(request.nextUrl.searchParams.get("next"));
+    return NextResponse.redirect(new URL(target, request.url));
   }
 
   const nonce = btoa(crypto.randomUUID());
@@ -68,7 +68,7 @@ export async function middleware(request: NextRequest) {
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   // Belt and braces next to robots.txt: private pages must never show up in search results.
-  if (matchesPath(pathname, PRIVATE_PATHS))
+  if (matchesPath(pathname, NOINDEX_PATHS))
     response.headers.set("X-Robots-Tag", "noindex, nofollow");
   return response;
 }

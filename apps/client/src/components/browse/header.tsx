@@ -9,7 +9,8 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Logo } from "../brand/logo";
-import { IconButton } from "../ui/button";
+import { useAuth } from "../providers/auth";
+import { Button, IconButton } from "../ui/button";
 import { TranslationSwitcher } from "./translation-switcher";
 
 // The account menu (Radix) isn't needed for first paint: load it after hydration.
@@ -39,8 +40,15 @@ export function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** My List needs an account: it isn't offered to signed-out visitors. */
+export function navFor(signedIn: boolean) {
+  return signedIn ? NAV : NAV.filter((item) => item.href !== "/my-list");
+}
+
 export function Header() {
   const pathname = usePathname();
+  const { status } = useAuth();
+  const nav = navFor(status !== "anonymous");
   const [solid, setSolid] = useState(false);
   useEffect(() => {
     const onScroll = () => setSolid(window.scrollY > 24);
@@ -60,7 +68,7 @@ export function Header() {
       <div className="relative flex h-[var(--header-h)] items-center gap-4 px-[max(4vw,16px)] xl:gap-7">
         <Logo />
         <nav aria-label="Primary" className="hidden items-center gap-5 xl:flex">
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -77,12 +85,18 @@ export function Header() {
             </Link>
           ))}
         </nav>
-        <CompactNav pathname={pathname} />
+        <CompactNav pathname={pathname} nav={nav} />
         <div className="ml-auto flex items-center gap-1.5 md:gap-3">
           <TranslationSwitcher compact />
           <SearchBox />
-          <NotificationsBell />
-          <ProfileMenu />
+          {status === "anonymous" ? (
+            <SignInButton />
+          ) : (
+            <>
+              <NotificationsBell />
+              <ProfileMenu />
+            </>
+          )}
         </div>
       </div>
       <MobileChips pathname={pathname} />
@@ -123,9 +137,21 @@ function MobileChips({ pathname }: { pathname: string }) {
   );
 }
 
-/** Below xl the six destinations collapse into a "Browse" menu (phones use the tab bar). */
-function CompactNav({ pathname }: { pathname: string }) {
-  const current = NAV.find((item) => isActive(pathname, item.href));
+/** Signed out: the red Sign In button where the profile menu would be. Comes back here after. */
+function SignInButton() {
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const here = `${pathname}${params.size ? `?${params}` : ""}`;
+  return (
+    <Button asChild variant="accent" size="sm" className="h-8 rounded px-4 font-semibold">
+      <Link href={`/login?next=${encodeURIComponent(here)}`}>Sign In</Link>
+    </Button>
+  );
+}
+
+/** Below xl the destinations collapse into a "Browse" menu (phones use the tab bar). */
+function CompactNav({ pathname, nav }: { pathname: string; nav: typeof NAV }) {
+  const current = nav.find((item) => isActive(pathname, item.href));
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger className="text-meta hidden items-center gap-1 font-semibold text-white outline-none focus-visible:outline-2 focus-visible:outline-white md:flex xl:hidden">
@@ -137,7 +163,7 @@ function CompactNav({ pathname }: { pathname: string }) {
           sideOffset={14}
           className="z-[70] w-60 border-t-2 border-white bg-black/90 py-2 text-center shadow-2xl"
         >
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <DropdownMenu.Item key={item.href} asChild>
               <Link
                 href={item.href}
