@@ -31,6 +31,13 @@ urlpatterns = [
     path("title-picker", cv.TitlePickerView.as_view(), name="admin-title-picker"),
     path("dashboard", pv.DashboardView.as_view(), name="admin-dashboard"),
     path("billing/stats", bv.BillingStatsView.as_view(), name="admin-billing-stats"),
+    path(
+        "testing/payments/<uuid:payment_id>/simulate",
+        bv.SimulatePaymentView.as_view(),
+        name="admin-simulate-payment",
+    ),
+    path("payments/test", cfg.PaymentsTestView.as_view(), name="admin-payments-test"),
+    path("testing/run-renewals", bv.RunRenewalsView.as_view(), name="admin-run-renewals"),
     path("config", cfg.ConfigListView.as_view(), name="admin-config"),
     path("config/<str:key>", cfg.ConfigEntryView.as_view(), name="admin-config-entry"),
     path("config/<str:key>/history", cfg.ConfigHistoryView.as_view(), name="admin-config-history"),

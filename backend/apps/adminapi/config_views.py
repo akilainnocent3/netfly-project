@@ -459,3 +459,51 @@ class OutboxView(APIView):
         response = Response(outbox.read(kind, to))
         response["Cache-Control"] = "no-store"
         return response
+
+
+class PaymentsTestView(APIView):
+    """Settings → Payments: [Test API key] (lists one payment) and the webhook URL to give
+    Snippe."""
+
+    permission_classes = [SuperadminOnly]
+
+    @extend_schema(
+        request=None,
+        responses=inline_serializer(
+            "PaymentsTestResult",
+            {
+                "ok": serializers.BooleanField(),
+                "message": serializers.CharField(),
+                "webhook_url": serializers.CharField(),
+            },
+        ),
+        operation_id="admin_payments_test",
+    )
+    def post(self, request):
+        from apps.billing import payments as pay
+        from apps.billing import snippe
+
+        url = pay.webhook_url(request)
+        try:
+            message = snippe.test_connection()
+            ok = True
+        except snippe.SnippeError as exc:
+            message, ok = exc.message, False
+        return Response({"ok": ok, "message": message, "webhook_url": url})
+
+    @extend_schema(
+        responses=inline_serializer(
+            "WebhookUrl",
+            {"webhook_url": serializers.CharField(), "configured": serializers.BooleanField()},
+        ),
+        operation_id="admin_payments_webhook_url",
+    )
+    def get(self, request):
+        from apps.billing import payments as pay
+
+        return Response(
+            {
+                "webhook_url": pay.webhook_url(request),
+                "configured": bool(config.get_str("payments.webhook_public_url")),
+            }
+        )

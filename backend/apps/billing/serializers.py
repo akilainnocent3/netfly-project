@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Plan, Subscription, UsageAdjustment
+from .models import Payment, Plan, Subscription, UsageAdjustment
 
 
 class PlanSerializer(serializers.ModelSerializer):
@@ -88,8 +88,14 @@ class UsagePlanSerializer(serializers.Serializer):
     is_free = serializers.BooleanField()
 
 
+class NoticeSerializer(serializers.Serializer):
+    text = serializers.CharField()
+    at = serializers.DateTimeField()
+
+
 class UsageSnapshotSerializer(serializers.Serializer):
     plan = UsagePlanSerializer()
+    notice = NoticeSerializer(allow_null=True)
     exempt = serializers.BooleanField()
     allowed = serializers.BooleanField()
     limit_reached = serializers.ChoiceField(choices=UsageAdjustment.Scope.choices, allow_null=True)
@@ -190,3 +196,51 @@ class CheckoutSerializer(serializers.Serializer):
     amount_tzs = serializers.IntegerField()
     payment_phone = serializers.CharField(allow_blank=True)
     payment_network = serializers.CharField(allow_null=True)
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(source="public_id", read_only=True)
+    plan = serializers.CharField(source="plan.name", read_only=True)
+    plan_slug = serializers.CharField(source="plan.slug", read_only=True)
+    phone_masked = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Payment
+        fields = [
+            "id",
+            "reference",
+            "status",
+            "purpose",
+            "plan",
+            "plan_slug",
+            "amount",
+            "currency",
+            "phone_masked",
+            "network",
+            "failure_reason",
+            "expires_at",
+            "completed_at",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+    def get_phone_masked(self, obj) -> str:
+        from apps.accounts.phone import masked
+
+        return masked(obj.phone)
+
+
+class CheckoutStartSerializer(serializers.Serializer):
+    plan = serializers.SlugField()
+    trial = serializers.BooleanField(default=False, required=False)
+    phone = serializers.CharField(required=False, allow_blank=True, max_length=20)
+
+
+class CheckoutStartResultSerializer(serializers.Serializer):
+    kind = serializers.ChoiceField(choices=["trial", "payment"])
+    payment = PaymentSerializer(allow_null=True)
+    subscription = SubscriptionSerializer()
+
+
+class PhoneOverrideSerializer(serializers.Serializer):
+    phone = serializers.CharField(required=False, allow_blank=True, max_length=20)

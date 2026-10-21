@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@netfly/ui";
+import { Check } from "lucide-react";
 import { forwardRef } from "react";
 import { COUNTRIES, NETWORKS, networkOf, normalizePhone, type Network } from "@/lib/phone";
 import { LightField } from "../ui/light-field";
@@ -19,14 +20,16 @@ export function NetworkChip({
   return (
     <span
       data-testid={`network-${network}`}
+      aria-current={selected || undefined}
       className={cn(
-        "text-meta inline-flex h-8 items-center gap-2 rounded-full border bg-white px-3 font-semibold text-[#333]",
-        selected ? "border-[#333]" : "border-[#d6d6d6]",
+        "text-meta inline-flex h-8 items-center gap-2 rounded-full border bg-white px-3 font-semibold text-[#333] transition-colors duration-150",
+        selected ? "border-2 border-[#333]" : "border-[#d6d6d6] font-normal text-[#595959]",
         className,
       )}
     >
       <span aria-hidden className="size-2.5 rounded-full" style={{ background: meta.color }} />
       {meta.label}
+      {selected ? <Check aria-hidden className="size-3.5" strokeWidth={3} /> : null}
     </span>
   );
 }
@@ -46,6 +49,8 @@ export const PhoneField = forwardRef<
     label?: string;
     autoFocus?: boolean;
     disabled?: boolean;
+    /** The detected network chip under the field (off where a network list is shown). */
+    showNetwork?: boolean;
   }
 >(function PhoneField(
   {
@@ -57,6 +62,7 @@ export const PhoneField = forwardRef<
     label = "Mobile number",
     autoFocus,
     disabled,
+    showNetwork = true,
   },
   ref,
 ) {
@@ -99,9 +105,11 @@ export const PhoneField = forwardRef<
           </label>
         }
       />
-      <div className="mt-3 min-h-8" aria-live="polite">
-        {network ? <NetworkChip network={network} selected /> : null}
-      </div>
+      {showNetwork ? (
+        <div className="mt-3 min-h-8" aria-live="polite">
+          {network ? <NetworkChip network={network} selected /> : null}
+        </div>
+      ) : null}
     </div>
   );
 });

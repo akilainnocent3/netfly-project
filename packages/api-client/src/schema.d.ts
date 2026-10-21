@@ -474,6 +474,30 @@ export interface paths {
         patch: operations["admin_legal_update"];
         trace?: never;
     };
+    "/api/v1/admin/payments/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Settings → Payments: [Test API key] (lists one payment) and the webhook URL to give
+         *     Snippe.
+         */
+        get: operations["admin_payments_webhook_url"];
+        put?: never;
+        /**
+         * @description Settings → Payments: [Test API key] (lists one payment) and the webhook URL to give
+         *     Snippe.
+         */
+        post: operations["admin_payments_test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/plans": {
         parameters: {
             query?: never;
@@ -855,6 +879,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/subscribers/{id}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Members with their plan, status, period and usage; staff actions are audited. */
+        get: operations["admin_subscriber_payments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/subscribers/{id}/reset-usage": {
         parameters: {
             query?: never;
@@ -883,6 +924,43 @@ export interface paths {
         get: operations["admin_outbox"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/testing/payments/{payment_id}/simulate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Test mode only: settle a simulated (mock_…) payment as if Snippe's webhook arrived. */
+        post: operations["admin_simulate_payment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/testing/run-renewals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Test mode only: run the renewal job and the reconcile poll now — or as of `at` — instead of
+         *     waiting for the beat (every few minutes) and the calendar.
+         */
+        post: operations["admin_run_renewals"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1529,6 +1607,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/billing/checkout/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Start the free trial (no charge) or push the plan's payment request to the phone.
+         *     The amount comes from the plan on the server; a second tap returns the pending request.
+         */
+        post: operations["billing_checkout_start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/billing/membership": {
         parameters: {
             query?: never;
@@ -1539,6 +1637,76 @@ export interface paths {
         get: operations["billing_membership"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/notice/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["billing_notice_dismiss"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Payment history (Account → Membership). */
+        get: operations["billing_payments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/payments/{payment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Polled every few seconds by "Check your phone" (reads our DB, kept fresh by the
+         *     webhook and the reconcile job).
+         */
+        get: operations["billing_payment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/payments/{payment_id}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description A new request (new idempotency key) for the same plan, optionally to another number. */
+        post: operations["billing_payment_resend"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1576,6 +1744,23 @@ export interface paths {
         get: operations["billing_plans"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/renew-now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Account → Renew now: pay the next period at once (past due, grace, or early). */
+        post: operations["billing_renew_now"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2319,6 +2504,23 @@ export interface components {
             payment_phone: string;
             payment_network: string | null;
         };
+        CheckoutStartRequest: {
+            plan: string;
+            /** @default false */
+            trial: boolean;
+            phone?: string;
+        };
+        CheckoutStartResult: {
+            kind: components["schemas"]["CheckoutStartResultKindEnum"];
+            payment: components["schemas"]["Payment"] | null;
+            subscription: components["schemas"]["Subscription"];
+        };
+        /**
+         * @description * `trial` - trial
+         *     * `payment` - payment
+         * @enum {string}
+         */
+        CheckoutStartResultKindEnum: "trial" | "payment";
         ChoosePlanRequest: {
             plan: string;
             /** @default false */
@@ -2597,6 +2799,7 @@ export interface components {
         };
         HeartbeatResponse: {
             plan: components["schemas"]["UsagePlan"];
+            notice: components["schemas"]["Notice"] | null;
             exempt: boolean;
             allowed: boolean;
             limit_reached: (components["schemas"]["UsageScopeEnum"] | components["schemas"]["NullEnum"]) | null;
@@ -2741,6 +2944,11 @@ export interface components {
             synopsis: string;
             thumbnail: components["schemas"]["ImageRef"] | null;
         };
+        Notice: {
+            text: string;
+            /** Format: date-time */
+            at: string;
+        };
         Notification: {
             id: string;
             kind: components["schemas"]["NotificationKindEnum"];
@@ -2770,6 +2978,13 @@ export interface components {
             subject: string;
             body: string;
         };
+        /**
+         * @description * `completed` - completed
+         *     * `failed` - failed
+         *     * `expired` - expired
+         * @enum {string}
+         */
+        OutcomeEnum: "completed" | "failed" | "expired";
         PaginatedAdminUserList: {
             /** @example 123 */
             count: number;
@@ -3011,6 +3226,44 @@ export interface components {
             autoplay_previews?: boolean;
             subtitles_language?: string;
         };
+        Payment: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly reference: string | null;
+            readonly status: components["schemas"]["PaymentStatusEnum"];
+            readonly purpose: components["schemas"]["PurposeEnum"];
+            readonly plan: string;
+            readonly plan_slug: string;
+            readonly amount: number;
+            readonly currency: string;
+            readonly phone_masked: string;
+            readonly network: string;
+            readonly failure_reason: string;
+            /** Format: date-time */
+            readonly expires_at: string | null;
+            /** Format: date-time */
+            readonly completed_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `created` - Created
+         *     * `pending` - Pending
+         *     * `completed` - Completed
+         *     * `failed` - Failed
+         *     * `voided` - Voided
+         *     * `expired` - Expired
+         * @enum {string}
+         */
+        PaymentStatusEnum: "created" | "pending" | "completed" | "failed" | "voided" | "expired";
+        PaymentsTestResult: {
+            ok: boolean;
+            message: string;
+            webhook_url: string;
+        };
+        PhoneOverrideRequest: {
+            phone?: string;
+        };
         Plan: {
             readonly id: number;
             readonly slug: string;
@@ -3149,6 +3402,14 @@ export interface components {
             };
         };
         /**
+         * @description * `signup` - Signup
+         *     * `trial_conversion` - Trial Conversion
+         *     * `renewal` - Renewal
+         *     * `upgrade` - Upgrade
+         * @enum {string}
+         */
+        PurposeEnum: "signup" | "trial_conversion" | "renewal" | "upgrade";
+        /**
          * @description * `4K` - 4K
          *     * `HD` - HD
          * @enum {string}
@@ -3220,6 +3481,17 @@ export interface components {
             avg_bandwidth: number;
             codecs: string;
             codec?: string;
+        };
+        RenewalRun: {
+            charged: number;
+            reminded: number;
+            grace: number;
+            ended: number;
+            reconciled: number;
+        };
+        RenewalRunRequestRequest: {
+            /** Format: date-time */
+            at?: string;
         };
         ReorderRequest: {
             ids: number[];
@@ -3321,6 +3593,9 @@ export interface components {
             password: string;
             /** @default client */
             app: components["schemas"]["AppEnum"];
+        };
+        SimulatePaymentRequestRequest: {
+            outcome: components["schemas"]["OutcomeEnum"];
         };
         Sitemap: {
             titles: components["schemas"]["SitemapTitle"][];
@@ -3800,6 +4075,7 @@ export interface components {
         UsageScopeEnum: "day" | "week" | "month";
         UsageSnapshot: {
             plan: components["schemas"]["UsagePlan"];
+            notice: components["schemas"]["Notice"] | null;
             exempt: boolean;
             allowed: boolean;
             limit_reached: (components["schemas"]["UsageScopeEnum"] | components["schemas"]["NullEnum"]) | null;
@@ -3938,6 +4214,10 @@ export interface components {
             rating: number | null;
             play: components["schemas"]["PlayTarget"] | null;
             last_season: number | null;
+        };
+        WebhookUrl: {
+            webhook_url: string;
+            configured: boolean;
         };
     };
     responses: never;
@@ -5061,6 +5341,44 @@ export interface operations {
             };
         };
     };
+    admin_payments_webhook_url: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookUrl"];
+                };
+            };
+        };
+    };
+    admin_payments_test: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentsTestResult"];
+                };
+            };
+        };
+    };
     admin_plans_list: {
         parameters: {
             query?: never;
@@ -5815,6 +6133,28 @@ export interface operations {
             };
         };
     };
+    admin_subscriber_payments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this user. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Payment"][];
+                };
+            };
+        };
+    };
     admin_subscriber_reset_usage: {
         parameters: {
             query?: never;
@@ -5860,6 +6200,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OutboxMessage"][];
+                };
+            };
+        };
+    };
+    admin_simulate_payment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimulatePaymentRequestRequest"];
+                "multipart/form-data": components["schemas"]["SimulatePaymentRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Payment"];
+                };
+            };
+        };
+    };
+    admin_run_renewals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RenewalRunRequestRequest"];
+                "multipart/form-data": components["schemas"]["RenewalRunRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RenewalRun"];
                 };
             };
         };
@@ -6898,6 +7288,30 @@ export interface operations {
             };
         };
     };
+    billing_checkout_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckoutStartRequest"];
+                "multipart/form-data": components["schemas"]["CheckoutStartRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutStartResult"];
+                };
+            };
+        };
+    };
     billing_membership: {
         parameters: {
             query?: never;
@@ -6913,6 +7327,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Membership"];
+                };
+            };
+        };
+    };
+    billing_notice_dismiss: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    billing_payments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Payment"][];
+                };
+            };
+        };
+    };
+    billing_payment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Payment"];
+                };
+            };
+        };
+    };
+    billing_payment_resend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PhoneOverrideRequest"];
+                "multipart/form-data": components["schemas"]["PhoneOverrideRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Payment"];
                 };
             };
         };
@@ -6956,6 +7454,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlansResponse"];
+                };
+            };
+        };
+    };
+    billing_renew_now: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PhoneOverrideRequest"];
+                "multipart/form-data": components["schemas"]["PhoneOverrideRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Payment"];
                 };
             };
         };

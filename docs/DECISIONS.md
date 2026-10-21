@@ -176,6 +176,32 @@ Ambiguities in the build brief, the option chosen, and why.
     outbox that only superadmins can read in Studio for an hour. It exists for staging and the e2e suite;
     Studio shows a warning while it's on.
 
+## Payments, trials and renewals (Snippe mobile money)
+
+44. **One funnel for every payment status.** Webhook, reconcile poll and Studio's test simulator all call
+    `payments.settle()`, which locks the payment row, never moves a completed payment, and applies the
+    subscription change exactly once (`applied_at`). Duplicate or late webhooks are harmless; every
+    delivery is stored in `PaymentEvent` (rejected ones too) and de-duplicated by event id.
+45. **Webhooks are verified, answered fast and processed by Celery.** HMAC-SHA256 of
+    `"{X-Webhook-Timestamp}.{raw body}"` with the `whsec_` secret, constant-time compared, rejected when
+    older than five minutes; the view stores the event, answers `OK` and enqueues the work. A reconcile
+    task polls pending payments every two minutes (a lost webhook) and expires stale requests.
+46. **Amounts only come from the server-side plan** (× `payments.amount_multiplier`, Snippe's
+    "smallest unit"), never from the client. Each attempt has its own `Idempotency-Key` (≤ 30 chars);
+    5xx / PAY_001 are retried with backoff under the same key, so a retry never double-charges. A second
+    tap on Pay returns the request that is already pending.
+47. **Subscription state machine.** Free trial: the plan's limits at once, no charge, `trialing` until
+    `trial_end`. Renewal: at `period_end − renewal_lead_hours` (trials: at `trial_end`) an SMS reminder
+    and a push; attempts at `retry_schedule_hours`; a completed renewal extends from the *previous*
+    period end (no drift); unpaid at the end → `grace` (limits kept) for `grace_days` → the free plan
+    (`expired`) with an SMS and a one-time in-app notice. Cancel = auto-renew off (kept to the end).
+    Upgrade = charge now, new period from payment; downgrade = scheduled for the period end. Every change
+    is audit-logged; the job locks each subscription so overlapping beats never double-charge.
+48. **Test mode settles payments with signed webhooks.** With `testing.mock_providers` on, Snippe isn't
+    called (`mock_…` references); the e2e suite signs webhooks with a known secret and posts them to the
+    real public endpoint, and Studio can settle simulated payments and run the renewal job "as of" a
+    later time. None of this is reachable with test mode off.
+
 ## Resilience
 
 32. **Errors are contained where they happen:** each home row and the hero have their own error boundary

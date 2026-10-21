@@ -7,7 +7,7 @@ import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-quer
 import { Search, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/providers/auth";
-import { useConfirm } from "@/components/ui/actions";
+import { useAction, useConfirm } from "@/components/ui/actions";
 import {
   Badge,
   Button,
@@ -254,6 +254,14 @@ function SubscriberDrawer({
       unwrap(api.GET("/api/v1/admin/subscribers/{id}", { params: { path: { id: id! } } })),
   });
   const d = detail.data;
+  const config = useQuery({
+    queryKey: ["config"],
+    queryFn: () => unwrap(api.GET("/api/v1/admin/config")),
+    enabled: writable,
+  });
+  const testMode = !!config.data
+    ?.flatMap((g) => g.entries)
+    .find((e) => e.key === "testing.mock_providers")?.value;
 
   type ActionPath =
     | "/api/v1/admin/subscribers/{id}/change-plan"
@@ -379,6 +387,8 @@ function SubscriberDrawer({
                   </ul>
                 )}
               </section>
+
+              <PaymentsSection id={d.id} testMode={testMode} />
 
               {writable && (
                 <section className="space-y-4">
@@ -581,5 +591,89 @@ function Item({ label, children }: { label: string; children: React.ReactNode })
       <dt className="text-subtle text-[12px]">{label}</dt>
       <dd className="mt-0.5 flex flex-wrap items-center gap-1.5">{children}</dd>
     </div>
+  );
+}
+
+const PAYMENT_TONE: Record<string, "neutral" | "green" | "amber" | "red"> = {
+  completed: "green",
+  pending: "amber",
+  created: "amber",
+  failed: "red",
+  expired: "neutral",
+  voided: "neutral",
+};
+
+/** The member's mobile-money requests; in test mode, simulated ones can be settled here. */
+function PaymentsSection({ id, testMode }: { id: number; testMode: boolean }) {
+  const queryClient = useQueryClient();
+  const payments = useQuery({
+    queryKey: ["subscriber-payments", id],
+    queryFn: () =>
+      unwrap(api.GET("/api/v1/admin/subscribers/{id}/payments", { params: { path: { id } } })),
+  });
+  const simulate = useAction(
+    async (paymentId: string, outcome: "completed" | "failed") => {
+      await unwrap(
+        api.POST("/api/v1/admin/testing/payments/{payment_id}/simulate", {
+          params: { path: { payment_id: paymentId } },
+          body: { outcome },
+        }),
+      );
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["subscriber-payments", id] }),
+        queryClient.invalidateQueries({ queryKey: ["subscriber", id] }),
+        queryClient.invalidateQueries({ queryKey: ["subscribers"] }),
+      ]);
+    },
+    { success: "Payment settled (simulated)" },
+  );
+  return (
+    <section>
+      <h3 className="text-subtle mb-2 text-[12px] font-medium tracking-wider uppercase">
+        Payments
+      </h3>
+      {!payments.data ? (
+        <Skeleton className="h-16" />
+      ) : payments.data.length === 0 ? (
+        <p className="text-muted text-[12.5px]">No payments yet.</p>
+      ) : (
+        <ul className="divide-line border-line divide-y rounded-md border">
+          {payments.data.map((p) => (
+            <li key={p.id} className="flex flex-wrap items-center gap-2 px-3 py-2 text-[12.5px]">
+              <span className="tabular text-subtle w-20">
+                {new Date(p.created_at).toLocaleDateString()}
+              </span>
+              <span className="min-w-0 flex-1 truncate">
+                {p.plan} · {p.purpose.replace("_", " ")} · {p.phone_masked}
+                {p.failure_reason ? (
+                  <span className="text-muted"> — {p.failure_reason}</span>
+                ) : null}
+              </span>
+              <span className="tabular">TSh {p.amount.toLocaleString()}</span>
+              <Badge tone={PAYMENT_TONE[p.status] ?? "neutral"}>{p.status}</Badge>
+              {testMode && p.status === "pending" && p.reference?.startsWith("mock_") ? (
+                <span className="flex gap-1">
+                  <Button
+                    size="sm"
+                    loading={simulate.pending}
+                    onClick={() => void simulate.run(p.id, "completed")}
+                  >
+                    Complete
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={simulate.pending}
+                    onClick={() => void simulate.run(p.id, "failed")}
+                  >
+                    Fail
+                  </Button>
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

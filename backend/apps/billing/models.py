@@ -8,6 +8,8 @@ so editing a plan in Studio applies to everyone on it at once.
 
 from __future__ import annotations
 
+import uuid
+
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
@@ -92,6 +94,9 @@ class Subscription(models.Model):
     next_retry_at = models.DateTimeField(null=True, blank=True)
     grace_until = models.DateTimeField(null=True, blank=True)
     reminder_sent_for = models.DateTimeField(null=True, blank=True)
+    # A one-time in-app notice ("Your Pendwa plan ended…"), shown until dismissed.
+    notice = models.CharField(max_length=300, blank=True)
+    notice_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -183,3 +188,89 @@ class TrialClaim(models.Model):
 
     def __str__(self) -> str:
         return f"trial:{self.user_id}:{self.plan_id}"
+
+
+class Payment(models.Model):
+    """One mobile-money push (USSD) request. The amount always comes from the server-side plan."""
+
+    class Purpose(models.TextChoices):
+        SIGNUP = "signup"
+        TRIAL_CONVERSION = "trial_conversion"
+        RENEWAL = "renewal"
+        UPGRADE = "upgrade"
+
+    class Status(models.TextChoices):
+        CREATED = "created"  # before the provider answered
+        PENDING = "pending"
+        COMPLETED = "completed"
+        FAILED = "failed"
+        VOIDED = "voided"
+        EXPIRED = "expired"
+
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    reference = models.CharField(max_length=80, unique=True, null=True, blank=True)
+    idempotency_key = models.CharField(max_length=30, unique=True)
+    provider = models.CharField(max_length=20, default="snippe")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="payments"
+    )
+    subscription = models.ForeignKey(
+        Subscription, on_delete=models.PROTECT, related_name="payments"
+    )
+    plan = models.ForeignKey(Plan, on_delete=models.PROTECT, related_name="payments")
+    purpose = models.CharField(max_length=20, choices=Purpose.choices)
+    amount = models.PositiveIntegerField()  # TZS
+    currency = models.CharField(max_length=3, default="TZS")
+    phone = models.CharField(max_length=15)
+    network = models.CharField(max_length=20, blank=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.CREATED)
+    failure_reason = models.CharField(max_length=300, blank=True)
+    raw = models.JSONField(default=dict, blank=True)
+    attempt = models.PositiveSmallIntegerField(default=1)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    # Set once the subscription change for a completed payment has been made (idempotency).
+    applied_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["status", "created_at"]),
+            models.Index(fields=["subscription", "status"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.reference or self.public_id}:{self.status}"
+
+    @property
+    def is_final(self) -> bool:
+        return self.status in FINAL_PAYMENT_STATUSES
+
+
+FINAL_PAYMENT_STATUSES = {
+    Payment.Status.COMPLETED,
+    Payment.Status.FAILED,
+    Payment.Status.VOIDED,
+    Payment.Status.EXPIRED,
+}
+
+
+class PaymentEvent(models.Model):
+    """Every webhook delivery, kept for audit (valid or not). Duplicate event ids are ignored."""
+
+    event_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    type = models.CharField(max_length=40, blank=True)
+    reference = models.CharField(max_length=80, blank=True, db_index=True)
+    payload = models.JSONField(default=dict, blank=True)
+    signature_valid = models.BooleanField(default=False)
+    received_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    error = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        ordering = ["-received_at"]
+
+    def __str__(self) -> str:
+        return f"{self.type}:{self.reference}"

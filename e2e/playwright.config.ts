@@ -11,6 +11,7 @@ const channel = process.env.NETFLY_E2E_CHANNEL || undefined;
 export default defineConfig({
   testDir: "./tests",
   globalSetup: "./global-setup.ts",
+  globalTeardown: "./global-teardown.ts",
   timeout: 60_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,

@@ -1,48 +1,18 @@
 import type { Page } from "@playwright/test";
 import {
-  adminToken,
   completeSignupSteps,
   createAccount,
   expect,
-  setConfig,
+  outboxCode,
   signUp,
   submitSignIn,
   test,
   uniqueName,
+  uniquePhone,
 } from "./helpers";
 
-// Providers are simulated (testing.mock_providers): codes are read from Studio's test outbox.
-const ADMIN = process.env.NETFLY_ADMIN_URL ?? "http://localhost:3001";
+// Providers are simulated for the run (global-setup): codes are read from Studio's test outbox.
 test.describe.configure({ mode: "serial" });
-test.beforeAll(async () => {
-  await setConfig("testing.mock_providers", true);
-  // Every e2e request comes from one IP: lift the per-IP code limit (10/hour) for this file.
-  await setConfig("security.rate_otp_send", "500/hour");
-});
-test.afterAll(async () => {
-  await setConfig("testing.mock_providers", false);
-  await setConfig("security.rate_otp_send", "10/hour");
-});
-
-async function outboxCode(kind: "sms" | "email", to: string): Promise<string> {
-  const token = await adminToken();
-  for (let i = 0; i < 20; i++) {
-    const res = await fetch(
-      `${ADMIN}/api/v1/admin/testing/outbox?kind=${kind}&to=${encodeURIComponent(to)}`,
-      { headers: { Authorization: `Bearer ${token}` } },
-    );
-    const messages = (await res.json()) as Array<{ body: string }>;
-    const match = messages[0]?.body.match(/\b(\d{6})\b/);
-    if (match) return match[1]!;
-    await new Promise((r) => setTimeout(r, 250));
-  }
-  throw new Error(`no ${kind} code for ${to}`);
-}
-
-/** A unique Tanzanian Mixx number (071…). */
-function uniquePhone(): string {
-  return `071${String(Date.now()).slice(-7)}`;
-}
 
 /** Android Chrome's WebOTP, simulated: the page's request resolves when the "SMS" arrives. */
 async function stubWebOtp(page: Page) {

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import datetime as dt
+
 from django.core.cache import cache
 from django.db import transaction
+from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,17 +17,22 @@ from apps.core.config import config
 from apps.core.exceptions import APIError
 from apps.core.throttling import throttle
 
+from . import payments as pay
 from . import plans as plan_service
 from . import usage
-from .models import Plan, Subscription
+from .models import Payment, Plan, Subscription
 from .serializers import (
     AutoRenewSerializer,
     CheckoutSerializer,
+    CheckoutStartResultSerializer,
+    CheckoutStartSerializer,
     ChoosePlanResultSerializer,
     ChoosePlanSerializer,
     HeartbeatRequestSerializer,
     HeartbeatResponseSerializer,
     MembershipSerializer,
+    PaymentSerializer,
+    PhoneOverrideSerializer,
     PlanSerializer,
     PlansResponseSerializer,
     SubscriptionSerializer,
@@ -298,3 +306,211 @@ class HeartbeatView(APIView):
         response = Response(snap)
         response["Cache-Control"] = "private, no-store"
         return response
+
+
+def _payment_error(exc: pay.PaymentError):
+    raise APIError(exc.message, exc.code, exc.status) from exc
+
+
+def _no_store(response: Response) -> Response:
+    response["Cache-Control"] = "private, no-store"
+    return response
+
+
+class CheckoutStartView(APIView):
+    """Start the free trial (no charge) or push the plan's payment request to the phone.
+    The amount comes from the plan on the server; a second tap returns the pending request."""
+
+    permission_classes = [IsViewer]
+    throttle_classes = [throttle("security.rate_payment", per_user=True)]
+
+    @extend_schema(
+        request=CheckoutStartSerializer,
+        responses=CheckoutStartResultSerializer,
+        operation_id="billing_checkout_start",
+    )
+    def post(self, request):
+        data = CheckoutStartSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        user = request.user
+        plan = Plan.objects.filter(
+            slug=data.validated_data["plan"], is_active=True, is_free=False
+        ).first()
+        if plan is None:
+            raise APIError("Choose a paid plan first.", "not_found", 404)
+        trial = bool(data.validated_data.get("trial"))
+        if trial and not trial_eligible(user, plan):
+            raise APIError(
+                "A free trial isn't available on this account.", "trial_unavailable", 409
+            )
+        left = [s for s in steps_for(user, plan, trial=trial) if s in ("email", "phone")]
+        if left:
+            raise APIError(
+                "Please verify your email and phone number first.",
+                "verification_required",
+                409,
+                extra={"steps": left},
+            )
+        try:
+            phone = pay.payment_phone(data.validated_data.get("phone"), user)
+            if trial:
+                sub = pay.start_trial(user, plan, phone=phone, ip=client_ip(request))
+                return _no_store(
+                    Response(
+                        {
+                            "kind": "trial",
+                            "payment": None,
+                            "subscription": SubscriptionSerializer(sub).data,
+                        },
+                        status=201,
+                    )
+                )
+            sub = plan_service.ensure_subscription(user)
+            if sub.plan_id == plan.pk and sub.status in (Subscription.Status.ACTIVE,):
+                raise APIError("You're already on this plan.", "already_subscribed", 409)
+            pending = Payment.objects.filter(
+                user=user,
+                plan=plan,
+                status=Payment.Status.PENDING,
+                purpose__in=[Payment.Purpose.SIGNUP, Payment.Purpose.UPGRADE],
+                phone=phone,
+                expires_at__gt=timezone.now(),
+                created_at__gt=timezone.now()
+                - dt.timedelta(seconds=config.get_int("payments.approve_timeout_seconds", 120)),
+            ).first()
+            payment = pending or pay.begin_payment(
+                user, plan, purpose=pay.purpose_for(sub, plan), phone=phone, request=request
+            )
+        except pay.PaymentError as exc:
+            _payment_error(exc)
+        return _no_store(
+            Response(
+                {
+                    "kind": "payment",
+                    "payment": PaymentSerializer(payment).data,
+                    "subscription": SubscriptionSerializer(
+                        plan_service.ensure_subscription(user)
+                    ).data,
+                },
+                status=201,
+            )
+        )
+
+
+def _own_payment(request, payment_id) -> Payment:
+    payment = (
+        Payment.objects.select_related("plan")
+        .filter(public_id=payment_id, user=request.user)
+        .first()
+    )
+    if payment is None:
+        raise APIError("Payment not found.", "not_found", 404)
+    return payment
+
+
+class PaymentStatusView(APIView):
+    """Polled every few seconds by "Check your phone" (reads our DB, kept fresh by the
+    webhook and the reconcile job)."""
+
+    permission_classes = [IsViewer]
+
+    @extend_schema(responses=PaymentSerializer, operation_id="billing_payment")
+    def get(self, request, payment_id):
+        return _no_store(Response(PaymentSerializer(_own_payment(request, payment_id)).data))
+
+
+class PaymentResendView(APIView):
+    """A new request (new idempotency key) for the same plan, optionally to another number."""
+
+    permission_classes = [IsViewer]
+    throttle_classes = [throttle("security.rate_payment", per_user=True)]
+
+    @extend_schema(
+        request=PhoneOverrideSerializer,
+        responses=PaymentSerializer,
+        operation_id="billing_payment_resend",
+    )
+    def post(self, request, payment_id):
+        old = _own_payment(request, payment_id)
+        if old.status == Payment.Status.COMPLETED:
+            raise APIError("This payment is already complete.", "conflict", 409)
+        data = PhoneOverrideSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        try:
+            phone = pay.payment_phone(data.validated_data.get("phone") or old.phone, request.user)
+            payment = pay.begin_payment(
+                request.user,
+                old.plan,
+                purpose=old.purpose,
+                phone=phone,
+                request=request,
+                attempt=old.attempt + 1,
+            )
+        except pay.PaymentError as exc:
+            _payment_error(exc)
+        return _no_store(Response(PaymentSerializer(payment).data, status=201))
+
+
+class PaymentsView(APIView):
+    """Payment history (Account → Membership)."""
+
+    permission_classes = [IsViewer]
+
+    @extend_schema(responses=PaymentSerializer(many=True), operation_id="billing_payments")
+    def get(self, request):
+        rows = Payment.objects.filter(user=request.user).select_related("plan")[:50]
+        return _no_store(Response(PaymentSerializer(rows, many=True).data))
+
+
+class RenewNowView(APIView):
+    """Account → Renew now: pay the next period at once (past due, grace, or early)."""
+
+    permission_classes = [IsViewer]
+    throttle_classes = [throttle("security.rate_payment", per_user=True)]
+
+    @extend_schema(
+        request=PhoneOverrideSerializer,
+        responses=PaymentSerializer,
+        operation_id="billing_renew_now",
+    )
+    def post(self, request):
+        S = Subscription.Status
+        sub = plan_service.ensure_subscription(request.user)
+        if sub.plan.is_free or sub.status not in (S.ACTIVE, S.TRIALING, S.PAST_DUE, S.GRACE):
+            raise APIError(
+                "There's nothing to renew. Choose a plan instead.", "not_applicable", 409
+            )
+        data = PhoneOverrideSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        target = (
+            sub.scheduled_plan
+            if sub.scheduled_plan and not sub.scheduled_plan.is_free
+            else sub.plan
+        )
+        try:
+            phone = pay.payment_phone(
+                data.validated_data.get("phone") or sub.payment_phone, request.user
+            )
+            payment = pay.begin_payment(
+                request.user,
+                target,
+                purpose=(
+                    Payment.Purpose.TRIAL_CONVERSION
+                    if sub.status == S.TRIALING
+                    else Payment.Purpose.RENEWAL
+                ),
+                phone=phone,
+                request=request,
+            )
+        except pay.PaymentError as exc:
+            _payment_error(exc)
+        return _no_store(Response(PaymentSerializer(payment).data, status=201))
+
+
+class NoticeDismissView(APIView):
+    permission_classes = [IsViewer]
+
+    @extend_schema(request=None, responses={204: None}, operation_id="billing_notice_dismiss")
+    def post(self, request):
+        Subscription.objects.filter(user=request.user).update(notice="", notice_at=None)
+        return Response(status=204)

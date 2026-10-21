@@ -677,6 +677,7 @@ const TOOLS: Record<string, () => React.ReactNode> = {
   intro: () => <IntroUpload />,
   email: () => <EmailTools />,
   sms: () => <SmsTools />,
+  payments: () => <PaymentTools />,
   testing: () => <TestModeTools />,
 };
 
@@ -788,6 +789,73 @@ function SmsTools() {
       </form>
       <ToolResultLine result={send.result} />
       <ToolResultLine result={balance.result} />
+    </div>
+  );
+}
+
+function PaymentTools() {
+  const test = useTool();
+  const [webhook, setWebhook] = useState<{ url: string; configured: boolean } | null>(null);
+  const show = useTool();
+  const toast = useToast();
+  return (
+    <div className="space-y-3 px-5 py-4">
+      <p className="text-muted text-[12.5px]">
+        Snippe: save the API key and webhook secret below, give Snippe the webhook URL, then make a
+        small test payment to confirm the amount multiplier.
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          variant="secondary"
+          loading={test.pending}
+          onClick={() =>
+            void test.run(async () => {
+              const r = await unwrap(api.POST("/api/v1/admin/payments/test"));
+              return { ok: r.ok, message: r.message };
+            })
+          }
+        >
+          <PlugZap className="size-3.5" /> Test API key
+        </Button>
+        <Button
+          variant="secondary"
+          loading={show.pending}
+          onClick={() =>
+            void show.run(async () => {
+              const r = await unwrap(api.GET("/api/v1/admin/payments/test"));
+              setWebhook({ url: r.webhook_url, configured: r.configured });
+              return {
+                ok: r.configured,
+                message: r.configured
+                  ? "This is the URL Snippe should call."
+                  : "Derived from this request — set “Webhook public URL” so renewals can use it.",
+              };
+            })
+          }
+        >
+          Show webhook URL
+        </Button>
+      </div>
+      <ToolResultLine result={test.result} />
+      {webhook ? (
+        <div className="flex items-center gap-2">
+          <code className="bg-raised border-line flex-1 truncate rounded-md border px-2.5 py-1.5 font-mono text-[12.5px] select-all">
+            {webhook.url}
+          </code>
+          <Button
+            variant="secondary"
+            onClick={() =>
+              void navigator.clipboard
+                ?.writeText(webhook.url)
+                .then(() => toast("Copied ✓"))
+                .catch(() => toast("Couldn't copy", "error"))
+            }
+          >
+            Copy
+          </Button>
+        </div>
+      ) : null}
+      <ToolResultLine result={show.result} />
     </div>
   );
 }

@@ -4,9 +4,10 @@ import { ApiError, unwrap } from "@netfly/api-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Smartphone } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/api";
-import { useMembership, type Membership } from "@/lib/queries";
+import { useMembership, useUsage, type Membership } from "@/lib/queries";
 import { formatCountdown, limitPhrase, useCountdown } from "@/lib/usage-format";
 import { planGradient, priceLabel } from "../billing/plan-picker";
 import { Button } from "../ui/button";
@@ -77,9 +78,43 @@ export function MembershipCard({ detailed = false }: { detailed?: boolean }) {
 
 function Card({ sub, detailed }: { sub: Sub; detailed: boolean }) {
   const toast = useToast();
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const notice = useUsage().data?.notice ?? null;
   const [confirm, setConfirm] = useState(false);
   const [resuming, setResuming] = useState(false);
+  const [renewing, setRenewing] = useState(false);
+  const [dismissing, setDismissing] = useState(false);
+  const due = sub.status === "past_due" || sub.status === "grace";
+
+  const renewNow = async () => {
+    if (renewing) return;
+    setRenewing(true);
+    try {
+      const payment = await unwrap(api.POST("/api/v1/billing/renew-now", { body: {} }));
+      router.push(
+        `/payment?payment=${payment.id}&next=${encodeURIComponent("/account/membership")}`,
+      );
+    } catch (e) {
+      toast({
+        message: e instanceof ApiError ? e.message : "Something went wrong. Please try again.",
+        tone: "error",
+      });
+      setRenewing(false);
+    }
+  };
+
+  const dismissNotice = async () => {
+    setDismissing(true);
+    try {
+      await unwrap(api.POST("/api/v1/billing/notice/dismiss"));
+      await queryClient.invalidateQueries({ queryKey: ["usage"] });
+    } catch {
+      toast({ message: "Couldn't dismiss. Please try again.", tone: "error" });
+    } finally {
+      setDismissing(false);
+    }
+  };
   const plan = sub.plan;
   const freeName = "the free plan";
   const event = nextEvent(sub, freeName);
@@ -134,6 +169,23 @@ function Card({ sub, detailed }: { sub: Sub; detailed: boolean }) {
         </p>
       </div>
       <div className="p-6">
+        {detailed && notice ? (
+          <div
+            role="status"
+            data-testid="billing-notice"
+            className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-md bg-[#e87c03]/15 px-4 py-3 ring-1 ring-[#e87c03]/40"
+          >
+            <p className="text-body text-white">{notice.text}</p>
+            <Button
+              size="sm"
+              variant="secondary"
+              loading={dismissing}
+              onClick={() => void dismissNotice()}
+            >
+              Dismiss
+            </Button>
+          </div>
+        ) : null}
         <p className="text-body text-white/90">{event.text}</p>
         {left !== null ? (
           <p className="text-meta mt-2 text-[#b3b3b3]">
@@ -176,6 +228,16 @@ function Card({ sub, detailed }: { sub: Sub; detailed: boolean }) {
           </p>
         ) : null}
         <div className="mt-6 flex flex-wrap gap-3">
+          {detailed && due ? (
+            <Button
+              variant="accent"
+              className="rounded"
+              loading={renewing}
+              onClick={() => void renewNow()}
+            >
+              Renew now
+            </Button>
+          ) : null}
           <Button asChild variant="play" className="rounded">
             <Link href="/signup/plan?from=account">Change plan</Link>
           </Button>

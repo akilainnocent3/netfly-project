@@ -547,3 +547,34 @@ export function useCheckout(plan: string | null, trial: boolean) {
     retry: false,
   });
 }
+
+// -- payments -----------------------------------------------------------------------------
+export type Payment = Schemas["Payment"];
+export const FINAL_PAYMENT = ["completed", "failed", "voided", "expired"] as const;
+
+/** One payment, polled while it's pending (our DB, kept fresh by webhooks + reconcile). */
+export function usePayment(id: string | null, pollMs: number) {
+  return useQuery({
+    queryKey: ["payment", id],
+    enabled: !!id,
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/v1/billing/payments/{payment_id}", { params: { path: { payment_id: id! } } }),
+      ),
+    refetchInterval: (query) =>
+      query.state.data && (FINAL_PAYMENT as readonly string[]).includes(query.state.data.status)
+        ? false
+        : pollMs,
+    refetchIntervalInBackground: true,
+    staleTime: 0,
+  });
+}
+
+export function usePayments(enabled = true) {
+  return useQuery({
+    queryKey: ["payments"],
+    enabled,
+    queryFn: () => unwrap(api.GET("/api/v1/billing/payments")),
+    staleTime: 10_000,
+  });
+}

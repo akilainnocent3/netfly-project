@@ -63,7 +63,8 @@ export function AuthGateProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState<{ intent: Intent; titleName: string } | null>(null);
   const [limit, setLimit] = useState<UsageSnapshot | null>(null);
   // The signed-in viewer's allowance: polled every 30 s, and pushed by every player heartbeat.
-  useUsage(status === "authenticated");
+  const usage = useUsage(status === "authenticated");
+  useBillingNotice(usage.data?.notice ?? null);
   useEffect(() => {
     const unsubscribe = subscribeUsage((snapshot) => queryClient.setQueryData(["usage"], snapshot));
     return unsubscribe;
@@ -112,6 +113,34 @@ export function AuthGateProvider({ children }: { children: React.ReactNode }) {
 }
 
 export const useAuthGate = () => useContext(GateContext);
+
+const NOTICE_SEEN = "netfly-notice-seen";
+
+/** A billing notice ("…you're on the free plan now") is toasted once per device. */
+function useBillingNotice(notice: { text: string; at: string } | null) {
+  const toast = useToast();
+  useEffect(() => {
+    if (!notice) return;
+    try {
+      if (localStorage.getItem(NOTICE_SEEN) === notice.at) return;
+      localStorage.setItem(NOTICE_SEEN, notice.at);
+    } catch {
+      /* show it anyway */
+    }
+    toast(
+      {
+        message: notice.text,
+        action: {
+          label: "View",
+          onClick: () => {
+            window.location.href = "/account/membership";
+          },
+        },
+      },
+      10_000,
+    );
+  }, [notice, toast]);
+}
 
 /** Netflix-style "Ready to watch?" sign-in gate (focus-trapped dialog). */
 function GateDialog({

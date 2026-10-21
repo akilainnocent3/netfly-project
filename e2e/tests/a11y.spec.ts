@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { expect, homeRows, signUp, test } from "./helpers";
+import { expect, homeRows, signUp, test, verifyContacts } from "./helpers";
 
 /** WCAG 2.1 A/AA via axe. Failures list the rule and the first offending selectors. */
 async function audit(page: Page, include?: string) {
@@ -38,8 +38,9 @@ test.describe("signed out", () => {
 });
 
 test.describe("signed in", () => {
+  let member = "";
   test.beforeEach(async ({ page }) => {
-    await signUp(page);
+    member = await signUp(page);
   });
 
   test("/browse", async ({ page }) => {
@@ -89,6 +90,14 @@ test.describe("signed in", () => {
       await page.waitForTimeout(400);
       await audit(page);
     }
+  });
+
+  test("/payment (light layout)", async ({ page }) => {
+    await verifyContacts(member);
+    await page.goto("/payment?plan=pendwa&next=%2Fbrowse");
+    await expect(page.getByRole("button", { name: "Pay TSh 2,500" })).toBeVisible();
+    await page.waitForTimeout(400); // entrance animation
+    await audit(page);
   });
 
   test("/signup/plan (light layout)", async ({ page }) => {

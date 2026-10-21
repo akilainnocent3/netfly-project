@@ -174,3 +174,65 @@ export async function canPlayH264(page: Page): Promise<boolean> {
       MediaSource.isTypeSupported('audio/mp4; codecs="mp4a.40.2"'),
   );
 }
+
+/** Test mode only: the latest code sent to an email / phone (Studio's outbox). */
+export async function outboxCode(kind: "sms" | "email", to: string): Promise<string> {
+  const token = await adminToken();
+  for (let i = 0; i < 20; i++) {
+    const res = await fetch(
+      `${ADMIN}/api/v1/admin/testing/outbox?kind=${kind}&to=${encodeURIComponent(to)}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    const messages = (await res.json()) as Array<{ body: string }>;
+    const match = messages[0]?.body.match(/\b(\d{6})\b/);
+    if (match) return match[1]!;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  throw new Error(`no ${kind} code for ${to}`);
+}
+
+/** A unique Tanzanian Mixx number (071…). */
+export function uniquePhone(): string {
+  return `071${String(Date.now()).slice(-7)}`;
+}
+
+/** Test mode only: verify an email and a phone for a viewer through the API (Node side). */
+export async function verifyContacts(username: string): Promise<{ email: string; phone: string }> {
+  const token = await viewerToken(username);
+  const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+  const email = `${username}@example.com`.toLowerCase();
+  const phone = uniquePhone();
+  for (const [channel, value, kind] of [
+    ["email", email, "email"],
+    ["phone", phone, "sms"],
+  ] as const) {
+    const sent = await fetch(`${CLIENT_URL}/api/v1/auth/verify/${channel}/start`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ value }),
+    });
+    if (!sent.ok) throw new Error(`verify ${channel}: ${sent.status} ${await sent.text()}`);
+    const target = ((await sent.json()) as { target: string }).target;
+    const code = await outboxCode(kind, target);
+    const done = await fetch(`${CLIENT_URL}/api/v1/auth/verify/${channel}/confirm`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ code }),
+    });
+    if (!done.ok) throw new Error(`confirm ${channel}: ${done.status}`);
+  }
+  return { email, phone };
+}
+
+/** Superadmin API call (Node side) for arranging state. */
+export async function adminApi(path: string, init: RequestInit = {}): Promise<Response> {
+  const token = await adminToken();
+  return fetch(`${ADMIN}/api/v1/admin/${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...(init.headers ?? {}),
+    },
+  });
+}

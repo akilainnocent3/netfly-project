@@ -1867,6 +1867,56 @@
                 }
             }
         },
+        "/api/v1/admin/payments/test": {
+            "get": {
+                "operationId": "admin_payments_webhook_url",
+                "description": "Settings → Payments: [Test API key] (lists one payment) and the webhook URL to give\nSnippe.",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WebhookUrl"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "admin_payments_test",
+                "description": "Settings → Payments: [Test API key] (lists one payment) and the webhook URL to give\nSnippe.",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaymentsTestResult"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/admin/plans": {
             "get": {
                 "operationId": "admin_plans_list",
@@ -3185,6 +3235,46 @@
                 }
             }
         },
+        "/api/v1/admin/subscribers/{id}/payments": {
+            "get": {
+                "operationId": "admin_subscriber_payments",
+                "description": "Members with their plan, status, period and usage; staff actions are audited.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this user.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Payment"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/admin/subscribers/{id}/reset-usage": {
             "post": {
                 "operationId": "admin_subscriber_reset_usage",
@@ -3277,6 +3367,98 @@
                                     "items": {
                                         "$ref": "#/components/schemas/OutboxMessage"
                                     }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/testing/payments/{payment_id}/simulate": {
+            "post": {
+                "operationId": "admin_simulate_payment",
+                "description": "Test mode only: settle a simulated (mock_…) payment as if Snippe's webhook arrived.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "payment_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SimulatePaymentRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SimulatePaymentRequestRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Payment"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/testing/run-renewals": {
+            "post": {
+                "operationId": "admin_run_renewals",
+                "description": "Test mode only: run the renewal job and the reconcile poll now — or as of `at` — instead of\nwaiting for the beat (every few minutes) and the calendar.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RenewalRunRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RenewalRunRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RenewalRun"
                                 }
                             }
                         },
@@ -5142,6 +5324,47 @@
                 }
             }
         },
+        "/api/v1/billing/checkout/start": {
+            "post": {
+                "operationId": "billing_checkout_start",
+                "description": "Start the free trial (no charge) or push the plan's payment request to the phone.\nThe amount comes from the plan on the server; a second tap returns the pending request.",
+                "tags": [
+                    "billing"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CheckoutStartRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CheckoutStartRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CheckoutStartResult"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/billing/membership": {
             "get": {
                 "operationId": "billing_membership",
@@ -5159,6 +5382,141 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Membership"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/billing/notice/dismiss": {
+            "post": {
+                "operationId": "billing_notice_dismiss",
+                "tags": [
+                    "billing"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/billing/payments": {
+            "get": {
+                "operationId": "billing_payments",
+                "description": "Payment history (Account → Membership).",
+                "tags": [
+                    "billing"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Payment"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/billing/payments/{payment_id}": {
+            "get": {
+                "operationId": "billing_payment",
+                "description": "Polled every few seconds by \"Check your phone\" (reads our DB, kept fresh by the\nwebhook and the reconcile job).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "payment_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "billing"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Payment"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/billing/payments/{payment_id}/resend": {
+            "post": {
+                "operationId": "billing_payment_resend",
+                "description": "A new request (new idempotency key) for the same plan, optionally to another number.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "payment_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "billing"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PhoneOverrideRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PhoneOverrideRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Payment"
                                 }
                             }
                         },
@@ -5224,6 +5582,46 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/PlansResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/billing/renew-now": {
+            "post": {
+                "operationId": "billing_renew_now",
+                "description": "Account → Renew now: pay the next period at once (past due, grace, or early).",
+                "tags": [
+                    "billing"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PhoneOverrideRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PhoneOverrideRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Payment"
                                 }
                             }
                         },
@@ -7428,6 +7826,59 @@
                     "trial_days"
                 ]
             },
+            "CheckoutStartRequest": {
+                "type": "object",
+                "properties": {
+                    "plan": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "trial": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "phone": {
+                        "type": "string",
+                        "maxLength": 20
+                    }
+                },
+                "required": [
+                    "plan"
+                ]
+            },
+            "CheckoutStartResult": {
+                "type": "object",
+                "properties": {
+                    "kind": {
+                        "$ref": "#/components/schemas/CheckoutStartResultKindEnum"
+                    },
+                    "payment": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/Payment"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "subscription": {
+                        "$ref": "#/components/schemas/Subscription"
+                    }
+                },
+                "required": [
+                    "kind",
+                    "payment",
+                    "subscription"
+                ]
+            },
+            "CheckoutStartResultKindEnum": {
+                "enum": [
+                    "trial",
+                    "payment"
+                ],
+                "type": "string",
+                "description": "* `trial` - trial\n* `payment` - payment"
+            },
             "ChoosePlanRequest": {
                 "type": "object",
                 "properties": {
@@ -8442,6 +8893,14 @@
                     "plan": {
                         "$ref": "#/components/schemas/UsagePlan"
                     },
+                    "notice": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/Notice"
+                            }
+                        ],
+                        "nullable": true
+                    },
                     "exempt": {
                         "type": "boolean"
                     },
@@ -8500,6 +8959,7 @@
                     "heartbeat_seconds",
                     "limit_reached",
                     "limits",
+                    "notice",
                     "plan",
                     "remaining",
                     "remaining_seconds",
@@ -8940,6 +9400,22 @@
                     "thumbnail"
                 ]
             },
+            "Notice": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string"
+                    },
+                    "at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "at",
+                    "text"
+                ]
+            },
             "Notification": {
                 "type": "object",
                 "properties": {
@@ -9027,6 +9503,15 @@
                     "ref",
                     "subject"
                 ]
+            },
+            "OutcomeEnum": {
+                "enum": [
+                    "completed",
+                    "failed",
+                    "expired"
+                ],
+                "type": "string",
+                "description": "* `completed` - completed\n* `failed` - failed\n* `expired` - expired"
             },
             "PaginatedAdminUserList": {
                 "type": "object",
@@ -9769,6 +10254,138 @@
                     }
                 }
             },
+            "Payment": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "reference": {
+                        "type": "string",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PaymentStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "purpose": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PurposeEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "plan": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "plan_slug": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "amount": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "currency": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "phone_masked": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "network": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "failure_reason": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "completed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "amount",
+                    "completed_at",
+                    "created_at",
+                    "currency",
+                    "expires_at",
+                    "failure_reason",
+                    "id",
+                    "network",
+                    "phone_masked",
+                    "plan",
+                    "plan_slug",
+                    "purpose",
+                    "reference",
+                    "status"
+                ]
+            },
+            "PaymentStatusEnum": {
+                "enum": [
+                    "created",
+                    "pending",
+                    "completed",
+                    "failed",
+                    "voided",
+                    "expired"
+                ],
+                "type": "string",
+                "description": "* `created` - Created\n* `pending` - Pending\n* `completed` - Completed\n* `failed` - Failed\n* `voided` - Voided\n* `expired` - Expired"
+            },
+            "PaymentsTestResult": {
+                "type": "object",
+                "properties": {
+                    "ok": {
+                        "type": "boolean"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "webhook_url": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "message",
+                    "ok",
+                    "webhook_url"
+                ]
+            },
+            "PhoneOverrideRequest": {
+                "type": "object",
+                "properties": {
+                    "phone": {
+                        "type": "string",
+                        "maxLength": 20
+                    }
+                }
+            },
             "Plan": {
                 "type": "object",
                 "properties": {
@@ -10310,6 +10927,16 @@
                     "values"
                 ]
             },
+            "PurposeEnum": {
+                "enum": [
+                    "signup",
+                    "trial_conversion",
+                    "renewal",
+                    "upgrade"
+                ],
+                "type": "string",
+                "description": "* `signup` - Signup\n* `trial_conversion` - Trial Conversion\n* `renewal` - Renewal\n* `upgrade` - Upgrade"
+            },
             "QualityEnum": {
                 "enum": [
                     "4K",
@@ -10590,6 +11217,42 @@
                     "name",
                     "width"
                 ]
+            },
+            "RenewalRun": {
+                "type": "object",
+                "properties": {
+                    "charged": {
+                        "type": "integer"
+                    },
+                    "reminded": {
+                        "type": "integer"
+                    },
+                    "grace": {
+                        "type": "integer"
+                    },
+                    "ended": {
+                        "type": "integer"
+                    },
+                    "reconciled": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "charged",
+                    "ended",
+                    "grace",
+                    "reconciled",
+                    "reminded"
+                ]
+            },
+            "RenewalRunRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
             },
             "ReorderRequest": {
                 "type": "object",
@@ -10972,6 +11635,17 @@
                     "full_name",
                     "password",
                     "username"
+                ]
+            },
+            "SimulatePaymentRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "outcome": {
+                        "$ref": "#/components/schemas/OutcomeEnum"
+                    }
+                },
+                "required": [
+                    "outcome"
                 ]
             },
             "Sitemap": {
@@ -12893,6 +13567,14 @@
                     "plan": {
                         "$ref": "#/components/schemas/UsagePlan"
                     },
+                    "notice": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/Notice"
+                            }
+                        ],
+                        "nullable": true
+                    },
                     "exempt": {
                         "type": "boolean"
                     },
@@ -12946,6 +13628,7 @@
                     "heartbeat_seconds",
                     "limit_reached",
                     "limits",
+                    "notice",
                     "plan",
                     "remaining",
                     "remaining_seconds",
@@ -13379,6 +14062,21 @@
                     "last_season",
                     "play",
                     "rating"
+                ]
+            },
+            "WebhookUrl": {
+                "type": "object",
+                "properties": {
+                    "webhook_url": {
+                        "type": "string"
+                    },
+                    "configured": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "configured",
+                    "webhook_url"
                 ]
             }
         },

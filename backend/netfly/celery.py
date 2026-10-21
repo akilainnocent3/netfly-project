@@ -22,6 +22,8 @@ app.conf.beat_schedule = {
         "schedule": 600.0,
     },
     "purge-usage-keys": {"task": "apps.billing.tasks.purge_usage_keys", "schedule": 3600.0},
+    "reconcile-payments": {"task": "apps.billing.tasks.reconcile_payments", "schedule": 120.0},
+    "run-renewals": {"task": "apps.billing.tasks.run_renewals", "schedule": 300.0},
     "cleanup-refresh-tokens": {
         "task": "apps.accounts.tasks.cleanup_refresh_tokens",
         "schedule": 86400.0,

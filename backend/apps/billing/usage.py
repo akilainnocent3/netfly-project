@@ -166,6 +166,12 @@ def snapshot(user, *, sub: Subscription | None = None, now: dt.datetime | None =
         "warn_at_minutes": config.get_json("usage.warn_at_minutes") or [10, 2],
         "heartbeat_seconds": config.get_int("usage.heartbeat_seconds", 30),
         "server_time": (now or timezone.now()).isoformat(),
+        # A one-time billing notice ("…you're on the free plan now"), until dismissed.
+        "notice": (
+            {"text": sub.notice, "at": sub.notice_at.isoformat()}
+            if sub.notice and sub.notice_at
+            else None
+        ),
     }
 
 

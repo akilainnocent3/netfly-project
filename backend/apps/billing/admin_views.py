@@ -26,8 +26,13 @@ from apps.core.exceptions import APIError
 
 from . import plans as plan_service
 from . import usage
-from .models import Plan, Subscription, UsageAdjustment
-from .serializers import AdminPlanSerializer, PlanSerializer, UsageSnapshotSerializer
+from .models import Payment, Plan, Subscription, UsageAdjustment
+from .serializers import (
+    AdminPlanSerializer,
+    PaymentSerializer,
+    PlanSerializer,
+    UsageSnapshotSerializer,
+)
 from .views import forget_plans
 
 R = User.Role
@@ -306,6 +311,12 @@ class SubscriberViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewse
     def bonus(self, request, pk=None):
         return self._act(request, pk, "bonus")
 
+    @extend_schema(responses=PaymentSerializer(many=True), operation_id="admin_subscriber_payments")
+    @action(detail=True, methods=["get"], pagination_class=None)
+    def payments(self, request, pk=None):
+        rows = Payment.objects.filter(user=self.get_object()).select_related("plan")[:100]
+        return Response(PaymentSerializer(rows, many=True).data)
+
 
 BillingStats = inline_serializer(
     "BillingStats",
@@ -356,15 +367,10 @@ class BillingStatsView(APIView):
             current_period_end__gt=now,
             current_period_end__lte=now + dt.timedelta(hours=48),
         ).count()
-        failed = 0
-        try:
-            from .models import Payment  # added with mobile money payments
-
-            failed = Payment.objects.filter(
-                status="failed", created_at__gte=now - dt.timedelta(days=7)
-            ).count()
-        except ImportError:
-            pass
+        failed = Payment.objects.filter(
+            status__in=[Payment.Status.FAILED, Payment.Status.EXPIRED],
+            created_at__gte=now - dt.timedelta(days=7),
+        ).count()
         return Response(
             {
                 "paid_by_plan": [
@@ -380,3 +386,89 @@ class BillingStatsView(APIView):
                 "plans": PlanSerializer(Plan.objects.filter(is_active=True), many=True).data,
             }
         )
+
+
+class SimulatePaymentView(APIView):
+    """Test mode only: settle a simulated (mock_…) payment as if Snippe's webhook arrived."""
+
+    permission_classes = [StaffPermission]
+    read_roles = ()
+    write_roles = ()  # superadmin only
+
+    @extend_schema(
+        request=inline_serializer(
+            "SimulatePaymentRequest",
+            {"outcome": serializers.ChoiceField(choices=["completed", "failed", "expired"])},
+        ),
+        responses=PaymentSerializer,
+        operation_id="admin_simulate_payment",
+    )
+    def post(self, request, payment_id):
+        from apps.messaging import outbox
+
+        from . import payments as pay
+
+        if not outbox.enabled():
+            raise APIError("Test mode is off.", "not_found", 404)
+        payment = Payment.objects.filter(public_id=payment_id).first()
+        if payment is None or not (payment.reference or "").startswith("mock_"):
+            raise APIError("Only simulated payments can be settled here.", "not_found", 404)
+        outcome = request.data.get("outcome")
+        if outcome not in ("completed", "failed", "expired"):
+            raise APIError("Choose completed, failed or expired.", "validation_error")
+        payment = pay.settle(
+            payment.pk,
+            outcome,
+            {"reference": payment.reference, "status": outcome, "simulated": True},
+            reason="Simulated failure" if outcome == "failed" else "",
+        )
+        record(
+            request.user,
+            "payment.simulated",
+            payment,
+            changes={"outcome": outcome},
+            ip=client_ip(request),
+        )
+        return Response(PaymentSerializer(payment).data)
+
+
+class RunRenewalsView(APIView):
+    """Test mode only: run the renewal job and the reconcile poll now — or as of `at` — instead of
+    waiting for the beat (every few minutes) and the calendar."""
+
+    permission_classes = [StaffPermission]
+    read_roles = ()
+    write_roles = ()  # superadmin only
+
+    @extend_schema(
+        request=inline_serializer(
+            "RenewalRunRequest", {"at": serializers.DateTimeField(required=False)}
+        ),
+        responses=inline_serializer(
+            "RenewalRun",
+            {
+                "charged": serializers.IntegerField(),
+                "reminded": serializers.IntegerField(),
+                "grace": serializers.IntegerField(),
+                "ended": serializers.IntegerField(),
+                "reconciled": serializers.IntegerField(),
+            },
+        ),
+        operation_id="admin_run_renewals",
+    )
+    def post(self, request):
+        from apps.messaging import outbox
+
+        from . import payments as pay
+        from . import renewals
+
+        if not outbox.enabled():
+            raise APIError("Test mode is off.", "not_found", 404)
+        # `at` runs the job as of another moment (test mode only), e.g. after a trial ends.
+        at = serializers.DateTimeField(required=False).run_validation(
+            request.data.get("at") or timezone.now().isoformat()
+        )
+        counts = renewals.run(at)
+        counts["reconciled"] = pay.reconcile()  # payments live in real time
+        record(request.user, "billing.run_renewals", changes=counts, ip=client_ip(request))
+        return Response(counts)
