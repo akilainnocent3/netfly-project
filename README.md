@@ -71,9 +71,18 @@ pnpm install && pnpm typecheck && pnpm lint && pnpm build
 
 # end-to-end (stack running, demo catalog seeded)
 pnpm e2e        # includes axe accessibility checks, SEO contract, Studio boost → viewer, profiles
+NETFLY_E2E_CHANNEL=chrome pnpm e2e   # also runs the video specs (Playwright's Chromium has no H.264)
 
 # Optional local S3 for media (moto): pip install "moto[server]" && moto_server -p 5005,
 # then set storage.s3.endpoint_url=http://localhost:5005 (+ bucket/keys) and run seed_demo --reset
 ```
 
 See `docs/DEPLOY.md` for production and `docs/DECISIONS.md` for design decisions.
+
+## Screenshots
+
+Captured by Playwright against the seeded demo catalog (`docs/screenshots/`):
+landing page and public title page (what search engines see), `/browse`, hover card, title modal
+with episodes and More Like This, New & Popular, search, mobile home, the Studio priority control and
+titles list, and the profile gate.
+

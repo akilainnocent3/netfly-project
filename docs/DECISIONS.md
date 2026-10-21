@@ -58,6 +58,9 @@ Ambiguities in the build brief, the option chosen, and why.
 15. **Cards are 16:9 backdrops with logo art**; Top 10 uses 2:3 posters next to the numerals.
 16. **Hover previews and the hero play the trailer, or a 720p-capped slice of the title** starting at 15 % when no
     trailer exists; disabled by the viewer's "Autoplay previews", `prefers-reduced-motion` and Save-Data.
+    Previews and the player both use hls.js wherever MSE exists and native HLS only as a fallback
+    (iOS): desktop Chrome now also claims native HLS support, and asking that first stalled previews.
+
 17. **Completion follows the latest position** (≥ `playback.completed_ratio`); rewatching reopens a title.
     Only *finishing* something busts the recommendation cache — routine progress saves don't.
 18. **"Because you liked X" needs ≥ 2 candidates** so small catalogs still get the row.

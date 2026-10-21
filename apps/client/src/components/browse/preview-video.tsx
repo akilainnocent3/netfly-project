@@ -88,13 +88,17 @@ export function PreviewVideo({
           video.currentTime = info.start_at;
           if (canPlay()) void video.play().catch(() => undefined);
         };
-        if (video.canPlayType("application/vnd.apple.mpegurl")) {
-          video.src = info.master_url;
-          video.addEventListener("loadedmetadata", start, { once: true });
+        // hls.js wherever MSE exists (as the player does); native HLS only as the fallback (iOS).
+        // Desktop Chrome now also answers canPlayType for HLS, so asking that first is wrong.
+        const { default: HlsCtor } = await import("hls.js");
+        if (cancelled) return;
+        if (!HlsCtor.isSupported()) {
+          if (video.canPlayType("application/vnd.apple.mpegurl")) {
+            video.src = info.master_url;
+            video.addEventListener("loadedmetadata", start, { once: true });
+          }
           return;
         }
-        const { default: HlsCtor } = await import("hls.js");
-        if (cancelled || !HlsCtor.isSupported()) return;
         hls = new HlsCtor({
           startPosition: info.start_at,
           capLevelToPlayerSize: true,

@@ -39,3 +39,15 @@ test("binges a series: Skip Intro, then the Next Episode countdown", async ({ pa
   await expect(page.getByText(/Next episode in \d+s/)).toBeVisible();
   await page.waitForURL(/episode=\d+.*autoplay=1/, { timeout: 30_000 });
 });
+
+test("hero trailer autoplays muted, pauses when scrolled out of view and resumes", async ({ page }) => {
+  await page.goto("/browse");
+  const trailer = page.locator("section[aria-label='Featured'] video").first();
+  const state = () =>
+    trailer.evaluate((v: HTMLVideoElement) => ({ playing: !v.paused && v.currentTime > 0.3, muted: v.muted }));
+  await expect.poll(state, { timeout: 30_000 }).toEqual({ playing: true, muted: true });
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await expect.poll(() => trailer.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect.poll(() => trailer.evaluate((v: HTMLVideoElement) => v.paused)).toBe(false);
+});

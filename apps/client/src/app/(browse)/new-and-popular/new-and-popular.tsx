@@ -124,6 +124,12 @@ function ComingSoon({ items }: { items?: Upcoming[] }) {
                   alt=""
                   sizes="(min-width:1024px) 800px, 85vw"
                   className="object-cover"
+                  fallback={
+                    // Artwork often lands after scheduling: show the name, not an empty box.
+                    <span className="text-title grid size-full place-items-center bg-[radial-gradient(ellipse_at_top,#2f2f2f,#181818_70%)] px-6 text-center font-black tracking-tight text-white/85 uppercase">
+                      {t.title}
+                    </span>
+                  }
                 />
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-3">

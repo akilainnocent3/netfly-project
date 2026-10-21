@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { GridSkeleton, TitleGrid } from "@/components/browse/title-grid";
 import { Button, IconButton } from "@/components/ui/button";
+import { useConfig } from "@/components/providers/config";
 import { StateMessage } from "@/components/ui/state-message";
 import type { TitleCard } from "@/lib/types";
 import { useNewAndPopular, useSearch, useSearchSuggestions } from "@/lib/queries";
@@ -22,6 +23,7 @@ function SearchScreen() {
   const results = useSearch(query);
   const suggestions = useSearchSuggestions();
   const popular = useNewAndPopular();
+  const config = useConfig();
   const [recent, setRecent] = useState<string[]>([]);
   useEffect(() => {
     setRecent(readRecent());
@@ -92,7 +94,10 @@ function SearchScreen() {
               }
             />
           </div>
-          <PopularGrid items={popular.data?.everyone_watching} title="Popular on Netfly" />
+          <PopularGrid
+            items={popular.data?.everyone_watching}
+            title={`Popular on ${config.str("branding.site_name", "NETFLY")}`}
+          />
         </div>
       ) : results.isPending ? (
         <GridSkeleton />
