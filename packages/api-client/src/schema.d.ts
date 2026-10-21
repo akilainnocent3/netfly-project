@@ -1157,6 +1157,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/browse/new-and-popular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description New & Popular tabs: Coming soon, Everyone's watching, Top 10 series, Top 10 films. */
+        get: operations["browse_new_and_popular"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/browse/upcoming": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Public Coming Soon list (scheduled titles only). `reminded` is set when signed in. */
+        get: operations["browse_upcoming"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/catalog/poster-wall": {
         parameters: {
             query?: never;
@@ -1168,6 +1202,23 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/continue-watching/{title_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description "Remove from row": hides the title from Continue Watching until it is played again. */
+        delete: operations["continue_watching_remove"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1253,6 +1304,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The bell: reminded titles that are out, new episodes of saved series, recent arrivals. */
+        get: operations["notifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["notifications_seen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/playback/{slug}": {
         parameters: {
             query?: never;
@@ -1303,6 +1387,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["profiles_list"];
+        put?: never;
+        post: operations["profiles_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["profiles_delete"];
+        options?: never;
+        head?: never;
+        patch: operations["profiles_update"];
+        trace?: never;
+    };
     "/api/v1/ratings/{title_id}": {
         parameters: {
             query?: never;
@@ -1316,6 +1432,24 @@ export interface paths {
         post?: never;
         /** @description One tap: 👎 -1 · 👍 1 · 👍👍 2. Recommendations react on the next request. */
         delete: operations["unrate_title"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reminders/{title_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description "Remind me" on a Coming Soon title (per profile when profiles are on). */
+        put: operations["reminder_add"];
+        post?: never;
+        /** @description "Remind me" on a Coming Soon title (per profile when profiles are on). */
+        delete: operations["reminder_remove"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1493,6 +1627,30 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        /**
+         * @description * `avatar-1` - avatar-1
+         *     * `avatar-2` - avatar-2
+         *     * `avatar-3` - avatar-3
+         *     * `avatar-4` - avatar-4
+         *     * `avatar-5` - avatar-5
+         *     * `avatar-6` - avatar-6
+         *     * `avatar-7` - avatar-7
+         *     * `avatar-8` - avatar-8
+         *     * `avatar-9` - avatar-9
+         *     * `avatar-10` - avatar-10
+         *     * `avatar-11` - avatar-11
+         *     * `avatar-12` - avatar-12
+         * @enum {string}
+         */
+        AvatarKeyEnum: "avatar-1" | "avatar-2" | "avatar-3" | "avatar-4" | "avatar-5" | "avatar-6" | "avatar-7" | "avatar-8" | "avatar-9" | "avatar-10" | "avatar-11" | "avatar-12";
+        /**
+         * @description * `top10` - top10
+         *     * `new_episodes` - new_episodes
+         *     * `recently_added` - recently_added
+         *     * `leaving_soon` - leaving_soon
+         * @enum {string}
+         */
+        BadgeEnum: "top10" | "new_episodes" | "recently_added" | "leaving_soon";
         BillboardAdmin: {
             readonly id: number;
             title: number;
@@ -1887,6 +2045,12 @@ export interface components {
             /** @default client */
             app: components["schemas"]["AppEnum"];
         };
+        NewAndPopular: {
+            coming_soon: components["schemas"]["Upcoming"][];
+            everyone_watching: components["schemas"]["TitleCard"][];
+            top10_series: components["schemas"]["TitleCard"][];
+            top10_films: components["schemas"]["TitleCard"][];
+        };
         NextEpisode: {
             id: number;
             label: string;
@@ -1894,6 +2058,28 @@ export interface components {
             synopsis: string;
             thumbnail: components["schemas"]["ImageRef"] | null;
         };
+        Notification: {
+            id: string;
+            kind: components["schemas"]["NotificationKindEnum"];
+            message: string;
+            /** Format: date-time */
+            at: string;
+            unread: boolean;
+            title: components["schemas"]["TitleCard"];
+        };
+        /**
+         * @description * `reminder` - reminder
+         *     * `new_episodes` - new_episodes
+         *     * `recently_added` - recently_added
+         * @enum {string}
+         */
+        NotificationKindEnum: "reminder" | "new_episodes" | "recently_added";
+        NotificationList: {
+            unread: number;
+            results: components["schemas"]["Notification"][];
+        };
+        /** @enum {unknown} */
+        NullEnum: null;
         PaginatedAdminUserList: {
             /** @example 123 */
             count: number;
@@ -2029,6 +2215,12 @@ export interface components {
             title?: string;
             body_markdown?: string;
         };
+        PatchedProfileRequest: {
+            name?: string;
+            avatar_key?: components["schemas"]["AvatarKeyEnum"];
+            is_kids?: boolean;
+            translation_mode?: components["schemas"]["TranslationModeEnum"] | components["schemas"]["BlankEnum"];
+        };
         PatchedRelatedWeightRequest: {
             weight?: number;
         };
@@ -2057,6 +2249,7 @@ export interface components {
             translator_name?: string;
             cast?: string[];
             directors?: string[];
+            moods?: string[];
             genre_ids?: number[];
             /** Format: uuid */
             poster_id?: string | null;
@@ -2154,6 +2347,27 @@ export interface components {
             /** Format: double */
             duration: number;
         };
+        Profile: {
+            readonly id: number;
+            name: string;
+            avatar_key?: components["schemas"]["AvatarKeyEnum"];
+            is_kids?: boolean;
+            translation_mode?: components["schemas"]["TranslationModeEnum"] | components["schemas"]["BlankEnum"];
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        ProfileList: {
+            enabled: boolean;
+            max_profiles: number;
+            avatars: string[];
+            results: components["schemas"]["Profile"][];
+        };
+        ProfileRequest: {
+            name: string;
+            avatar_key?: components["schemas"]["AvatarKeyEnum"];
+            is_kids?: boolean;
+            translation_mode?: components["schemas"]["TranslationModeEnum"] | components["schemas"]["BlankEnum"];
+        };
         ProgressBatchRequest: {
             updates: components["schemas"]["ProgressUpdateRequest"][];
         };
@@ -2180,6 +2394,12 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /**
+         * @description * `4K` - 4K
+         *     * `HD` - HD
+         * @enum {string}
+         */
+        QualityEnum: "4K" | "HD";
         RatingInputRequest: {
             value: components["schemas"]["ValueEnum"];
         };
@@ -2391,6 +2611,7 @@ export interface components {
             translator_name?: string;
             cast?: string[];
             directors?: string[];
+            moods?: string[];
             readonly genres: components["schemas"]["GenreBrief"][];
             genre_ids?: number[];
             readonly poster: components["schemas"]["AdminImage"];
@@ -2481,6 +2702,7 @@ export interface components {
             translator_name?: string;
             cast?: string[];
             directors?: string[];
+            moods?: string[];
             genre_ids?: number[];
             /** Format: uuid */
             poster_id?: string | null;
@@ -2528,6 +2750,9 @@ export interface components {
             readonly context: components["schemas"]["CardContext"] | null;
             readonly in_my_list: boolean | null;
             readonly rating: number | null;
+            readonly badge: (components["schemas"]["BadgeEnum"] | components["schemas"]["NullEnum"]) | null;
+            readonly top10_rank: number | null;
+            readonly moods: string[];
         };
         TitleDetail: {
             readonly id: number;
@@ -2550,6 +2775,9 @@ export interface components {
             readonly context: components["schemas"]["CardContext"] | null;
             readonly in_my_list: boolean | null;
             readonly rating: number | null;
+            readonly badge: (components["schemas"]["BadgeEnum"] | components["schemas"]["NullEnum"]) | null;
+            readonly top10_rank: number | null;
+            readonly moods: string[];
             original_title?: string;
             synopsis?: string;
             language?: string;
@@ -2559,6 +2787,7 @@ export interface components {
             readonly seasons: components["schemas"]["SeasonSummary"][];
             /** Format: date-time */
             published_at?: string | null;
+            readonly quality: (components["schemas"]["QualityEnum"] | components["schemas"]["NullEnum"]) | null;
         };
         TitlePage: {
             title: components["schemas"]["TitleDetail"];
@@ -2605,6 +2834,36 @@ export interface components {
          * @enum {string}
          */
         TranslationStatusEnum: "translated" | "not_translated";
+        /** @description A Coming Soon card: when it lands and whether this viewer asked to be reminded. */
+        Upcoming: {
+            readonly id: number;
+            slug: string;
+            title: string;
+            type: components["schemas"]["TitleTypeEnum"];
+            year?: number | null;
+            maturity_rating?: string;
+            runtime_minutes?: number | null;
+            readonly season_count: number | null;
+            short_synopsis?: string;
+            translation_status: components["schemas"]["TranslationStatusEnum"];
+            translator_name?: string;
+            readonly poster: components["schemas"]["ImageRef"] | null;
+            readonly backdrop: components["schemas"]["ImageRef"] | null;
+            readonly logo: components["schemas"]["ImageRef"] | null;
+            readonly genres: string[];
+            readonly has_preview: boolean;
+            readonly match: number | null;
+            readonly context: components["schemas"]["CardContext"] | null;
+            readonly in_my_list: boolean | null;
+            readonly rating: number | null;
+            readonly badge: (components["schemas"]["BadgeEnum"] | components["schemas"]["NullEnum"]) | null;
+            readonly top10_rank: number | null;
+            readonly moods: string[];
+            readonly synopsis: string;
+            /** Format: date-time */
+            publish_at?: string | null;
+            readonly reminded: boolean | null;
+        };
         UploadSession: {
             /** Format: uuid */
             readonly id: string;
@@ -5030,6 +5289,7 @@ export interface operations {
         parameters: {
             query?: {
                 translation?: "all" | "not_translated" | "translated";
+                type?: "movie" | "series";
             };
             header?: never;
             path?: never;
@@ -5070,6 +5330,46 @@ export interface operations {
             };
         };
     };
+    browse_new_and_popular: {
+        parameters: {
+            query?: {
+                translation?: "all" | "not_translated" | "translated";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewAndPopular"];
+                };
+            };
+        };
+    };
+    browse_upcoming: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Upcoming"][];
+                };
+            };
+        };
+    };
     poster_wall: {
         parameters: {
             query?: never;
@@ -5088,6 +5388,26 @@ export interface operations {
                         results?: Record<string, never>[];
                     };
                 };
+            };
+        };
+    };
+    continue_watching_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                title_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -5219,6 +5539,43 @@ export interface operations {
             };
         };
     };
+    notifications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationList"];
+                };
+            };
+        };
+    };
+    notifications_seen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     playback: {
         parameters: {
             query?: {
@@ -5290,6 +5647,95 @@ export interface operations {
             };
         };
     };
+    profiles_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileList"];
+                };
+            };
+        };
+    };
+    profiles_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileRequest"];
+                "multipart/form-data": components["schemas"]["ProfileRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+        };
+    };
+    profiles_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    profiles_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedProfileRequest"];
+                "multipart/form-data": components["schemas"]["PatchedProfileRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+        };
+    };
     rate_title: {
         parameters: {
             query?: never;
@@ -5317,6 +5763,46 @@ export interface operations {
         };
     };
     unrate_title: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                title_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reminder_add: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                title_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reminder_remove: {
         parameters: {
             query?: never;
             header?: never;

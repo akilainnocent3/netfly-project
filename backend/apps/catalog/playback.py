@@ -9,6 +9,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.permissions import IsViewer
+from apps.accounts.viewer import viewer_for
+from apps.core.config import config
 from apps.core.exceptions import APIError
 from apps.engagement.models import WatchProgress
 from apps.media import delivery
@@ -102,6 +104,13 @@ class PlaybackView(APIView):
             Title.objects.published().select_related("video", "trailer", "logo", "backdrop"),
             slug=slug,
         )
+        who = viewer_for(request)
+        if (
+            who
+            and who.kids
+            and title.maturity_rating not in (config.get_json("content.kids_ratings") or [])
+        ):
+            raise APIError("This title isn't available on this profile.", "not_available", 404)
         preview = request.query_params.get("preview") in ("1", "true")
         episode = None
         asset: VideoAsset | None = None
@@ -134,7 +143,7 @@ class PlaybackView(APIView):
             if episode is None:
                 from .views import play_target
 
-                target = play_target(request.user, title)
+                target = play_target(who, title)
                 episode = qs.filter(pk=target["episode_id"]).first() if target else None
             asset = episode.video if episode else None
         else:
@@ -145,7 +154,7 @@ class PlaybackView(APIView):
 
         if not preview:
             progress = WatchProgress.objects.filter(
-                user=request.user, title=title, episode=episode
+                **who.scope, title=title, episode=episode
             ).first()
             if progress and not progress.completed and progress.position_seconds > 5:
                 start_at = progress.position_seconds

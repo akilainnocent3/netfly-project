@@ -73,6 +73,8 @@ class Title(models.Model):
     translator_name = models.CharField(max_length=120, blank=True)
     cast = ArrayField(models.CharField(max_length=120), default=list, blank=True)
     directors = ArrayField(models.CharField(max_length=120), default=list, blank=True)
+    # "This title is…" (e.g. Suspenseful, Witty). Falls back to genre-derived moods when empty.
+    moods = ArrayField(models.CharField(max_length=40), default=list, blank=True)
     genres = models.ManyToManyField(Genre, related_name="titles", blank=True)
 
     poster = models.ForeignKey(

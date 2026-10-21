@@ -29,6 +29,7 @@ from dataclasses import dataclass, field
 from django.db.models import Count, Max, Q, Sum
 from django.utils import timezone
 
+from apps.accounts.viewer import Viewer, as_viewer
 from apps.catalog.models import RelatedTitle, Title, effective_boost
 from apps.catalog.queries import visible_titles
 from apps.core.config import config
@@ -61,12 +62,13 @@ def _decay(at: dt.datetime, now: dt.datetime) -> float:
     return 0.5 ** (age / half_life)
 
 
-def load_signals(user_id: int) -> Signals:
+def load_signals(who: Viewer | int) -> Signals:
+    viewer = as_viewer(who)
     now = timezone.now()
     signals = Signals()
     rating_strength = {Rating.Value.LOVE: 2.0, Rating.Value.LIKE: 1.0}
     rated: dict[int, tuple[float, str, dt.datetime]] = {}
-    for title_id, value, at in Rating.objects.filter(user_id=user_id).values_list(
+    for title_id, value, at in Rating.objects.filter(**viewer.scope).values_list(
         "title_id", "value", "updated_at"
     ):
         if value == Rating.Value.DISLIKE:
@@ -82,7 +84,7 @@ def load_signals(user_id: int) -> Signals:
     completed_ratio = config.get_float("playback.completed_ratio", 0.92)
     watch: dict[int, tuple[float, dt.datetime]] = {}
     rows = (
-        WatchProgress.objects.filter(user_id=user_id)
+        WatchProgress.objects.filter(**viewer.scope)
         .values("title_id", "title__type")
         .annotate(
             last=Max("updated_at"),
@@ -135,7 +137,7 @@ def load_signals(user_id: int) -> Signals:
     return signals
 
 
-def _daily_rng(user_id: int, salt: str = "") -> random.Random:
+def _daily_rng(user_id: int | str, salt: str = "") -> random.Random:
     day = timezone.now().date().isoformat()
     digest = hashlib.sha256(f"{user_id}:{day}:{salt}".encode()).hexdigest()
     return random.Random(int(digest[:16], 16))
@@ -152,11 +154,11 @@ class Candidate:
     type: str = ""
 
 
-def candidates(mode: str, kind: str | None = None) -> dict[int, Candidate]:
+def candidates(mode: str, kind: str | None = None, kids: bool = False) -> dict[int, Candidate]:
     """Visible titles with what scoring needs (one query; boost already resolved for now)."""
     now = timezone.now()
     out: dict[int, Candidate] = {}
-    qs = visible_titles(mode)
+    qs = visible_titles(mode, kids)
     if kind:
         qs = qs.filter(type=kind)
     rows = qs.values_list(
@@ -193,7 +195,7 @@ def _is_new(c: Candidate, now: dt.datetime) -> bool:
 
 
 def score(
-    user_id: int,
+    user_id: Viewer | int,
     mode: str,
     signals: Signals | None = None,
     *,
@@ -201,15 +203,16 @@ def score(
     pool: dict[int, Candidate] | None = None,
 ) -> tuple[list[int], dict[int, float]]:
     """Ranked title ids for "Top picks" plus raw scores. Completed & disliked excluded."""
-    signals = signals or load_signals(user_id)
-    pool = pool if pool is not None else candidates(mode, kind)
+    viewer = as_viewer(user_id)
+    signals = signals or load_signals(viewer)
+    pool = pool if pool is not None else candidates(mode, kind, viewer.kids)
     now = timezone.now()
     w_new = config.get_float("recommendations.weight_new", 0.2)
     w_featured = config.get_float("recommendations.weight_featured", 0.3)
     w_boost = config.get_float("recommendations.weight_boost", 0.6)
     max_pop = max((c.popularity for c in pool.values()), default=0) or 1.0
     excluded = signals.completed | signals.disliked
-    rng = _daily_rng(user_id, mode)
+    rng = _daily_rng(viewer.cache_id, mode)
     scores: dict[int, float] = {}
 
     if not signals.seeds:
@@ -399,10 +402,14 @@ def because_you_liked(
 
 
 def trending_ids(
-    mode: str, limit: int, exclude: set[int] = frozenset(), kind: str | None = None
+    mode: str,
+    limit: int,
+    exclude: set[int] = frozenset(),
+    kind: str | None = None,
+    kids: bool = False,
 ) -> list[int]:
     """Purely data-driven (no boost)."""
-    qs = visible_titles(mode).exclude(pk__in=exclude)
+    qs = visible_titles(mode, kids).exclude(pk__in=exclude)
     if kind:
         qs = qs.filter(type=kind)
     return list(

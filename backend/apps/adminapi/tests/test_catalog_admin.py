@@ -83,6 +83,15 @@ def test_update_records_field_diff(content_manager_api):
     assert log.changes["title"] == {"old": "Old name", "new": "New name"}
 
 
+def test_moods_are_trimmed_and_capped(content_manager_api):
+    title = TitleFactory()
+    url = f"/api/v1/admin/titles/{title.pk}"
+    ok = content_manager_api.patch(url, {"moods": [" Witty ", "Witty", "Dark"]}, format="json")
+    assert ok.status_code == 200 and ok.json()["moods"] == ["Witty", "Dark"]
+    too_many = content_manager_api.patch(url, {"moods": ["a", "b", "c", "d"]}, format="json")
+    assert too_many.status_code == 400
+
+
 def test_publish_blocked_without_rights_and_media(content_manager_api):
     title = TitleFactory(status=Title.Status.DRAFT, rights_holder="", poster=None, video=None)
     response = content_manager_api.post(f"/api/v1/admin/titles/{title.pk}/publish")

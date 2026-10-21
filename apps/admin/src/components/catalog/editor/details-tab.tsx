@@ -25,6 +25,7 @@ export type DetailsPatch = Partial<
     | "synopsis"
     | "cast"
     | "directors"
+    | "moods"
     | "genre_ids"
   >
 >;
@@ -130,6 +131,17 @@ export function DetailsTab({
               placeholder="Type a name, press Enter"
             />
           </div>
+        </div>
+        <div>
+          <Label htmlFor="t-moods" hint="“This title is…” — up to 3; empty uses the genres">
+            Moods
+          </Label>
+          <TagInput
+            id="t-moods"
+            value={draft.moods ?? []}
+            onChange={(moods) => onChange({ moods: moods.slice(0, 3) })}
+            placeholder="e.g. Suspenseful, Witty"
+          />
         </div>
       </Card>
 

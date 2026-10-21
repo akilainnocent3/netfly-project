@@ -1,6 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED = ["/browse", "/title", "/watch", "/my-list", "/account", "/search", "/categories"];
+const PROTECTED = [
+  "/browse",
+  "/series",
+  "/films",
+  "/new-and-popular",
+  "/title",
+  "/watch",
+  "/my-list",
+  "/account",
+  "/search",
+  "/categories",
+];
 const API = process.env.NETFLY_API_URL ?? "http://localhost:8000";
 
 let mediaOrigins: { value: string; at: number } = { value: "", at: 0 };

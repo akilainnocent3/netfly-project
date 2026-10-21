@@ -13,7 +13,7 @@ from django.db import transaction
 CATALOG_KEY = "recs:catalog:v"
 
 
-def user_version(user_id: int) -> int:
+def user_version(user_id: int | str) -> int:
     return cache.get_or_set(f"recs:v:{user_id}", 1, None)
 
 
@@ -21,11 +21,16 @@ def catalog_version() -> int:
     return cache.get_or_set(CATALOG_KEY, 1, None)
 
 
-def invalidate_user(user_id: int) -> None:
+def invalidate_user(user_id: int | str) -> None:
+    """`user_id` is a Viewer.cache_id ("12" or "12.3" for a profile) or a plain user id."""
     try:
         cache.incr(f"recs:v:{user_id}")
     except ValueError:
         cache.set(f"recs:v:{user_id}", 2, None)
+
+
+def invalidate_viewer(viewer) -> None:
+    invalidate_user(viewer.cache_id)
 
 
 def bump_catalog() -> None:
@@ -40,7 +45,7 @@ def bump_catalog_on_commit() -> None:
     transaction.on_commit(bump_catalog)
 
 
-def key(user_id: int, *parts: object) -> str:
+def key(user_id: int | str, *parts: object) -> str:
     return f"recs:{catalog_version()}:{user_id}:{user_version(user_id)}:" + ":".join(
         str(p) for p in parts
     )

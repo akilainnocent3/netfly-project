@@ -55,6 +55,7 @@ class User(AbstractBaseUser):
     autoplay_next = models.BooleanField(default=True)
     autoplay_previews = models.BooleanField(default=True)
     subtitles_language = models.CharField(max_length=12, blank=True)
+    notifications_seen_at = models.DateTimeField(null=True, blank=True)
 
     objects = UserManager()
 
@@ -83,6 +84,8 @@ class ViewerProfile(models.Model):
     name = models.CharField(max_length=40)
     avatar_key = models.CharField(max_length=255, blank=True)
     is_kids = models.BooleanField(default=False)
+    translation_mode = models.CharField(max_length=20, blank=True)
+    notifications_seen_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

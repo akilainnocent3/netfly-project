@@ -2,7 +2,8 @@
 
 import { cn } from "@netfly/ui";
 import { AnimatePresence, m } from "framer-motion";
-import { Search, X } from "lucide-react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { ChevronDown, Search, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -17,11 +18,26 @@ const ProfileMenu = dynamic(() => import("./profile-menu").then((m) => m.Profile
   loading: () => <span aria-hidden className="block size-9 rounded-md bg-white/10" />,
 });
 
-const NAV = [
+const NotificationsBell = dynamic(
+  () => import("./notifications").then((m) => m.NotificationsBell),
+  {
+    ssr: false,
+    loading: () => <span aria-hidden className="block size-9" />,
+  },
+);
+
+export const NAV = [
   { href: "/browse", label: "Home" },
-  { href: "/categories", label: "Categories" },
+  { href: "/series", label: "Series" },
+  { href: "/films", label: "Films" },
+  { href: "/new-and-popular", label: "New & Popular" },
   { href: "/my-list", label: "My List" },
+  { href: "/categories", label: "Categories" },
 ];
+
+export function isActive(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function Header() {
   const pathname = usePathname();
@@ -37,40 +53,106 @@ export function Header() {
     <header
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-[background-color,backdrop-filter,box-shadow] duration-300",
-        solid
-          ? "bg-bg/92 shadow-[0_1px_0_rgb(255_255_255/0.06)] backdrop-blur-xl"
-          : "bg-gradient-to-b from-black/75 via-black/30 to-transparent",
+        solid ? "bg-bg" : "bg-gradient-to-b from-black/75 via-black/30 to-transparent",
       )}
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      <div className="relative flex h-[var(--header-h)] items-center gap-6 px-[max(4vw,16px)]">
+      <div className="relative flex h-[var(--header-h)] items-center gap-4 px-[max(4vw,16px)] xl:gap-7">
         <Logo />
-        <nav aria-label="Primary" className="hidden items-center gap-5 lg:flex">
+        <nav aria-label="Primary" className="hidden items-center gap-5 xl:flex">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               prefetch
+              aria-current={isActive(pathname, item.href) ? "page" : undefined}
               className={cn(
-                "text-body transition-colors",
-                pathname.startsWith(item.href)
-                  ? "font-semibold text-white"
-                  : "text-white/70 hover:text-white",
+                "text-meta transition-colors duration-300",
+                isActive(pathname, item.href)
+                  ? "font-bold text-white"
+                  : "text-[#e5e5e5] hover:text-[#b3b3b3]",
               )}
             >
               {item.label}
             </Link>
           ))}
         </nav>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+        <CompactNav pathname={pathname} />
+        <div className="ml-auto flex items-center gap-1.5 md:gap-3">
           <TranslationSwitcher compact />
-        </div>
-        <div className="ml-auto flex items-center gap-2 md:gap-4">
           <SearchBox />
+          <NotificationsBell />
           <ProfileMenu />
         </div>
       </div>
+      <MobileChips pathname={pathname} />
     </header>
+  );
+}
+
+const CHIPS = [
+  { href: "/series", label: "Series" },
+  { href: "/films", label: "Films" },
+  { href: "/categories", label: "Categories" },
+];
+
+/** Phones: Netflix-style chips under the bar on the home pages (the tab bar holds the rest). */
+function MobileChips({ pathname }: { pathname: string }) {
+  if (!["/browse", "/series", "/films"].includes(pathname)) return null;
+  return (
+    <nav
+      aria-label="Browse by type"
+      className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-2.5 md:hidden"
+    >
+      {CHIPS.map((chip) => (
+        <Link
+          key={chip.href}
+          href={chip.href}
+          aria-current={isActive(pathname, chip.href) ? "page" : undefined}
+          className={cn(
+            "text-meta inline-flex h-9 shrink-0 items-center rounded-full border px-4 font-semibold",
+            isActive(pathname, chip.href)
+              ? "border-white bg-white text-black"
+              : "border-white/50 text-white",
+          )}
+        >
+          {chip.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+/** Below xl the six destinations collapse into a "Browse" menu (phones use the tab bar). */
+function CompactNav({ pathname }: { pathname: string }) {
+  const current = NAV.find((item) => isActive(pathname, item.href));
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger className="text-meta hidden items-center gap-1 font-semibold text-white outline-none focus-visible:outline-2 focus-visible:outline-white md:flex xl:hidden">
+        {current?.label ?? "Browse"} <ChevronDown className="size-4" />
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align="center"
+          sideOffset={14}
+          className="z-[70] w-60 border-t-2 border-white bg-black/90 py-2 text-center shadow-2xl"
+        >
+          {NAV.map((item) => (
+            <DropdownMenu.Item key={item.href} asChild>
+              <Link
+                href={item.href}
+                className={cn(
+                  "text-meta block h-11 leading-[44px] outline-none data-[highlighted]:bg-white/8",
+                  isActive(pathname, item.href) ? "font-bold text-white" : "text-[#b3b3b3]",
+                )}
+              >
+                {item.label}
+              </Link>
+            </DropdownMenu.Item>
+          ))}
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
   );
 }
 
@@ -94,7 +176,7 @@ function SearchBox() {
       else next.delete("q");
       if ((params.get("q") ?? "") !== value.trim())
         router.replace(`/search?${next.toString()}`, { scroll: false });
-    }, 250);
+    }, 200);
     return () => clearTimeout(timer);
   }, [value, onSearchPage, params, router]);
 

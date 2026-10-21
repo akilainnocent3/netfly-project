@@ -19,7 +19,14 @@ export default defineConfig({
     video: "retain-on-failure",
   },
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } }, testIgnore: /mobile\.spec\.ts/ },
+    { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } }, testIgnore: /(mobile|profiles)\.spec\.ts/ },
     { name: "mobile", use: { ...devices["Pixel 7"] }, testMatch: /mobile\.spec\.ts/ },
+    // Profiles flips a global flag (every viewer then sees the gate): run it after everything else.
+    {
+      name: "profiles",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
+      testMatch: /profiles\.spec\.ts/,
+      dependencies: ["desktop", "mobile"],
+    },
   ],
 });

@@ -16,6 +16,7 @@ from dataclasses import asdict, dataclass, field
 
 from django.core.cache import cache
 
+from apps.accounts.viewer import Viewer, as_viewer
 from apps.catalog.models import Collection, Episode, Genre, HomeRow, Title
 from apps.catalog.queries import cards_by_ids, visible_titles
 from apps.core.config import config
@@ -53,16 +54,17 @@ def _limit() -> int:
 
 
 # -- live rows -------------------------------------------------------------------
-def continue_watching(user_id: int, mode: str, limit: int, kind: str | None = None) -> Row:
+def continue_watching(who: Viewer | int, mode: str, limit: int, kind: str | None = None) -> Row:
+    viewer = as_viewer(who)
     ignores_filter = config.get_bool("features.continue_watching_ignores_filter")
     latest: dict[int, WatchProgress] = {}
     for p in (
-        WatchProgress.objects.filter(user_id=user_id)
+        WatchProgress.objects.filter(**viewer.scope, hidden=False)
         .select_related("episode__season", "title")
         .order_by("-updated_at")[:200]
     ):
         latest.setdefault(p.title_id, p)
-    visible_qs = visible_titles("all").filter(pk__in=list(latest))
+    visible_qs = visible_titles("all", viewer.kids).filter(pk__in=list(latest))
     if kind:
         visible_qs = visible_qs.filter(type=kind)
     visible = set(visible_qs.values_list("pk", "translation_status"))
@@ -134,10 +136,12 @@ def next_episode(episode: Episode) -> Episode | None:
     )
 
 
-def my_list(user_id: int, mode: str, limit: int, kind: str | None = None) -> Row:
-    titles = visible_titles(mode).filter(type=kind) if kind else visible_titles(mode)
+def my_list(who: Viewer | int, mode: str, limit: int, kind: str | None = None) -> Row:
+    viewer = as_viewer(who)
+    titles = visible_titles(mode, viewer.kids)
+    titles = titles.filter(type=kind) if kind else titles
     ids = list(
-        MyListItem.objects.filter(user_id=user_id, title__in=titles)
+        MyListItem.objects.filter(**viewer.scope, title__in=titles)
         .order_by("-created_at")
         .values_list("title_id", flat=True)[:limit]
     )
@@ -195,17 +199,19 @@ class _Dedupe:
         return kept
 
 
-def _personal_rows(user_id: int, mode: str, kind: str | None = None) -> dict:
-    """All non-live rows in layout order (ids only), cached per user + mode + type."""
+def _personal_rows(who: Viewer | int, mode: str, kind: str | None = None) -> dict:
+    """All non-live rows in layout order (ids only), cached per viewer + mode + type."""
+    viewer = as_viewer(who)
+    user_id = viewer.cache_id
     ck = cache_key(user_id, "rows", mode, kind or "all")
     cached = cache.get(ck)
     if cached is not None:
         return cached
     limit = _limit()
-    signals = engine.load_signals(user_id)
-    pool = engine.candidates(mode, kind)
+    signals = engine.load_signals(viewer)
+    pool = engine.candidates(mode, kind, viewer.kids)
     disliked = signals.disliked
-    ranked, scores = engine.score(user_id, mode, signals, pool=pool)
+    ranked, scores = engine.score(viewer, mode, signals, pool=pool)
     personal = bool(signals.seeds)
     match = engine.to_match(scores, ranked) if personal else {}
     seen = signals.completed | signals.in_progress | set(signals.seeds) | disliked
@@ -262,12 +268,12 @@ def _personal_rows(user_id: int, mode: str, kind: str | None = None) -> dict:
                     "trending",
                     row_kind,
                     heading or "Trending now",
-                    engine.trending_ids(mode, limit, disliked, kind),
+                    engine.trending_ids(mode, limit, disliked, kind, viewer.kids),
                 )
             )
         elif row_kind == "top10":
             if config.get_bool("features.top10_row", True):
-                ids = engine.trending_ids(mode, 10, disliked, kind)
+                ids = engine.trending_ids(mode, 10, disliked, kind, viewer.kids)
                 if len(ids) >= 5:
                     add(
                         Row(
@@ -355,7 +361,7 @@ def _personal_rows(user_id: int, mode: str, kind: str | None = None) -> dict:
 
 
 def home_page(
-    user_id: int, mode: str, page: int, kind: str | None = None
+    user_id: Viewer | int, mode: str, page: int, kind: str | None = None
 ) -> tuple[list[Row], dict[int, int], bool]:
     """Rows for one page of the feed, plus match scores, plus whether more pages exist."""
     payload = _personal_rows(user_id, mode, kind)
@@ -393,7 +399,7 @@ def hydrate(rows: list[Row]) -> dict[int, Title]:
 
 
 def billboard_ids(
-    mode: str, user_id: int | None, limit: int = 5
+    mode: str, who: Viewer | int | None, limit: int = 5, kind: str | None = None
 ) -> tuple[list[int], dict[int, object]]:
     """Admin billboard rows first, then effective boost, featured, trending. Viewer dislikes excluded."""
     from django.db.models import Q
@@ -403,10 +409,13 @@ def billboard_ids(
     from apps.engagement.models import Rating
 
     now = timezone.now()
-    visible = visible_titles(mode)
+    viewer = as_viewer(who) if who is not None else None
+    visible = visible_titles(mode, bool(viewer and viewer.kids))
+    if kind:
+        visible = visible.filter(type=kind)
     disliked = (
-        set(Rating.objects.filter(user_id=user_id, value=-1).values_list("title_id", flat=True))
-        if user_id
+        set(Rating.objects.filter(**viewer.scope, value=-1).values_list("title_id", flat=True))
+        if viewer
         else set()
     )
     items = list(
@@ -421,7 +430,7 @@ def billboard_ids(
     meta = {b.title_id: b for b in items}
     ids = [b.title_id for b in items]
     if len(ids) < limit:
-        pool = engine.candidates(mode)
+        pool = engine.candidates(mode, None, bool(viewer and viewer.kids))
         info = {pk: (t, b) for pk, t, b in visible.values_list("pk", "trending", "backdrop_id")}
         rest = sorted(
             (c for pk, c in pool.items() if pk in info and pk not in meta and pk not in disliked),

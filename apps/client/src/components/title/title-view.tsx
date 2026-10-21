@@ -13,6 +13,7 @@ import { PreviewVideo } from "../browse/preview-video";
 import { RatingButton } from "../browse/rating-button";
 import { StateMessage } from "../ui/state-message";
 import { NetflyImage } from "../ui/netfly-image";
+import { Badge } from "../ui/badge";
 import { Button, IconButton } from "../ui/button";
 import { Episodes } from "./episodes";
 
@@ -100,7 +101,14 @@ function TitleContent({
           className="object-cover"
           fallback={<CardArt title={card} sizes="900px" showText={false} />}
         />
-        {title.has_preview && <PreviewVideo title={card} showMute />}
+        {title.has_preview && (
+          <PreviewVideo
+            title={card}
+            showMute
+            delayMs={600}
+            controlsClassName="absolute right-[5%] bottom-[10%] z-20"
+          />
+        )}
         <div className="from-surface via-surface/20 absolute inset-0 bg-gradient-to-t to-transparent" />
         <CloseButton onClose={onClose} />
         <div className="absolute right-[5%] bottom-[8%] left-[5%] z-10">
@@ -147,19 +155,7 @@ function TitleContent({
               />
             )}
           </div>
-          {play && play.progress > 0 && (
-            <div className="text-meta mt-3 flex max-w-xs items-center gap-3 text-white/75">
-              <div className="h-1 flex-1 rounded-full bg-white/25">
-                <div
-                  className="bg-accent h-full rounded-full"
-                  style={{ width: `${play.progress * 100}%` }}
-                />
-              </div>
-              {title.type === "movie" && title.runtime_minutes
-                ? `${Math.max(1, Math.round((1 - play.progress) * title.runtime_minutes))}m left`
-                : "In progress"}
-            </div>
-          )}
+          {play && play.progress > 0 && <ResumeBar play={play} runtime={title.runtime_minutes} />}
         </div>
       </div>
 
@@ -167,7 +163,7 @@ function TitleContent({
         <div>
           <div className="text-body flex flex-wrap items-center gap-2.5">
             {typeof title.match === "number" && (
-              <span className="font-bold text-emerald-400">{title.match}% match</span>
+              <span className="text-match font-bold">{title.match}% Match</span>
             )}
             {title.year && <span className="text-white/80">{title.year}</span>}
             {meta && <span className="text-white/80">{meta}</span>}
@@ -176,10 +172,18 @@ function TitleContent({
                 {title.maturity_rating}
               </span>
             )}
-            <span className="text-caption rounded border border-white/30 px-1 leading-4 font-semibold text-white/70">
-              HD
-            </span>
+            {title.quality && (
+              <span className="text-caption rounded border border-white/30 px-1 leading-4 font-semibold text-white/70">
+                {title.quality}
+              </span>
+            )}
           </div>
+          {title.top10_rank ? (
+            <p className="text-lead mt-3 flex items-center gap-2 font-bold">
+              <Badge kind="top10" rank={title.top10_rank} />#{title.top10_rank} in{" "}
+              {title.type === "series" ? "Series" : "Films"} Today
+            </p>
+          ) : null}
           <div className="mt-3">
             {title.translation_status === "translated" ? (
               <span className="bg-accent/15 ring-accent/40 text-meta inline-flex items-center gap-2 rounded-full px-3 py-1 font-semibold text-white ring-1">
@@ -207,6 +211,12 @@ function TitleContent({
             <Meta
               label={title.type === "series" ? "Creators" : "Director"}
               value={(title.directors ?? []).join(", ")}
+            />
+          )}
+          {title.moods.length > 0 && (
+            <Meta
+              label={`This ${title.type === "series" ? "show" : "film"} is`}
+              value={title.moods.join(", ")}
             />
           )}
           {title.original_title && title.original_title !== title.title && (
@@ -245,7 +255,7 @@ function TitleContent({
                   <div className="flex items-center justify-between gap-2">
                     <div className="text-meta flex flex-wrap items-center gap-1.5 text-white/75">
                       {typeof t.match === "number" && (
-                        <span className="font-bold text-emerald-400">{t.match}%</span>
+                        <span className="text-match font-bold">{t.match}%</span>
                       )}
                       {t.maturity_rating && (
                         <span className="rounded border border-white/35 px-1 leading-4">
@@ -265,7 +275,72 @@ function TitleContent({
           </ul>
         </section>
       )}
+
+      <About title={title} />
     </article>
+  );
+}
+
+/** "23 of 48m": how far in, out of the full running time. */
+function ResumeBar({
+  play,
+  runtime,
+}: {
+  play: NonNullable<NonNullable<TitlePage["viewer"]>["play"]>;
+  runtime?: number | null;
+}) {
+  const total =
+    play.progress > 0 && play.position > 0
+      ? Math.round(play.position / play.progress / 60)
+      : (runtime ?? 0);
+  const done = Math.max(1, Math.round(play.position / 60));
+  return (
+    <div
+      className="text-meta mt-3 flex max-w-sm items-center gap-3 text-white/80"
+      data-testid="resume-bar"
+    >
+      <div className="h-[3px] flex-1 bg-white/25">
+        <div className="bg-accent h-full" style={{ width: `${play.progress * 100}%` }} />
+      </div>
+      <span className="whitespace-nowrap">
+        {total ? `${Math.min(done, total)} of ${total}m` : "In progress"}
+      </span>
+    </div>
+  );
+}
+
+function About({ title }: { title: TitlePage["title"] }) {
+  const people = (label: string, list?: string[] | null) =>
+    list && list.length > 0 ? <Meta label={label} value={list.join(", ")} /> : null;
+  return (
+    <section aria-labelledby="about-heading" className="px-[5%] pb-14">
+      <h3 id="about-heading" className="text-h3 mb-4 font-normal">
+        About <strong className="font-bold">{title.title}</strong>
+      </h3>
+      <dl className="text-meta space-y-2">
+        {people(title.type === "series" ? "Creators" : "Director", title.directors)}
+        {people("Cast", title.cast)}
+        {people(
+          "Genres",
+          title.genres_full.map((g) => g.name),
+        )}
+        {title.moods.length > 0 &&
+          people(`This ${title.type === "series" ? "show" : "film"} is`, title.moods)}
+        {title.maturity_rating && (
+          <div className="flex items-center gap-2">
+            <dt className="text-white/50">Maturity rating:</dt>
+            <dd>
+              <span className="rounded border border-white/40 px-1.5 leading-5 font-medium">
+                {title.maturity_rating}
+              </span>
+            </dd>
+          </div>
+        )}
+        {title.translation_status === "translated" && title.translator_name && (
+          <Meta label="Translated by" value={title.translator_name} />
+        )}
+      </dl>
+    </section>
   );
 }
 

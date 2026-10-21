@@ -196,7 +196,7 @@ function EpisodeRow({ episode, slug }: { episode: Episode; slug: string }) {
         </div>
         <p className="text-body mt-1 line-clamp-2 leading-snug text-white/65">{episode.synopsis}</p>
         {episode.watched && (
-          <p className="text-meta mt-1.5 flex items-center gap-1 font-semibold text-emerald-400">
+          <p className="text-meta text-match mt-1.5 flex items-center gap-1 font-semibold">
             <Check className="size-3.5" /> Watched
           </p>
         )}

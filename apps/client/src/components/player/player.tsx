@@ -558,7 +558,8 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
           <PlayerButton label="Back" onClick={() => router.push(exitHref)}>
             <ArrowLeft />
           </PlayerButton>
-          <div className="min-w-0">
+          {/* Phones keep the title up here; desktop centres it in the control bar. */}
+          <div className="min-w-0 md:hidden">
             <p className="text-body md:text-lead truncate font-bold">{info.title.title}</p>
             {ep && (
               <p className="text-meta md:text-body truncate text-white/70">
@@ -637,7 +638,19 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
                 className="w-0 accent-[var(--accent)] opacity-0 transition-all duration-200 group-hover/vol:w-24 group-hover/vol:opacity-100 focus:w-24 focus:opacity-100"
               />
             </div>
-            <div className="ml-auto flex items-center gap-1 md:gap-2">
+            <p
+              className="text-body hidden min-w-0 flex-1 truncate text-center md:block"
+              data-testid="player-title"
+            >
+              <span className="font-bold">{info.title.title}</span>
+              {ep && (
+                <span className="text-white/75">
+                  {" "}
+                  E{ep.number} {ep.name}
+                </span>
+              )}
+            </p>
+            <div className="ml-auto flex items-center gap-1 md:ml-0 md:gap-2">
               {info.next && (
                 <PlayerButton label="Next episode" onClick={() => playNext(false)}>
                   <SkipForward className="size-7" />

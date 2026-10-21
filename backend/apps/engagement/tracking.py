@@ -13,11 +13,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.permissions import IsViewer
+from apps.accounts.viewer import viewer_for
 from apps.catalog.models import Episode, Title
 from apps.core.config import config
 from apps.core.redis import get_redis
 from apps.core.throttling import throttle
-from apps.recommendations.cache import invalidate_user
+from apps.recommendations.cache import invalidate_viewer
 
 from .models import ViewEvent, WatchProgress
 
@@ -75,6 +76,7 @@ class ProgressView(APIView):
         ratio = config.get_float("playback.completed_ratio", 0.92)
         completed_now: list[int] = []
         saved = 0
+        who = viewer_for(request)
         for update in data.validated_data["updates"]:
             title = Title.objects.filter(pk=update["title_id"]).only("pk", "type").first()
             if title is None:
@@ -91,10 +93,7 @@ class ProgressView(APIView):
             done = bool(duration) and position / duration >= ratio
             with transaction.atomic():
                 progress, _ = WatchProgress.objects.select_for_update().get_or_create(
-                    user=request.user,
-                    profile=None,
-                    title=title,
-                    episode=episode,
+                    **who.scope, title=title, episode=episode
                 )
                 was_completed = progress.completed
                 progress.position_seconds = 0 if done else position
@@ -102,12 +101,14 @@ class ProgressView(APIView):
                 progress.watch_seconds += update["watched"]
                 # Completion follows the latest position: rewatching a finished title reopens it.
                 progress.completed = done
+                # Watching again brings a title removed from Continue Watching back.
+                progress.hidden = False
                 progress.save()
             saved += 1
             if done and not was_completed:
                 completed_now.append(title.pk)
         if completed_now:
-            invalidate_user(request.user.pk)
+            invalidate_viewer(who)
         return Response({"saved": saved, "completed": completed_now})
 
 

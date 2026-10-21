@@ -78,6 +78,8 @@ class WatchProgress(models.Model):
     duration_seconds = models.FloatField(default=0)
     completed = models.BooleanField(default=False)
     watch_seconds = models.FloatField(default=0, help_text="Accumulated time actually watched.")
+    # "Remove from row" hides the title from Continue Watching until the viewer plays it again.
+    hidden = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -112,6 +114,30 @@ class WatchProgress(models.Model):
             if self.duration_seconds
             else 0.0
         )
+
+
+class Reminder(models.Model):
+    """ "Remind me" on a Coming Soon title; surfaces as a notification once it is released."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reminders"
+    )
+    profile = models.ForeignKey(
+        ViewerProfile, null=True, blank=True, on_delete=models.CASCADE, related_name="+"
+    )
+    title = models.ForeignKey(Title, on_delete=models.CASCADE, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "profile", "title"], name="reminder_unique", nulls_distinct=False
+            )
+        ]
+        indexes = [models.Index(fields=["user", "-created_at"])]
+
+    def __str__(self) -> str:
+        return f"{self.user_id}:{self.title_id}"
 
 
 class ViewEvent(models.Model):

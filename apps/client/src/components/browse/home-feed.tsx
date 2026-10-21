@@ -10,11 +10,16 @@ import { Row, RowSkeleton } from "./row";
 
 export function HomeFeed({
   initialBillboard,
+  kind,
+  heading,
 }: {
   initialBillboard?: { mode: string; items: BillboardItem[] };
+  kind?: "movie" | "series";
+  /** Series / Films pages: a page title over the hero, like Netflix's category pages. */
+  heading?: string;
 }) {
   const mode = useMode();
-  const home = useHome();
+  const home = useHome(kind);
   const sentinel = useRef<HTMLDivElement>(null);
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = home;
 
@@ -34,8 +39,13 @@ export function HomeFeed({
 
   const rows = home.data?.pages.flatMap((p) => p.rows) ?? [];
   return (
-    <div className="pb-28 lg:pb-16">
-      <Hero initial={initialBillboard} />
+    <div className="page-fade pb-28 lg:pb-16">
+      {heading && (
+        <h1 className="text-h1 absolute top-[calc(var(--header-h)+env(safe-area-inset-top)+8px)] left-[max(4vw,16px)] z-20 font-bold max-md:sr-only">
+          {heading}
+        </h1>
+      )}
+      <Hero initial={initialBillboard} kind={kind} />
       <div className="relative z-10 -mt-[11vh] space-y-[clamp(18px,2.4vw,40px)] md:-mt-[13vh]">
         {home.isPending &&
           Array.from({ length: 4 }, (_, i) => <RowSkeleton key={i} titleWidth={140 + i * 30} />)}
@@ -65,7 +75,7 @@ export function HomeFeed({
             className="space-y-[clamp(18px,2.4vw,40px)]"
           >
             {rows.map((row, i) => (
-              <Row key={`${row.key}-${i}`} row={row} index={i} />
+              <Row key={`${row.key}-${i}`} row={row} index={i} lazy={i >= 3} />
             ))}
           </m.div>
         </AnimatePresence>

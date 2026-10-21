@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Header } from "@/components/browse/header";
+import { ProfileGate } from "@/components/profiles/profile-gate";
 import { TabBar } from "@/components/browse/tab-bar";
 import { TranslationSync } from "@/components/browse/translation-sync";
 import { InitialModeProvider } from "@/components/providers/initial-mode";
@@ -15,15 +16,17 @@ export default async function BrowseLayout({
   const mode = await serverMode();
   return (
     <InitialModeProvider value={mode}>
-      <Suspense>
-        <TranslationSync />
-        <Header />
-      </Suspense>
-      <main id="content" className="min-h-dvh">
-        {children}
-      </main>
-      {modal}
-      <TabBar />
+      <ProfileGate>
+        <Suspense>
+          <TranslationSync />
+          <Header />
+        </Suspense>
+        <main id="content" className="min-h-dvh">
+          {children}
+        </main>
+        {modal}
+        <TabBar />
+      </ProfileGate>
     </InitialModeProvider>
   );
 }

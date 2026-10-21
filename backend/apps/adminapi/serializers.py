@@ -155,6 +155,7 @@ class TitleAdminSerializer(serializers.ModelSerializer):
             "translator_name",
             "cast",
             "directors",
+            "moods",
             "genres",
             "genre_ids",
             "poster",
@@ -200,6 +201,12 @@ class TitleAdminSerializer(serializers.ModelSerializer):
         if value and value not in allowed:
             raise serializers.ValidationError(f"Choose one of: {', '.join(allowed)}.")
         return value
+
+    def validate_moods(self, value: list[str]) -> list[str]:
+        moods = list(dict.fromkeys(m.strip() for m in value if m.strip()))
+        if len(moods) > 3:
+            raise serializers.ValidationError("Use at most 3 moods.")
+        return moods
 
     def validate_slug(self, value: str) -> str:
         qs = Title.objects.filter(slug=value)

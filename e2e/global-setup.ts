@@ -13,7 +13,7 @@ export default async function globalSetup(): Promise<void> {
   });
   if (!login.ok) throw new Error(`Admin login failed (${login.status}). Set NETFLY_ADMIN_USER / NETFLY_ADMIN_PASSWORD.`);
   const { access } = (await login.json()) as { access: string };
-  for (const [key, value] of [["security.rate_signup", "500/min"], ["security.rate_login", "500/min"], ["security.rate_username_check", "2000/min"]]) {
+  for (const [key, value] of [["security.rate_signup", "500/min"], ["security.rate_login", "500/min"], ["security.rate_username_check", "2000/min"], ["security.rate_engagement", "2000/min"], ["features.profiles_enabled", false]] as const) {
     const res = await fetch(`${admin}/api/v1/admin/config/${key}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${access}` },

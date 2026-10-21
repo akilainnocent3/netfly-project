@@ -6,6 +6,7 @@ import { LazyMotion, MotionConfig } from "framer-motion";
 import { useState } from "react";
 import { AuthProvider } from "./auth";
 import { ConfigProvider } from "./config";
+import { ProfileProvider } from "./profile";
 import { ToastProvider } from "../ui/toast";
 
 const loadMotionFeatures = () => import("./motion-features").then((mod) => mod.default);
@@ -39,7 +40,9 @@ export function Providers({
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           >
             <ToastProvider>
-              <AuthProvider>{children}</AuthProvider>
+              <AuthProvider>
+                <ProfileProvider>{children}</ProfileProvider>
+              </AuthProvider>
             </ToastProvider>
           </MotionConfig>
         </LazyMotion>

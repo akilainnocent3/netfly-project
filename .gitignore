@@ -5,6 +5,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 backend/staticfiles/
+backend/.venv/
 backend/.wheels/*.whl
 .env
 playwright-report/

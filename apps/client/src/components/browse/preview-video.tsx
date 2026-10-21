@@ -2,7 +2,7 @@
 
 import type Hls from "hls.js";
 import { AnimatePresence, m } from "framer-motion";
-import { Volume2, VolumeX } from "lucide-react";
+import { RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { getPlayback, warmManifest } from "@/lib/playback";
 import type { TitleCard } from "@/lib/types";
@@ -23,56 +23,106 @@ function previewsAllowed(autoplayPreviews: boolean | undefined): boolean {
   return !connection?.saveData;
 }
 
-/** Muted, looping preview (trailer, or a slice of the title) that fades in over the artwork. */
+export type PreviewState = "idle" | "playing" | "ended";
+
+/**
+ * Muted preview (trailer, or a slice of the title) that fades in over the artwork.
+ * Starts after `delayMs`, pauses while scrolled out of view or while the tab is hidden, and —
+ * when it doesn't loop — fades back to the artwork at the end, offering Replay.
+ */
 export function PreviewVideo({
   title,
   loop = true,
   className,
   showMute,
+  delayMs = 0,
+  onStateChange,
+  controlsClassName = "absolute right-[4vw] bottom-[18%] z-10",
 }: {
   title: TitleCard;
   loop?: boolean;
   className?: string;
   showMute?: boolean;
+  delayMs?: number;
+  onStateChange?: (state: PreviewState) => void;
+  controlsClassName?: string;
 }) {
   const { user } = useAuth();
   const ref = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(false);
+  const startAt = useRef(0);
+  const [state, setStateRaw] = useState<PreviewState>("idle");
   const [muted, setMuted] = useState(true);
+  const onState = useRef(onStateChange);
+  onState.current = onStateChange;
+  const setState = (next: PreviewState) => {
+    setStateRaw(next);
+    onState.current?.(next);
+  };
 
   useEffect(() => {
     const video = ref.current;
     if (!video || !previewsAllowed(user?.autoplay_previews)) return;
     let hls: Hls | null = null;
     let cancelled = false;
-    void getPlayback(title.slug, { preview: true }).then(async (info) => {
-      if (!info || cancelled) return;
-      const start = () => {
-        video.currentTime = info.start_at;
-        void video.play().catch(() => undefined);
-      };
-      if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        video.src = info.master_url;
-        video.addEventListener("loadedmetadata", start, { once: true });
-        return;
-      }
-      const { default: HlsCtor } = await import("hls.js");
-      if (cancelled || !HlsCtor.isSupported()) return;
-      hls = new HlsCtor({
-        startPosition: info.start_at,
-        capLevelToPlayerSize: true,
-        maxBufferLength: 12,
-        abrEwmaDefaultEstimate: 3_000_000,
+    let visible = true;
+    const canPlay = () => visible && document.visibilityState === "visible";
+    const resume = () => {
+      if (canPlay() && video.src && !video.ended) void video.play().catch(() => undefined);
+      else video.pause();
+    };
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        visible = (entry?.intersectionRatio ?? 0) > 0.35;
+        resume();
+      },
+      { threshold: [0, 0.35, 0.6] },
+    );
+    observer.observe(video);
+    document.addEventListener("visibilitychange", resume);
+
+    const timer = setTimeout(() => {
+      void getPlayback(title.slug, { preview: true }).then(async (info) => {
+        if (!info || cancelled) return;
+        startAt.current = info.start_at;
+        const start = () => {
+          video.currentTime = info.start_at;
+          if (canPlay()) void video.play().catch(() => undefined);
+        };
+        if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = info.master_url;
+          video.addEventListener("loadedmetadata", start, { once: true });
+          return;
+        }
+        const { default: HlsCtor } = await import("hls.js");
+        if (cancelled || !HlsCtor.isSupported()) return;
+        hls = new HlsCtor({
+          startPosition: info.start_at,
+          capLevelToPlayerSize: true,
+          maxBufferLength: 12,
+          abrEwmaDefaultEstimate: 3_000_000,
+        });
+        hls.loadSource(info.master_url);
+        hls.attachMedia(video);
+        hls.on(HlsCtor.Events.MANIFEST_PARSED, () => {
+          if (canPlay()) void video.play().catch(() => undefined);
+        });
       });
-      hls.loadSource(info.master_url);
-      hls.attachMedia(video);
-      hls.on(HlsCtor.Events.MANIFEST_PARSED, () => void video.play().catch(() => undefined));
-    });
+    }, delayMs);
     return () => {
       cancelled = true;
+      clearTimeout(timer);
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", resume);
       hls?.destroy();
     };
-  }, [title.slug, user?.autoplay_previews]);
+  }, [title.slug, user?.autoplay_previews, delayMs]);
+
+  const replay = () => {
+    const video = ref.current;
+    if (!video) return;
+    video.currentTime = startAt.current;
+    void video.play().catch(() => undefined);
+  };
 
   return (
     <>
@@ -83,27 +133,31 @@ export function PreviewVideo({
         loop={loop}
         preload="none"
         aria-hidden
-        onPlaying={() => setPlaying(true)}
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${playing ? "opacity-100" : "opacity-0"} ${className ?? ""}`}
+        onPlaying={() => setState("playing")}
+        onEnded={() => setState("ended")}
+        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${state === "playing" ? "opacity-100" : "opacity-0"} ${className ?? ""}`}
       />
       <AnimatePresence>
-        {showMute && playing && (
+        {showMute && state !== "idle" && (
           <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute right-[4vw] bottom-[18%] z-10"
+            className={controlsClassName}
           >
             <IconButton
               size="lg"
-              label={muted ? "Unmute preview" : "Mute preview"}
+              label={
+                state === "ended" ? "Replay preview" : muted ? "Unmute preview" : "Mute preview"
+              }
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                setMuted((value) => !value);
+                if (state === "ended") replay();
+                else setMuted((value) => !value);
               }}
             >
-              {muted ? <VolumeX /> : <Volume2 />}
+              {state === "ended" ? <RotateCcw /> : muted ? <VolumeX /> : <Volume2 />}
             </IconButton>
           </m.div>
         )}

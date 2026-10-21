@@ -31,6 +31,14 @@ from apps.media.tasks import queue_transcode
 FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
+COMING_SOON = [
+    ("Glass Orchard", "A botanist inherits an orchard where the fruit remembers who planted it."),
+    (
+        "Signal Fire",
+        "Two rival radio hosts discover their broadcasts are reaching the same stranger.",
+    ),
+]
+
 GENRES = ["Action", "Drama", "Comedy", "Thriller", "Sci-Fi", "Romance", "Mystery"]
 
 MOVIES = [
@@ -335,7 +343,8 @@ class Command(BaseCommand):
             deleted, _ = Title.objects.filter(slug__in=slugs).delete()
             self.stdout.write(f"Removed {deleted} demo rows.")
         if Title.objects.filter(slug="neon-tide").exists():
-            self.stdout.write("Demo catalog already present — nothing to do.")
+            self._coming_soon()
+            self.stdout.write("Demo catalog already present — Coming Soon titles ensured.")
             return
         media = not opts["no_media"] and storage.is_configured()
         if not media:
@@ -447,6 +456,7 @@ class Command(BaseCommand):
                     ]
                 ):
                     HomeRow.objects.create(kind=kind, order=order)
+        self._coming_soon()
         self.stdout.write(
             self.style.SUCCESS(
                 f"Seeded {len(titles)} titles."
@@ -457,6 +467,32 @@ class Command(BaseCommand):
                 )
             )
         )
+
+    def _coming_soon(self) -> None:
+        """Two scheduled drafts for New & Popular → Coming Soon (kept a few days ahead)."""
+        drama = Genre.objects.filter(slug="drama").first()
+        for days, (name, synopsis) in zip((5, 12), COMING_SOON, strict=True):
+            from django.utils.text import slugify
+
+            title, _ = Title.objects.update_or_create(
+                slug=slugify(name),
+                defaults={
+                    "type": Title.Type.MOVIE,
+                    "title": name,
+                    "synopsis": synopsis,
+                    "short_synopsis": synopsis,
+                    "year": timezone.now().year,
+                    "maturity_rating": "PG-13",
+                    "runtime_minutes": 1,
+                    "language": "en",
+                    "translation_status": "translated",
+                    "rights_holder": "NETFLY Studios (demo)",
+                    "status": Title.Status.DRAFT,
+                    "publish_at": timezone.now() + dt.timedelta(days=days),
+                },
+            )
+            if drama:
+                title.genres.add(drama)
 
     def _title(
         self, name, kind, gs, tr, translator, rating, year, synopsis, colors, genres, n, media

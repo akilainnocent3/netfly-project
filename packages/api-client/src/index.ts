@@ -46,6 +46,8 @@ export class SessionManager {
   private inflight: Promise<boolean> | null = null;
   private listeners = new Set<Listener>();
   private timer: ReturnType<typeof setTimeout> | null = null;
+  /** Active viewer profile (sent as `X-Profile`; ignored by the API unless profiles are on). */
+  profileId: number | null = null;
 
   constructor(
     private readonly baseUrl: string,
@@ -81,6 +83,7 @@ export class SessionManager {
   clear(): void {
     this.access = null;
     this.user = null;
+    this.profileId = null;
     this.expiresAt = 0;
     if (this.timer) clearTimeout(this.timer);
     this.emit();
@@ -161,6 +164,9 @@ export function createNetflyClient(options: {
     const withAuth = (request: Request): Request => {
       if (session.token && !request.headers.has("Authorization")) {
         request.headers.set("Authorization", `Bearer ${session.token}`);
+      }
+      if (session.profileId != null && !request.headers.has("X-Profile")) {
+        request.headers.set("X-Profile", String(session.profileId));
       }
       return request;
     };

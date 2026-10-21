@@ -15,15 +15,24 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.permissions import IsViewer
+from apps.accounts.viewer import Viewer, viewer_for
 from apps.core.config import config
 from apps.core.throttling import throttle
-from apps.engagement.models import MyListItem, Rating, SearchLog, WatchProgress
+from apps.engagement.models import MyListItem, Rating, Reminder, SearchLog, WatchProgress
 from apps.recommendations import engine, feed
 from apps.recommendations.cache import catalog_version
 
 from . import serializers as s
 from .models import Episode, Genre, Season, Title
-from .queries import card_queryset, cards_by_ids, translation_mode, viewer_state, visible_titles
+from .queries import (
+    badge_context,
+    card_queryset,
+    cards_by_ids,
+    translation_mode,
+    upcoming_titles,
+    viewer_state,
+    visible_titles,
+)
 
 TRANSLATION = OpenApiParameter("translation", str, enum=["translated", "not_translated", "all"])
 CURSOR = OpenApiParameter("cursor", str)
@@ -67,15 +76,17 @@ class HomeView(APIView):
         page = _offset(request.query_params.get("cursor"))
         kind = request.query_params.get("type")
         kind = kind if kind in ("movie", "series") else None
-        rows, match, more = feed.home_page(request.user.pk, mode, page, kind)
+        who = viewer_for(request)
+        rows, match, more = feed.home_page(who, mode, page, kind)
         cards = feed.hydrate(rows)
-        viewer = viewer_state(request.user, cards)
+        viewer = viewer_state(who, cards)
+        badges = badge_context(mode)
         out = []
         for row in rows:
             items = [cards[i] for i in row.ids if i in cards]
             if not items:
                 continue
-            row_context = {"match": match, "extras": row.extras, "viewer": viewer}
+            row_context = {"match": match, "extras": row.extras, "viewer": viewer, "badges": badges}
             out.append(
                 {
                     "key": row.key,
@@ -94,27 +105,30 @@ class BillboardView(APIView):
     """Hero billboard. Anonymous: short public cache. Signed in: computed per viewer (dislikes excluded)."""
 
     @extend_schema(
-        parameters=[TRANSLATION],
+        parameters=[TRANSLATION, OpenApiParameter("type", str, enum=["movie", "series"])],
         responses=s.BillboardItemSerializer(many=True),
         operation_id="browse_billboard",
     )
     def get(self, request):
         mode = translation_mode(request)
-        user_id = request.user.pk if request.user.is_authenticated else None
-        if user_id is None:
-            ck = f"billboard:{catalog_version()}:{mode}"
+        kind = request.query_params.get("type")
+        kind = kind if kind in ("movie", "series") else None
+        who = viewer_for(request)
+        if who is None:
+            ck = f"billboard:{catalog_version()}:{mode}:{kind or 'all'}"
             data = cache.get(ck)
             if data is None:
-                data = self._build(mode, None)
+                data = self._build(mode, None, kind)
                 cache.set(ck, data, 60)
             return _public_cache(Response(data))
-        response = Response(self._build(mode, user_id))
+        response = Response(self._build(mode, who, kind))
         response["Cache-Control"] = "private, no-store"
         return response
 
     @staticmethod
-    def _build(mode: str, user_id: int | None) -> list[dict]:
-        ids, meta = feed.billboard_ids(mode, user_id)
+    def _build(mode: str, who: Viewer | None, kind: str | None = None) -> list[dict]:
+        ids, meta = feed.billboard_ids(mode, who, kind=kind)
+        badges = badge_context(mode)
         cards = {t.pk: t for t in cards_by_ids(ids)}
         return [
             {
@@ -122,28 +136,36 @@ class BillboardView(APIView):
                 "headline": meta[i].headline if i in meta else "",
                 "tagline": (meta[i].tagline if i in meta else "") or cards[i].short_synopsis,
                 "use_trailer": meta[i].use_trailer if i in meta else True,
-                "title": s.TitleCardSerializer(cards[i]).data,
+                "title": s.TitleCardSerializer(cards[i], context={"badges": badges}).data,
             }
             for i in ids
             if i in cards
         ]
 
 
-def _progress_by_episode(user_id: int, title: Title) -> dict[int, WatchProgress]:
+def _progress_by_episode(viewer: Viewer, title: Title) -> dict[int, WatchProgress]:
     return {
         p.episode_id: p
-        for p in WatchProgress.objects.filter(user_id=user_id, title=title, episode__isnull=False)
+        for p in WatchProgress.objects.filter(**viewer.scope, title=title, episode__isnull=False)
     }
 
 
-def play_target(user, title: Title) -> dict | None:
-    """Smart Play: 'Play S1:E1', 'Resume S2:E4', 'Play S3:E1' after finishing a season."""
+def _as_viewer(who) -> Viewer | None:
+    if who is None or isinstance(who, Viewer):
+        return who
+    return Viewer(who.pk) if getattr(who, "is_authenticated", False) else None
+
+
+def play_target(who, title: Title) -> dict | None:
+    """Smart Play: 'Play S1:E1', 'Resume S2:E4', 'Play S3:E1' after finishing a season.
+    `who` is a Viewer (or a user, meaning account scope)."""
+    viewer = _as_viewer(who)
     if not title.is_series:
         if not (title.video_id and title.video.status == "ready"):
             return None
         p = (
-            WatchProgress.objects.filter(user=user, title=title, episode__isnull=True).first()
-            if user
+            WatchProgress.objects.filter(**viewer.scope, title=title, episode__isnull=True).first()
+            if viewer
             else None
         )
         if p and not p.completed and p.fraction > 0.01:
@@ -173,11 +195,11 @@ def play_target(user, title: Title) -> dict | None:
     if first is None:
         return None
     latest = (
-        WatchProgress.objects.filter(user=user, title=title, episode__isnull=False)
+        WatchProgress.objects.filter(**viewer.scope, title=title, episode__isnull=False)
         .select_related("episode__season")
         .order_by("-updated_at")
         .first()
-        if user
+        if viewer
         else None
     )
     if latest is None:
@@ -219,8 +241,8 @@ def play_target(user, title: Title) -> dict | None:
     }
 
 
-def more_like_this(title: Title, mode: str, limit: int = 12) -> list[Title]:
-    visible = visible_titles(mode).exclude(pk=title.pk)
+def more_like_this(title: Title, mode: str, limit: int = 12, kids: bool = False) -> list[Title]:
+    visible = visible_titles(mode, kids).exclude(pk=title.pk)
     related = list(
         visible.filter(related_from__title=title)
         .order_by("-related_from__weight")
@@ -262,37 +284,42 @@ class TitlePageView(APIView):
                 )
             )
         )
+        who = viewer_for(request)
+        kids = bool(who and who.kids)
+        if kids:
+            qs = qs.filter(maturity_rating__in=config.get_json("content.kids_ratings") or [])
         title = qs.filter(slug=slug).first()
         if title is None:
             raise NotFound("We couldn't find that title.")
         viewer = None
-        user = request.user if request.user.is_authenticated else None
-        if user:
+        user = who
+        if who:
             rating = (
-                Rating.objects.filter(user=user, title=title)
+                Rating.objects.filter(**who.scope, title=title)
                 .values_list("value", flat=True)
                 .first()
             )
             last = (
-                WatchProgress.objects.filter(user=user, title=title, episode__isnull=False)
+                WatchProgress.objects.filter(**who.scope, title=title, episode__isnull=False)
                 .order_by("-updated_at")
                 .values_list("episode__season__number", flat=True)
                 .first()
             )
             viewer = {
-                "in_my_list": MyListItem.objects.filter(user=user, title=title).exists(),
+                "in_my_list": MyListItem.objects.filter(**who.scope, title=title).exists(),
                 "rating": rating,
-                "play": play_target(user, title),
+                "play": play_target(who, title),
                 "last_season": last,
             }
-        similar = more_like_this(title, mode)
+        similar = more_like_this(title, mode, kids=kids)
+        badges = badge_context(mode)
         data = {
-            "title": s.TitleDetailSerializer(title).data,
+            "title": s.TitleDetailSerializer(title, context={"badges": badges}).data,
             "viewer": viewer,
             "more_like_this": s.TitleCardSerializer(
                 similar,
                 many=True,
-                context={"viewer": viewer_state(request.user, [t.pk for t in similar])},
+                context={"viewer": viewer_state(who, [t.pk for t in similar]), "badges": badges},
             ).data,
         }
         response = Response(data)
@@ -327,11 +354,8 @@ class EpisodesView(APIView):
             .order_by("number")
         )
         page = list(qs[offset : offset + limit + 1])
-        progress = (
-            _progress_by_episode(request.user.pk, season.title)
-            if request.user.is_authenticated
-            else {}
-        )
+        who = viewer_for(request)
+        progress = _progress_by_episode(who, season.title) if who else {}
         return Response(
             {
                 "results": s.EpisodeSerializer(
@@ -394,15 +418,16 @@ class GenreTitlesView(APIView):
         sort = request.query_params.get("sort", "suggested")
         size = config.get_int("content.page_size", 30)
         offset = _offset(request.query_params.get("cursor"))
-        base = visible_titles(mode).filter(genres=genre)
+        who = viewer_for(request)
+        base = visible_titles(mode, bool(who and who.kids)).filter(genres=genre)
         if sort in SORTS:
             ids = list(
                 base.order_by(*SORTS[sort]).values_list("pk", flat=True)[offset : offset + size + 1]
             )
         else:
             pool = set(base.values_list("pk", flat=True))
-            if request.user.is_authenticated:
-                ranked, _ = engine.score(request.user.pk, mode)
+            if who:
+                ranked, _ = engine.score(who, mode)
                 ordered = [pk for pk in ranked if pk in pool]
                 ordered += sorted(pool - set(ordered))
             else:
@@ -411,7 +436,8 @@ class GenreTitlesView(APIView):
                 )
             ids = ordered[offset : offset + size + 1]
         cards = cards_by_ids(ids[:size])
-        viewer = viewer_state(request.user, [c.pk for c in cards])
+        viewer = viewer_state(who, [c.pk for c in cards])
+        badges = badge_context(mode)
         return Response(
             {
                 "rows": [
@@ -421,7 +447,7 @@ class GenreTitlesView(APIView):
                         "title": genre.name,
                         "seed": None,
                         "items": s.TitleCardSerializer(
-                            cards, many=True, context={"viewer": viewer}
+                            cards, many=True, context={"viewer": viewer, "badges": badges}
                         ).data,
                     }
                 ],
@@ -444,8 +470,9 @@ class SearchView(APIView):
         if len(q) < 1:
             return Response([])
         sim = Greatest(TrigramSimilarity("title", q), TrigramSimilarity("original_title", q))
+        who = viewer_for(request)
         ids = list(
-            visible_titles(mode)
+            visible_titles(mode, bool(who and who.kids))
             .annotate(
                 sim=sim,
                 cast_text=Func(
@@ -467,7 +494,9 @@ class SearchView(APIView):
         _log_search(request, q, len(ids), mode)
         return Response(
             s.TitleCardSerializer(
-                cards_by_ids(ids), many=True, context={"viewer": viewer_state(request.user, ids)}
+                cards_by_ids(ids),
+                many=True,
+                context={"viewer": viewer_state(who, ids), "badges": badge_context(mode)},
             ).data
         )
 
@@ -568,3 +597,91 @@ class PosterWallView(APIView):
             data = [{"key": t.poster.key, "blur": t.poster.blur_data_url} for t in titles]
             cache.set("poster-wall", data, 600)
         return _public_cache(Response({"results": data}))
+
+
+def _coming_soon(who: Viewer | None, limit: int = 30) -> tuple[list[Title], set[int] | None]:
+    titles = list(
+        card_queryset(upcoming_titles(bool(who and who.kids))).order_by("publish_at", "pk")[:limit]
+    )
+    reminded = None
+    if who:
+        reminded = set(
+            Reminder.objects.filter(**who.scope, title__in=[t.pk for t in titles]).values_list(
+                "title_id", flat=True
+            )
+        )
+    return titles, reminded
+
+
+class UpcomingView(APIView):
+    """Public Coming Soon list (scheduled titles only). `reminded` is set when signed in."""
+
+    @extend_schema(responses=s.UpcomingSerializer(many=True), operation_id="browse_upcoming")
+    def get(self, request):
+        who = viewer_for(request)
+        titles, reminded = _coming_soon(who)
+        response = Response(
+            s.UpcomingSerializer(titles, many=True, context={"reminded": reminded}).data
+        )
+        if who:
+            response["Cache-Control"] = "private, no-store"
+            return response
+        return _public_cache(response)
+
+
+class NewAndPopularView(APIView):
+    """New & Popular tabs: Coming soon, Everyone's watching, Top 10 series, Top 10 films."""
+
+    permission_classes = [IsViewer]
+
+    @extend_schema(
+        parameters=[TRANSLATION],
+        responses=s.NewAndPopularSerializer,
+        operation_id="browse_new_and_popular",
+    )
+    def get(self, request):
+        who = viewer_for(request)
+        mode = translation_mode(request)
+        visible = visible_titles(mode, who.kids)
+        trending = ("-trending", "-popularity", "-published_at", "pk")
+        everyone = list(visible.order_by(*trending).values_list("pk", flat=True)[:20])
+        series = list(
+            visible.filter(type=Title.Type.SERIES)
+            .order_by(*trending)
+            .values_list("pk", flat=True)[:10]
+        )
+        films = list(
+            visible.filter(type=Title.Type.MOVIE)
+            .order_by(*trending)
+            .values_list("pk", flat=True)[:10]
+        )
+        cards = {t.pk: t for t in cards_by_ids(list(dict.fromkeys(everyone + series + films)))}
+        state = viewer_state(who, cards)
+        badges = badge_context(mode)
+
+        def ranked(ids: list[int]) -> list[dict]:
+            out = []
+            for rank, pk in enumerate(ids, 1):
+                if pk not in cards:
+                    continue
+                ctx = {"viewer": state, "badges": badges, "extras": {pk: {"rank": rank}}}
+                out.append(s.TitleCardSerializer(cards[pk], context=ctx).data)
+            return out
+
+        upcoming, reminded = _coming_soon(who)
+        response = Response(
+            {
+                "coming_soon": s.UpcomingSerializer(
+                    upcoming, many=True, context={"reminded": reminded, "viewer": state}
+                ).data,
+                "everyone_watching": s.TitleCardSerializer(
+                    [cards[pk] for pk in everyone if pk in cards],
+                    many=True,
+                    context={"viewer": state, "badges": badges},
+                ).data,
+                "top10_series": ranked(series),
+                "top10_films": ranked(films),
+            }
+        )
+        response["Cache-Control"] = "private, no-store"
+        return response

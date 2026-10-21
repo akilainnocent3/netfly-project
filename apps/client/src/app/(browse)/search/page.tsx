@@ -7,7 +7,11 @@ import { Suspense, useEffect, useState } from "react";
 import { GridSkeleton, TitleGrid } from "@/components/browse/title-grid";
 import { Button, IconButton } from "@/components/ui/button";
 import { StateMessage } from "@/components/ui/state-message";
-import { useSearch, useSearchSuggestions } from "@/lib/queries";
+import type { TitleCard } from "@/lib/types";
+import { useNewAndPopular, useSearch, useSearchSuggestions } from "@/lib/queries";
+import { clearRecent, pushRecent, readRecent } from "@/lib/recent-searches";
+
+const DEBOUNCE_MS = 200;
 
 function SearchScreen() {
   const params = useSearchParams();
@@ -17,6 +21,13 @@ function SearchScreen() {
   const [query, setQuery] = useState(urlQuery.trim());
   const results = useSearch(query);
   const suggestions = useSearchSuggestions();
+  const popular = useNewAndPopular();
+  const [recent, setRecent] = useState<string[]>([]);
+  useEffect(() => setRecent(readRecent()), []);
+  // Remember searches that found something (on this device, per profile).
+  useEffect(() => {
+    if (query && results.data?.length && !results.isPlaceholderData) setRecent(pushRecent(query));
+  }, [query, results.data, results.isPlaceholderData]);
 
   useEffect(() => setValue(urlQuery), [urlQuery]);
   // Instant results: debounce keystrokes, keep the URL shareable.
@@ -28,12 +39,12 @@ function SearchScreen() {
       else next.delete("q");
       if ((params.get("q") ?? "") !== value.trim())
         router.replace(`/search?${next}`, { scroll: false });
-    }, 250);
+    }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [value, params, router]);
 
   return (
-    <div className="px-[max(4vw,16px)] pt-[calc(var(--header-h)+24px)] pb-28 lg:pb-16">
+    <div className="page-fade px-[max(4vw,16px)] pt-[calc(var(--header-h)+env(safe-area-inset-top)+24px)] pb-28 lg:pb-16">
       <label className="focus-within:ring-accent mb-8 flex h-14 items-center gap-3 rounded-xl bg-white/8 px-4 ring-1 ring-white/10 focus-within:ring-2 md:hidden">
         <Search className="size-5 text-white/60" />
         <input
@@ -51,20 +62,31 @@ function SearchScreen() {
         )}
       </label>
       {!query ? (
-        <div className="grid gap-10 md:grid-cols-2">
-          <SuggestionList
-            icon={<TrendingUp className="size-4" />}
-            title="Top searches"
-            items={suggestions.data?.top ?? []}
-            onPick={setValue}
-          />
-          <SuggestionList
-            icon={<Clock className="size-4" />}
-            title="Your recent searches"
-            items={suggestions.data?.recent ?? []}
-            onPick={setValue}
-            empty="Searches you make will show up here."
-          />
+        <div className="space-y-10">
+          <div className="grid gap-10 md:grid-cols-2">
+            <SuggestionList
+              icon={<TrendingUp className="size-4" />}
+              title="Top searches"
+              items={suggestions.data?.top ?? []}
+              onPick={setValue}
+            />
+            <SuggestionList
+              icon={<Clock className="size-4" />}
+              title="Your recent searches"
+              items={recent}
+              onPick={setValue}
+              empty="Searches you make will show up here."
+              onClear={
+                recent.length
+                  ? () => {
+                      clearRecent();
+                      setRecent([]);
+                    }
+                  : undefined
+              }
+            />
+          </div>
+          <PopularGrid items={popular.data?.everyone_watching} title="Popular on Netfly" />
         </div>
       ) : results.isPending ? (
         <GridSkeleton />
@@ -76,15 +98,36 @@ function SearchScreen() {
           <TitleGrid items={results.data} dimmed={results.isPlaceholderData} />
         </>
       ) : (
-        <StateMessage title={`No matches for “${query}”`}>
-          Try a different spelling, a genre like{" "}
-          <Link href="/search?q=Drama" className="text-white underline">
-            Drama
-          </Link>
-          , or switch the translation filter.
-        </StateMessage>
+        <div className="space-y-10">
+          <StateMessage title={`No matches for “${query}”`}>
+            Try a different spelling, a genre like{" "}
+            <Link href="/search?q=Drama" className="text-white underline">
+              Drama
+            </Link>
+            , or switch the translation filter.
+          </StateMessage>
+          {(suggestions.data?.top?.length ?? 0) > 0 && (
+            <SuggestionList
+              icon={<TrendingUp className="size-4" />}
+              title="Try one of these"
+              items={suggestions.data?.top ?? []}
+              onPick={setValue}
+            />
+          )}
+          <PopularGrid items={popular.data?.everyone_watching} title="You might like" />
+        </div>
       )}
     </div>
+  );
+}
+
+function PopularGrid({ items, title }: { items?: TitleCard[]; title: string }) {
+  if (!items?.length) return null;
+  return (
+    <section>
+      <h2 className="text-h3 mb-4 font-bold">{title}</h2>
+      <TitleGrid items={items.slice(0, 12)} />
+    </section>
   );
 }
 
@@ -94,17 +137,24 @@ function SuggestionList({
   items,
   onPick,
   empty,
+  onClear,
 }: {
   icon: React.ReactNode;
   title: string;
   items: string[];
   onPick: (q: string) => void;
   empty?: string;
+  onClear?: () => void;
 }) {
   return (
     <section>
       <h2 className="text-body mb-3 flex items-center gap-2 font-bold tracking-wider text-white/60 uppercase">
         {icon} {title}
+        {onClear && (
+          <Button variant="ghost" size="sm" className="ml-auto normal-case" onClick={onClear}>
+            Clear
+          </Button>
+        )}
       </h2>
       {items.length ? (
         <ul className="flex flex-wrap gap-2">

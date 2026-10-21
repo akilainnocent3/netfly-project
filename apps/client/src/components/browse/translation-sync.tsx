@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { api } from "@/lib/api";
 import type { TranslationMode } from "@/lib/types";
@@ -15,7 +15,6 @@ export function TranslationSync() {
   const config = useConfig();
   const { user, status } = useAuth();
   const params = useSearchParams();
-  const router = useRouter();
   const pathname = usePathname();
   const { mode, init } = useTranslation();
   const lastSaved = useRef<string | null>(null);
@@ -43,13 +42,15 @@ export function TranslationSync() {
     if (params.get("translation") !== mode) {
       const next = new URLSearchParams(params.toString());
       next.set("translation", mode);
-      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+      // Shallow URL update (Next syncs useSearchParams): a router.replace here would be a soft
+      // navigation, re-running intercepting routes (e.g. mounting a 2nd title modal on deep links).
+      window.history.replaceState(null, "", `${pathname}?${next.toString()}`);
     }
     if (user && lastSaved.current !== mode) {
       lastSaved.current = mode;
       void api.PATCH("/api/v1/auth/me", { body: { translation_mode: mode } });
     }
-  }, [mode, params, pathname, router, user]);
+  }, [mode, params, pathname, user]);
 
   return null;
 }

@@ -1,6 +1,10 @@
+import datetime as dt
+
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from apps.core.config import config
 from apps.media.serializers import ImageRef
 
 from .models import Episode, Genre, Season, Title
@@ -22,6 +26,53 @@ class CardContextSerializer(serializers.Serializer):
     other_mode = serializers.BooleanField(required=False)
 
 
+# Fallback "This title is…" moods when the editor hasn't set any (first match per genre).
+GENRE_MOODS = {
+    "thriller": "Suspenseful",
+    "crime": "Gritty",
+    "horror": "Scary",
+    "mystery": "Suspenseful",
+    "comedy": "Witty",
+    "romance": "Romantic",
+    "drama": "Emotional",
+    "action": "Exciting",
+    "adventure": "Exciting",
+    "sci-fi": "Mind-bending",
+    "science fiction": "Mind-bending",
+    "fantasy": "Imaginative",
+    "documentary": "Thought-provoking",
+    "family": "Feel-good",
+    "animation": "Feel-good",
+    "kids": "Feel-good",
+    "music": "Uplifting",
+}
+
+BADGES = ["top10", "new_episodes", "recently_added", "leaving_soon"]
+
+
+def card_badge(obj, top10: dict) -> str | None:
+    """One badge per card, most important first: Top 10 → Leaving soon → New episodes → Recently added."""
+    if obj.pk in top10:
+        return "top10"
+    now = timezone.now()
+    window = dt.timedelta(days=config.get_int("content.badge_days", 14))
+    if obj.license_end and now < obj.license_end <= now + window:
+        return "leaving_soon"
+    latest = getattr(obj, "latest_episode_at", None)
+    published = obj.published_at
+    if (
+        obj.type == Title.Type.SERIES
+        and latest
+        and latest >= now - window
+        and published
+        and published < now - window
+    ):
+        return "new_episodes"
+    if published and published >= now - window:
+        return "recently_added"
+    return None
+
+
 class TitleCardSerializer(serializers.ModelSerializer):
     poster = ImageRef(read_only=True)
     backdrop = ImageRef(read_only=True)
@@ -33,6 +84,9 @@ class TitleCardSerializer(serializers.ModelSerializer):
     context = serializers.SerializerMethodField()
     in_my_list = serializers.SerializerMethodField()
     rating = serializers.SerializerMethodField()
+    badge = serializers.SerializerMethodField()
+    top10_rank = serializers.SerializerMethodField()
+    moods = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
@@ -57,7 +111,33 @@ class TitleCardSerializer(serializers.ModelSerializer):
             "context",
             "in_my_list",
             "rating",
+            "badge",
+            "top10_rank",
+            "moods",
         ]
+
+    def _top10(self) -> dict:
+        badges = self.context.get("badges") or {}
+        return badges.get("top10") or {}
+
+    @extend_schema_field(
+        serializers.ChoiceField(choices=BADGES, allow_null=True)  # type: ignore[arg-type]
+    )
+    def get_badge(self, obj) -> str | None:
+        return card_badge(obj, self._top10())
+
+    def get_top10_rank(self, obj) -> int | None:
+        return self._top10().get(obj.pk)
+
+    def get_moods(self, obj) -> list[str]:
+        if obj.moods:
+            return list(obj.moods)[:3]
+        out: list[str] = []
+        for g in obj.genres.all():
+            mood = GENRE_MOODS.get(g.name.lower())
+            if mood and mood not in out:
+                out.append(mood)
+        return out[:3]
 
     def get_in_my_list(self, obj) -> bool | None:
         state = self.context.get("viewer")
@@ -169,9 +249,19 @@ class ViewerStateSerializer(serializers.Serializer):
     last_season = serializers.IntegerField(allow_null=True)
 
 
+def quality_label(video) -> str | None:
+    """ "4K" / "HD" from the encoded ladder (what the viewer can actually get), else None."""
+    if video is None:
+        return None
+    heights = [r.get("height") or 0 for r in (video.renditions or [])] or [video.source_height]
+    top = max(heights)
+    return "4K" if top >= 2160 else "HD" if top >= 720 else None
+
+
 class TitleDetailSerializer(TitleCardSerializer):
     genres_full = GenreSerializer(source="genres", many=True, read_only=True)
     seasons = serializers.SerializerMethodField()
+    quality = serializers.SerializerMethodField()
 
     class Meta(TitleCardSerializer.Meta):
         fields = [
@@ -184,7 +274,20 @@ class TitleDetailSerializer(TitleCardSerializer):
             "genres_full",
             "seasons",
             "published_at",
+            "quality",
         ]
+
+    @extend_schema_field(serializers.ChoiceField(choices=["4K", "HD"], allow_null=True))
+    def get_quality(self, obj):
+        if obj.type != Title.Type.SERIES:
+            return quality_label(obj.video if obj.video_id else None)
+        episode = (
+            Episode.objects.filter(season__title=obj, video__status="ready")
+            .select_related("video")
+            .order_by("season__number", "number")
+            .first()
+        )
+        return quality_label(episode.video if episode else None)
 
     @extend_schema_field(SeasonSummarySerializer(many=True))
     def get_seasons(self, obj):
@@ -224,3 +327,24 @@ class EpisodePageSerializer(serializers.Serializer):
 class PosterWallItemSerializer(serializers.Serializer):
     key = serializers.CharField()
     blur = serializers.CharField()
+
+
+class UpcomingSerializer(TitleCardSerializer):
+    """A Coming Soon card: when it lands and whether this viewer asked to be reminded."""
+
+    synopsis = serializers.CharField(read_only=True)
+    reminded = serializers.SerializerMethodField()
+
+    class Meta(TitleCardSerializer.Meta):
+        fields = [*TitleCardSerializer.Meta.fields, "synopsis", "publish_at", "reminded"]
+
+    def get_reminded(self, obj) -> bool | None:
+        reminded = self.context.get("reminded")
+        return obj.pk in reminded if reminded is not None else None
+
+
+class NewAndPopularSerializer(serializers.Serializer):
+    coming_soon = UpcomingSerializer(many=True)
+    everyone_watching = TitleCardSerializer(many=True)
+    top10_series = TitleCardSerializer(many=True)
+    top10_films = TitleCardSerializer(many=True)

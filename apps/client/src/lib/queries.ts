@@ -23,7 +23,7 @@ export function useMode(): TranslationMode {
 
 export const keys = {
   home: (mode: string) => ["home", mode] as const,
-  billboard: (mode: string) => ["billboard", mode] as const,
+  billboard: (mode: string, kind?: string) => ["billboard", mode, kind ?? "all"] as const,
   title: (slug: string, mode: string) => ["title", slug, mode] as const,
   episodes: (slug: string, season: number) => ["episodes", slug, season] as const,
   genres: (mode: string) => ["genres", mode] as const,
@@ -32,15 +32,15 @@ export const keys = {
   myList: (mode: string) => ["my-list", mode] as const,
 };
 
-export function useHome() {
+export function useHome(kind?: "movie" | "series") {
   const mode = useMode();
   return useInfiniteQuery({
-    queryKey: keys.home(mode),
+    queryKey: kind ? [...keys.home(mode), kind] : keys.home(mode),
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam }) =>
       unwrap(
         api.GET("/api/v1/browse/home", {
-          params: { query: { translation: mode, cursor: pageParam } },
+          params: { query: { translation: mode, cursor: pageParam, type: kind } },
         }),
       ),
     getNextPageParam: (last) => last.next ?? undefined,
@@ -49,13 +49,20 @@ export function useHome() {
   });
 }
 
-export function useBillboard(initial?: { mode: string; items: BillboardItem[] }) {
+export function useBillboard(
+  initial?: { mode: string; items: BillboardItem[] },
+  kind?: "movie" | "series",
+) {
   const mode = useMode();
   return useQuery({
-    queryKey: keys.billboard(mode),
+    queryKey: keys.billboard(mode, kind),
     initialData: initial && initial.mode === mode ? initial.items : undefined,
     queryFn: () =>
-      unwrap(api.GET("/api/v1/browse/billboard", { params: { query: { translation: mode } } })),
+      unwrap(
+        api.GET("/api/v1/browse/billboard", {
+          params: { query: { translation: mode, type: kind } },
+        }),
+      ),
     placeholderData: keepPreviousData,
     staleTime: 5 * 60_000,
   });
@@ -166,7 +173,10 @@ type RatingValue = -1 | 1 | 2 | null;
 type TitleRef = Pick<TitleCard, "id" | "slug" | "title">;
 
 /** Per-title pending flag (for rendering the spinner). */
-export function usePendingFor(kind: "rate" | "mylist", titleId: number): boolean {
+export function usePendingFor(
+  kind: "rate" | "mylist" | "reminder" | "cw-hide",
+  titleId: number,
+): boolean {
   return useIsMutating({ mutationKey: [kind, titleId] }) > 0;
 }
 
@@ -324,4 +334,152 @@ export function useInList() {
     staleTime: Infinity,
     gcTime: Infinity,
   });
+}
+
+export function useNotifications(enabled = true) {
+  return useQuery({
+    queryKey: ["notifications"],
+    enabled,
+    queryFn: () => unwrap(api.GET("/api/v1/notifications")),
+    staleTime: 60_000,
+    refetchInterval: 5 * 60_000,
+  });
+}
+
+export function useMarkNotificationsSeen() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["notifications-seen"],
+    mutationFn: () => unwrap(api.POST("/api/v1/notifications/seen")),
+    onMutate: () =>
+      queryClient.setQueryData<{ unread: number; results: { unread: boolean }[] }>(
+        ["notifications"],
+        (d) => (d ? { ...d, unread: 0 } : d),
+      ),
+  });
+}
+
+export function useNewAndPopular() {
+  const mode = useMode();
+  return useQuery({
+    queryKey: ["new-and-popular", mode],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/v1/browse/new-and-popular", { params: { query: { translation: mode } } }),
+      ),
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
+  });
+}
+
+type ReminderRef = Pick<TitleCard, "id" | "title">;
+
+/** "Remind me" with the same single-flight + rollback + Retry rules as My List. */
+export function useReminder(title: ReminderRef) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const setReminded = (on: boolean) =>
+    queryClient.setQueriesData<{ coming_soon: { id: number; reminded?: boolean | null }[] }>(
+      { queryKey: ["new-and-popular"] },
+      (d) =>
+        d
+          ? {
+              ...d,
+              coming_soon: d.coming_soon.map((t) =>
+                t.id === title.id ? { ...t, reminded: on } : t,
+              ),
+            }
+          : d,
+    );
+  const mutation = useMutation({
+    mutationKey: ["reminder", title.id],
+    mutationFn: ({ on }: { on: boolean }) =>
+      on
+        ? unwrap(
+            api.PUT("/api/v1/reminders/{title_id}", { params: { path: { title_id: title.id } } }),
+          )
+        : unwrap(
+            api.DELETE("/api/v1/reminders/{title_id}", {
+              params: { path: { title_id: title.id } },
+            }),
+          ),
+    onMutate: ({ on }) => setReminded(on),
+    onSuccess: (_d, { on }) =>
+      toast(
+        {
+          message: on
+            ? `We'll let you know when ${title.title} is out`
+            : `Reminder for ${title.title} removed`,
+          tone: "success",
+        },
+        2400,
+      ),
+    onError: (_e, variables) => {
+      setReminded(!variables.on);
+      toast({
+        message: "Couldn't update the reminder.",
+        tone: "error",
+        action: {
+          label: "Retry",
+          onClick: () => claim(`reminder:${title.id}`) && mutation.mutate(variables),
+        },
+      });
+    },
+    onSettled: () => release(`reminder:${title.id}`),
+  });
+  const toggleNow = (on: boolean) => {
+    if (claim(`reminder:${title.id}`)) mutation.mutate({ on });
+  };
+  return { ...mutation, toggleNow };
+}
+
+/** "Remove from row" on Continue Watching: optimistic, with Undo-free rollback on error. */
+export function useHideFromContinueWatching(title: ReminderRef) {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const mutation = useMutation({
+    mutationKey: ["cw-hide", title.id],
+    mutationFn: () =>
+      unwrap(
+        api.DELETE("/api/v1/continue-watching/{title_id}", {
+          params: { path: { title_id: title.id } },
+        }),
+      ),
+    onMutate: () => {
+      const snapshot = queryClient.getQueriesData<InfiniteData<HomePage>>({ queryKey: ["home"] });
+      queryClient.setQueriesData<InfiniteData<HomePage>>({ queryKey: ["home"] }, (data) =>
+        data
+          ? {
+              ...data,
+              pages: data.pages.map((page) => ({
+                ...page,
+                rows: page.rows
+                  .map((row) =>
+                    row.kind === "continue_watching"
+                      ? { ...row, items: row.items.filter((i) => i.id !== title.id) }
+                      : row,
+                  )
+                  .filter((row) => row.items.length > 0),
+              })),
+            }
+          : data,
+      );
+      return { snapshot };
+    },
+    onSuccess: () =>
+      toast({ message: `Removed ${title.title} from Continue Watching`, tone: "success" }, 2400),
+    onError: (_e, _v, context) => {
+      for (const [key, data] of context?.snapshot ?? []) queryClient.setQueryData(key, data);
+      toast({
+        message: "Couldn't remove it from the row.",
+        tone: "error",
+        action: { label: "Retry", onClick: () => claim(`cw:${title.id}`) && mutation.mutate() },
+      });
+    },
+    onSettled: () => release(`cw:${title.id}`),
+  });
+  const hideNow = () => {
+    if (claim(`cw:${title.id}`)) mutation.mutate();
+  };
+  return { ...mutation, hideNow };
 }

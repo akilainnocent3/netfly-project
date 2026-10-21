@@ -9,7 +9,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { TitleCard } from "@/lib/types";
 import { useConfig } from "../providers/config";
+import { Badge, badgeFromApi } from "../ui/badge";
 import { IconButton } from "../ui/button";
+import { ContinueMenu } from "./continue-menu";
 import { NetflyImage } from "../ui/netfly-image";
 import { MyListButton } from "./my-list-button";
 import { PreviewVideo, prefetchPlayback } from "./preview-video";
@@ -84,6 +86,32 @@ export function CardArt({
   );
 }
 
+// Scrolling moves cards under a still pointer and Chrome then fires mouseenter/mousemove on them;
+// like Netflix, a preview only opens after the pointer itself has moved since the last scroll.
+let lastScrollAt = 0;
+let scrolledSinceMove = false;
+let pointer = { x: -1, y: -1 };
+if (typeof window !== "undefined") {
+  const opts = { passive: true, capture: true };
+  window.addEventListener(
+    "scroll",
+    () => {
+      lastScrollAt = performance.now();
+      scrolledSinceMove = true;
+    },
+    opts,
+  );
+  window.addEventListener(
+    "mousemove",
+    (e) => {
+      if (e.clientX === pointer.x && e.clientY === pointer.y) return; // synthetic post-scroll event
+      pointer = { x: e.clientX, y: e.clientY };
+      scrolledSinceMove = false;
+    },
+    opts,
+  );
+}
+
 function canHover(): boolean {
   return (
     typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches
@@ -96,13 +124,17 @@ export function Card({
   rank,
   priority,
   onDislike,
+  rowKind,
 }: {
   title: TitleCard;
   variant?: "wide" | "poster";
   rank?: number;
   priority?: boolean;
   onDislike?: () => void;
+  rowKind?: string;
 }) {
+  const continuing = rowKind === "continue_watching";
+  const badge = badgeFromApi(title.badge);
   const config = useConfig();
   const router = useRouter();
   const ref = useRef<HTMLAnchorElement>(null);
@@ -111,19 +143,37 @@ export function Card({
   const progress = title.context?.progress;
   const label = title.context?.label;
   const hoverEnabled = config.bool("features.hover_previews", true);
-  const delay = config.num("ux.hover_preview_delay_ms", 400);
+  // Netflix-like intent delay: long enough to skip cards the pointer merely crosses.
+  const delay = Math.min(500, Math.max(400, config.num("ux.hover_preview_delay_ms", 450)));
 
+  // A menu inside the hover card renders in a portal; while it's open, leaving the card or the
+  // small scroll caused by focusing the menu must not close the card underneath it.
+  const menuOpen = useRef(false);
   const close = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    menuOpen.current = false;
     setRect(null);
   }, []);
 
   useEffect(() => {
     if (!rect) return;
-    const onScroll = () => close();
+    const onScroll = () => !menuOpen.current && close();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [rect, close]);
+  const armHover = () => {
+    if (!hoverEnabled || !canHover()) return;
+    if (scrolledSinceMove) return;
+    const armedAt = performance.now();
+    prefetchPlayback(title);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      timer.current = null;
+      if (lastScrollAt >= armedAt) return; // the page scrolled during the intent delay
+      if (ref.current) setRect(ref.current.getBoundingClientRect());
+    }, delay);
+  };
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
@@ -132,23 +182,18 @@ export function Card({
   );
 
   return (
-    <>
+    <div className="relative">
       <Link
         ref={ref}
         href={titleHref(title)}
         scroll={false}
         prefetch={false}
         aria-label={`${title.title}${label ? `, continue ${label}` : ""}`}
-        onMouseEnter={() => {
-          if (!hoverEnabled || !canHover()) return;
-          prefetchPlayback(title);
-          timer.current = setTimeout(
-            () => ref.current && setRect(ref.current.getBoundingClientRect()),
-            delay,
-          );
-        }}
+        onMouseEnter={armHover}
+        onMouseMove={() => !timer.current && !rect && armHover()}
         onMouseLeave={() => {
           if (timer.current) clearTimeout(timer.current);
+          timer.current = null;
         }}
         onFocus={() => prefetchPlayback(title)}
         className={cn(
@@ -170,6 +215,19 @@ export function Card({
             title={title}
             sizes="(min-width:1536px) 17vw, (min-width:1024px) 20vw, (min-width:640px) 30vw, 45vw"
             priority={priority}
+          />
+        )}
+        {badge === "top10" && rank === undefined && (
+          <Badge
+            kind="top10"
+            rank={title.top10_rank}
+            className="absolute top-0 right-1.5 rounded-t-none"
+          />
+        )}
+        {badge && badge !== "top10" && typeof progress !== "number" && (
+          <Badge
+            kind={badge}
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-b-none whitespace-nowrap"
           />
         )}
         {title.context?.other_mode && (
@@ -194,6 +252,13 @@ export function Card({
         )}
         <span className="pointer-events-none absolute inset-0 rounded-md ring-0 ring-white/0 transition group-focus-visible/card:ring-2 group-focus-visible/card:ring-white" />
       </Link>
+      {continuing && (
+        // Touch devices have no hover card: the ⋯ menu sits on the card itself.
+        <ContinueMenu
+          title={title}
+          className="absolute top-1.5 right-1.5 z-10 hidden pointer-coarse:inline-flex"
+        />
+      )}
       {rank !== undefined && <span className="sr-only">Number {rank}</span>}
       {typeof document !== "undefined" &&
         createPortal(
@@ -205,6 +270,9 @@ export function Card({
                 rect={rect}
                 onClose={close}
                 onDislike={onDislike}
+                continuing={continuing}
+                isMenuOpen={() => menuOpen.current}
+                setMenuOpen={(open) => (menuOpen.current = open)}
                 onOpen={() => {
                   close();
                   router.push(titleHref(title), { scroll: false });
@@ -214,7 +282,7 @@ export function Card({
           </AnimatePresence>,
           document.body,
         )}
-    </>
+    </div>
   );
 }
 
@@ -224,13 +292,20 @@ function HoverPanel({
   onClose,
   onOpen,
   onDislike,
+  continuing,
+  isMenuOpen,
+  setMenuOpen,
 }: {
   title: TitleCard;
   rect: DOMRect;
   onClose: () => void;
   onOpen: () => void;
   onDislike?: () => void;
+  continuing?: boolean;
+  isMenuOpen: () => boolean;
+  setMenuOpen: (open: boolean) => void;
 }) {
+  const badge = badgeFromApi(title.badge);
   const scale = 1.5;
   const width = Math.max(rect.width * scale, 300);
   const margin = 16;
@@ -249,7 +324,7 @@ function HoverPanel({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 1 / scale, transition: { duration: 0.15 } }}
       transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-      onMouseLeave={onClose}
+      onMouseLeave={() => !isMenuOpen() && onClose()}
       style={{ position: "absolute", top, left, width, transformOrigin: origin }}
       className="bg-surface z-[60] overflow-hidden rounded-lg shadow-[0_24px_70px_-10px_rgb(0_0_0/0.85)] ring-1 ring-white/8"
     >
@@ -278,13 +353,25 @@ function HoverPanel({
               onClose();
             }}
           />
-          <IconButton label="More info" onClick={onOpen} className="ml-auto">
+          {continuing && (
+            <ContinueMenu
+              title={title}
+              onAction={onClose}
+              onOpenChange={setMenuOpen}
+              className="ml-auto"
+            />
+          )}
+          <IconButton
+            label={title.type === "series" ? "Episodes and info" : "More info"}
+            onClick={onOpen}
+            className={continuing ? undefined : "ml-auto"}
+          >
             <ChevronDown />
           </IconButton>
         </div>
         <div className="text-meta flex flex-wrap items-center gap-x-2 gap-y-1">
           {typeof title.match === "number" && (
-            <span className="font-bold text-emerald-400">{title.match}% match</span>
+            <span className="text-match font-bold">{title.match}% Match</span>
           )}
           {title.maturity_rating && (
             <span className="text-caption rounded border border-white/40 px-1.5 leading-5 font-medium text-white/85">
@@ -297,15 +384,16 @@ function HoverPanel({
             HD
           </span>
         </div>
-        {title.genres.length > 0 && (
-          <p className="text-meta flex flex-wrap items-center gap-1.5 text-white/85">
-            {title.genres.map((g, i) => (
-              <span key={g} className="flex items-center gap-1.5">
-                {i > 0 && <span className="size-1 rounded-full bg-white/40" />}
-                {g}
-              </span>
-            ))}
+        {badge && (
+          <p className="text-meta flex items-center gap-2 font-semibold text-white">
+            <Badge kind={badge} rank={title.top10_rank} />
+            {badge === "top10" && title.top10_rank
+              ? `#${title.top10_rank} in ${title.type === "series" ? "Series" : "Films"} Today`
+              : null}
           </p>
+        )}
+        {title.genres.length > 0 && (
+          <p className="text-meta text-white/85">{title.genres.join(" • ")}</p>
         )}
         {title.translation_status === "translated" && title.translator_name && (
           <p className="text-meta text-white/55">Translated by {title.translator_name}</p>

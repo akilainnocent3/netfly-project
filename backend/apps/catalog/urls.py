@@ -5,6 +5,10 @@ from . import views
 urlpatterns = [
     path("browse/home", views.HomeView.as_view(), name="browse-home"),
     path("browse/billboard", views.BillboardView.as_view(), name="browse-billboard"),
+    path("browse/upcoming", views.UpcomingView.as_view(), name="browse-upcoming"),
+    path(
+        "browse/new-and-popular", views.NewAndPopularView.as_view(), name="browse-new-and-popular"
+    ),
     path("catalog/poster-wall", views.PosterWallView.as_view(), name="poster-wall"),
     path("titles/<slug:slug>", views.TitlePageView.as_view(), name="title-detail"),
     path(

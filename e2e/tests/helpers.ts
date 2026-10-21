@@ -36,3 +36,46 @@ export async function playableSlug(page: Page, type: "movie" | "series"): Promis
     return null;
   }, type);
 }
+
+const ADMIN = process.env.NETFLY_ADMIN_URL ?? "http://localhost:3001";
+
+/** Staff access token for arranging state through the admin API (Node side, not the page). */
+export async function adminToken(): Promise<string> {
+  const res = await fetch(`${ADMIN}/api/v1/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: process.env.NETFLY_ADMIN_USER ?? "admin",
+      password: process.env.NETFLY_ADMIN_PASSWORD ?? "netfly-dev-admin",
+      app: "admin",
+    }),
+  });
+  if (!res.ok) throw new Error(`admin login ${res.status}`);
+  return ((await res.json()) as { access: string }).access;
+}
+
+export async function setConfig(key: string, value: unknown): Promise<void> {
+  const token = await adminToken();
+  const res = await fetch(`${ADMIN}/api/v1/admin/config/${key}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ value }),
+  });
+  if (!res.ok) throw new Error(`set ${key}: ${res.status}`);
+}
+
+/** Count API requests matching `pattern` (method + path) while `action` runs. */
+export async function countRequests(
+  page: Page,
+  pattern: RegExp,
+  action: () => Promise<void>,
+): Promise<number> {
+  let n = 0;
+  const listener = (r: { method: () => string; url: () => string }) => {
+    if (pattern.test(`${r.method()} ${new URL(r.url()).pathname}`)) n += 1;
+  };
+  page.on("request", listener);
+  await action();
+  page.off("request", listener);
+  return n;
+}

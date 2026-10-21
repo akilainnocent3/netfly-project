@@ -3970,6 +3970,17 @@
                                 "translated"
                             ]
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "type",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "movie",
+                                "series"
+                            ]
+                        }
                     }
                 ],
                 "tags": [
@@ -4056,6 +4067,76 @@
                 }
             }
         },
+        "/api/v1/browse/new-and-popular": {
+            "get": {
+                "operationId": "browse_new_and_popular",
+                "description": "New & Popular tabs: Coming soon, Everyone's watching, Top 10 series, Top 10 films.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "translation",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "not_translated",
+                                "translated"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "browse"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NewAndPopular"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/browse/upcoming": {
+            "get": {
+                "operationId": "browse_upcoming",
+                "description": "Public Coming Soon list (scheduled titles only). `reminded` is set when signed in.",
+                "tags": [
+                    "browse"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Upcoming"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/catalog/poster-wall": {
             "get": {
                 "operationId": "poster_wall",
@@ -4083,6 +4164,35 @@
                             }
                         },
                         "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/continue-watching/{title_id}": {
+            "delete": {
+                "operationId": "continue_watching_remove",
+                "description": "\"Remove from row\": hides the title from Continue Watching until it is played again.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "title_id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "continue-watching"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
                     }
                 }
             }
@@ -4324,6 +4434,50 @@
                 }
             }
         },
+        "/api/v1/notifications": {
+            "get": {
+                "operationId": "notifications",
+                "description": "The bell: reminded titles that are out, new episodes of saved series, recent arrivals.",
+                "tags": [
+                    "notifications"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotificationList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/seen": {
+            "post": {
+                "operationId": "notifications_seen",
+                "tags": [
+                    "notifications"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
         "/api/v1/playback/{slug}": {
             "get": {
                 "operationId": "playback",
@@ -4448,6 +4602,144 @@
                 }
             }
         },
+        "/api/v1/profiles": {
+            "get": {
+                "operationId": "profiles_list",
+                "tags": [
+                    "profiles"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProfileList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "profiles_create",
+                "tags": [
+                    "profiles"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProfileRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProfileRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Profile"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/profiles/{id}": {
+            "patch": {
+                "operationId": "profiles_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "profiles"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedProfileRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedProfileRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Profile"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "profiles_delete",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "profiles"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
         "/api/v1/ratings/{title_id}": {
             "put": {
                 "operationId": "rate_title",
@@ -4513,6 +4805,62 @@
                 ],
                 "tags": [
                     "ratings"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/v1/reminders/{title_id}": {
+            "put": {
+                "operationId": "reminder_add",
+                "description": "\"Remind me\" on a Coming Soon title (per profile when profiles are on).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "title_id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "reminders"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "reminder_remove",
+                "description": "\"Remind me\" on a Coming Soon title (per profile when profiles are on).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "title_id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "reminders"
                 ],
                 "security": [
                     {
@@ -5150,6 +5498,34 @@
                     "id",
                     "target_type"
                 ]
+            },
+            "AvatarKeyEnum": {
+                "enum": [
+                    "avatar-1",
+                    "avatar-2",
+                    "avatar-3",
+                    "avatar-4",
+                    "avatar-5",
+                    "avatar-6",
+                    "avatar-7",
+                    "avatar-8",
+                    "avatar-9",
+                    "avatar-10",
+                    "avatar-11",
+                    "avatar-12"
+                ],
+                "type": "string",
+                "description": "* `avatar-1` - avatar-1\n* `avatar-2` - avatar-2\n* `avatar-3` - avatar-3\n* `avatar-4` - avatar-4\n* `avatar-5` - avatar-5\n* `avatar-6` - avatar-6\n* `avatar-7` - avatar-7\n* `avatar-8` - avatar-8\n* `avatar-9` - avatar-9\n* `avatar-10` - avatar-10\n* `avatar-11` - avatar-11\n* `avatar-12` - avatar-12"
+            },
+            "BadgeEnum": {
+                "enum": [
+                    "top10",
+                    "new_episodes",
+                    "recently_added",
+                    "leaving_soon"
+                ],
+                "type": "string",
+                "description": "* `top10` - top10\n* `new_episodes` - new_episodes\n* `recently_added` - recently_added\n* `leaving_soon` - leaving_soon"
             },
             "BillboardAdmin": {
                 "type": "object",
@@ -6516,6 +6892,41 @@
                     "username"
                 ]
             },
+            "NewAndPopular": {
+                "type": "object",
+                "properties": {
+                    "coming_soon": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Upcoming"
+                        }
+                    },
+                    "everyone_watching": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TitleCard"
+                        }
+                    },
+                    "top10_series": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TitleCard"
+                        }
+                    },
+                    "top10_films": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TitleCard"
+                        }
+                    }
+                },
+                "required": [
+                    "coming_soon",
+                    "everyone_watching",
+                    "top10_films",
+                    "top10_series"
+                ]
+            },
             "NextEpisode": {
                 "type": "object",
                 "properties": {
@@ -6546,6 +6957,70 @@
                     "name",
                     "synopsis",
                     "thumbnail"
+                ]
+            },
+            "Notification": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/NotificationKindEnum"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "unread": {
+                        "type": "boolean"
+                    },
+                    "title": {
+                        "$ref": "#/components/schemas/TitleCard"
+                    }
+                },
+                "required": [
+                    "at",
+                    "id",
+                    "kind",
+                    "message",
+                    "title",
+                    "unread"
+                ]
+            },
+            "NotificationKindEnum": {
+                "enum": [
+                    "reminder",
+                    "new_episodes",
+                    "recently_added"
+                ],
+                "type": "string",
+                "description": "* `reminder` - reminder\n* `new_episodes` - new_episodes\n* `recently_added` - recently_added"
+            },
+            "NotificationList": {
+                "type": "object",
+                "properties": {
+                    "unread": {
+                        "type": "integer"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Notification"
+                        }
+                    }
+                },
+                "required": [
+                    "results",
+                    "unread"
+                ]
+            },
+            "NullEnum": {
+                "enum": [
+                    null
                 ]
             },
             "PaginatedAdminUserList": {
@@ -6914,6 +7389,32 @@
                     }
                 }
             },
+            "PatchedProfileRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                    },
+                    "avatar_key": {
+                        "$ref": "#/components/schemas/AvatarKeyEnum"
+                    },
+                    "is_kids": {
+                        "type": "boolean"
+                    },
+                    "translation_mode": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/TranslationModeEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BlankEnum"
+                            }
+                        ]
+                    }
+                }
+            },
             "PatchedRelatedWeightRequest": {
                 "type": "object",
                 "properties": {
@@ -7023,6 +7524,14 @@
                             "type": "string",
                             "minLength": 1,
                             "maxLength": 120
+                        }
+                    },
+                    "moods": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 40
                         }
                     },
                     "genre_ids": {
@@ -7363,6 +7872,103 @@
                     "thumbnails_url"
                 ]
             },
+            "Profile": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 40
+                    },
+                    "avatar_key": {
+                        "$ref": "#/components/schemas/AvatarKeyEnum"
+                    },
+                    "is_kids": {
+                        "type": "boolean"
+                    },
+                    "translation_mode": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/TranslationModeEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BlankEnum"
+                            }
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "id",
+                    "name"
+                ]
+            },
+            "ProfileList": {
+                "type": "object",
+                "properties": {
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "max_profiles": {
+                        "type": "integer"
+                    },
+                    "avatars": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Profile"
+                        }
+                    }
+                },
+                "required": [
+                    "avatars",
+                    "enabled",
+                    "max_profiles",
+                    "results"
+                ]
+            },
+            "ProfileRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                    },
+                    "avatar_key": {
+                        "$ref": "#/components/schemas/AvatarKeyEnum"
+                    },
+                    "is_kids": {
+                        "type": "boolean"
+                    },
+                    "translation_mode": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/TranslationModeEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BlankEnum"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "name"
+                ]
+            },
             "ProgressBatchRequest": {
                 "type": "object",
                 "properties": {
@@ -7441,6 +8047,14 @@
                 "required": [
                     "values"
                 ]
+            },
+            "QualityEnum": {
+                "enum": [
+                    "4K",
+                    "HD"
+                ],
+                "type": "string",
+                "description": "* `4K` - 4K\n* `HD` - HD"
             },
             "RatingInputRequest": {
                 "type": "object",
@@ -8265,6 +8879,13 @@
                             "maxLength": 120
                         }
                     },
+                    "moods": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 40
+                        }
+                    },
                     "genres": {
                         "type": "array",
                         "items": {
@@ -8639,6 +9260,14 @@
                             "maxLength": 120
                         }
                     },
+                    "moods": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 40
+                        }
+                    },
                     "genre_ids": {
                         "type": "array",
                         "items": {
@@ -8827,10 +9456,35 @@
                         "type": "integer",
                         "nullable": true,
                         "readOnly": true
+                    },
+                    "badge": {
+                        "nullable": true,
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/BadgeEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/NullEnum"
+                            }
+                        ]
+                    },
+                    "top10_rank": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "moods": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "backdrop",
+                    "badge",
                     "context",
                     "genres",
                     "has_preview",
@@ -8838,11 +9492,13 @@
                     "in_my_list",
                     "logo",
                     "match",
+                    "moods",
                     "poster",
                     "rating",
                     "season_count",
                     "slug",
                     "title",
+                    "top10_rank",
                     "translation_status",
                     "type"
                 ]
@@ -8960,6 +9616,30 @@
                         "nullable": true,
                         "readOnly": true
                     },
+                    "badge": {
+                        "nullable": true,
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/BadgeEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/NullEnum"
+                            }
+                        ]
+                    },
+                    "top10_rank": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "moods": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    },
                     "original_title": {
                         "type": "string",
                         "maxLength": 200
@@ -9003,10 +9683,23 @@
                         "type": "string",
                         "format": "date-time",
                         "nullable": true
+                    },
+                    "quality": {
+                        "nullable": true,
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/QualityEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/NullEnum"
+                            }
+                        ]
                     }
                 },
                 "required": [
                     "backdrop",
+                    "badge",
                     "context",
                     "genres",
                     "genres_full",
@@ -9015,12 +9708,15 @@
                     "in_my_list",
                     "logo",
                     "match",
+                    "moods",
                     "poster",
+                    "quality",
                     "rating",
                     "season_count",
                     "seasons",
                     "slug",
                     "title",
+                    "top10_rank",
                     "translation_status",
                     "type"
                 ]
@@ -9136,6 +9832,182 @@
                 ],
                 "type": "string",
                 "description": "* `translated` - Translated\n* `not_translated` - Not translated"
+            },
+            "Upcoming": {
+                "type": "object",
+                "description": "A Coming Soon card: when it lands and whether this viewer asked to be reminded.",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "slug": {
+                        "type": "string",
+                        "maxLength": 140,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/TitleTypeEnum"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "maximum": 2100,
+                        "minimum": 1888,
+                        "nullable": true
+                    },
+                    "maturity_rating": {
+                        "type": "string",
+                        "maxLength": 12
+                    },
+                    "runtime_minutes": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": 0,
+                        "nullable": true
+                    },
+                    "season_count": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "short_synopsis": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "translation_status": {
+                        "$ref": "#/components/schemas/TranslationStatusEnum"
+                    },
+                    "translator_name": {
+                        "type": "string",
+                        "maxLength": 120
+                    },
+                    "poster": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "backdrop": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "logo": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "genres": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    },
+                    "has_preview": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "match": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "context": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CardContext"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "in_my_list": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "rating": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "badge": {
+                        "nullable": true,
+                        "readOnly": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/BadgeEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/NullEnum"
+                            }
+                        ]
+                    },
+                    "top10_rank": {
+                        "type": "integer",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "moods": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    },
+                    "synopsis": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "publish_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "reminded": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "backdrop",
+                    "badge",
+                    "context",
+                    "genres",
+                    "has_preview",
+                    "id",
+                    "in_my_list",
+                    "logo",
+                    "match",
+                    "moods",
+                    "poster",
+                    "rating",
+                    "reminded",
+                    "season_count",
+                    "slug",
+                    "synopsis",
+                    "title",
+                    "top10_rank",
+                    "translation_status",
+                    "type"
+                ]
             },
             "UploadSession": {
                 "type": "object",

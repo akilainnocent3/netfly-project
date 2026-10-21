@@ -72,7 +72,7 @@ class ConfigSecurityMiddleware:
 class ConfigCorsMiddleware:
     """Strict CORS: only origins listed in `security.cors_allowed_origins`, with credentials."""
 
-    ALLOW_HEADERS = "authorization, content-type, x-csrf-token, x-requested-with"
+    ALLOW_HEADERS = "authorization, content-type, x-csrf-token, x-requested-with, x-profile"
     ALLOW_METHODS = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
 
     def __init__(self, get_response):
