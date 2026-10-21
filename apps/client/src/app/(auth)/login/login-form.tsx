@@ -153,6 +153,12 @@ export function LoginForm() {
             </span>
             Remember me
           </label>
+          <Link
+            href={rawNext ? `/login/forgot?next=${encodeURIComponent(next)}` : "/login/forgot"}
+            className="text-muted rounded hover:text-white hover:underline focus-visible:outline-2 focus-visible:outline-white"
+          >
+            Forgot password?
+          </Link>
         </div>
       </form>
     </AuthShell>

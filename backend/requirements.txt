@@ -13,3 +13,4 @@ whitenoise==6.9.*
 gunicorn==23.*
 filetype==1.2.*
 jsonschema==4.*
+requests==2.*

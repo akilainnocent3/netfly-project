@@ -12,7 +12,9 @@ export type ButtonVariant =
   | "ghost"
   | "icon-circle"
   /** Primary action on the white registration pages (blue focus ring on white). */
-  | "accent-light";
+  | "accent-light"
+  /** Text action on the white registration pages ("Resend code"). */
+  | "ghost-light";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const BASE =
@@ -31,6 +33,8 @@ const VARIANT: Record<ButtonVariant, string> = {
   "accent-light":
     "rounded-[4px] bg-accent text-accent-fg hover:bg-[color-mix(in_srgb,var(--accent)_84%,black)] active:bg-[color-mix(in_srgb,var(--accent)_78%,black)] focus-visible:outline-[#0071eb]",
   ghost: "rounded-md text-white/80 hover:bg-white/10 hover:text-white",
+  "ghost-light":
+    "rounded-[4px] font-semibold text-[#333] underline-offset-2 hover:underline focus-visible:outline-[#0071eb] disabled:no-underline",
   "icon-circle": "rounded-full border-2 border-white/50 bg-black/45 text-white hover:border-white",
 };
 

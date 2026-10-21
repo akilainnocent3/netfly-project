@@ -136,3 +136,39 @@ class RefreshToken(models.Model):
 
     def __str__(self) -> str:
         return f"refresh:{self.user_id}:{self.family}"
+
+
+class VerificationCode(models.Model):
+    """A one-time code sent to an email address or phone number.
+
+    Only an HMAC of the code is stored (or the provider's pin id when Beem's OTP API generates
+    it). Each code has its own attempt limit and expiry; a newer code replaces older ones.
+    `purpose` = verify (add a contact detail) or reset (password reset).
+    """
+
+    class Channel(models.TextChoices):
+        EMAIL = "email"
+        PHONE = "phone"
+
+    class Purpose(models.TextChoices):
+        VERIFY = "verify"
+        RESET = "reset"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="verification_codes")
+    channel = models.CharField(max_length=5, choices=Channel.choices)
+    purpose = models.CharField(max_length=6, choices=Purpose.choices, default=Purpose.VERIFY)
+    target = models.CharField(max_length=254)
+    code_hash = models.CharField(max_length=64, blank=True)
+    provider_ref = models.CharField(max_length=80, blank=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    max_attempts = models.PositiveSmallIntegerField(default=5)
+    expires_at = models.DateTimeField()
+    consumed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["user", "channel", "purpose", "-created_at"])]
+
+    def __str__(self) -> str:
+        return f"{self.user_id}:{self.channel}:{self.purpose}"

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from django.core.cache import cache
 from django.db import transaction
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -19,6 +19,7 @@ from . import usage
 from .models import Plan, Subscription
 from .serializers import (
     AutoRenewSerializer,
+    CheckoutSerializer,
     ChoosePlanResultSerializer,
     ChoosePlanSerializer,
     HeartbeatRequestSerializer,
@@ -207,6 +208,47 @@ class ChoosePlanView(APIView):
                 "subscription": SubscriptionSerializer(sub).data,
             }
         )
+
+
+class CheckoutView(APIView):
+    """What's left before a paid plan or a trial starts (verify email → phone → pay / trial)."""
+
+    permission_classes = [IsViewer]
+
+    @extend_schema(
+        parameters=[OpenApiParameter("plan", str), OpenApiParameter("trial", bool)],
+        responses=CheckoutSerializer,
+        operation_id="billing_checkout",
+    )
+    def get(self, request):
+        slug = request.query_params.get("plan", "")
+        plan = Plan.objects.filter(slug=slug, is_active=True, is_free=False).first()
+        if plan is None:
+            raise APIError("Choose a paid plan first.", "not_found", 404)
+        trial = request.query_params.get("trial") in ("1", "true")
+        if trial and not trial_eligible(request.user, plan):
+            raise APIError(
+                "A free trial isn't available on this account.", "trial_unavailable", 409
+            )
+        from apps.accounts.phone import network
+
+        user = request.user
+        sub = plan_service.ensure_subscription(user)
+        phone = sub.payment_phone or (user.phone if user.phone_verified else "") or ""
+        _, days = trial_settings()
+        response = Response(
+            {
+                "plan": PlanSerializer(plan).data,
+                "trial": trial,
+                "trial_days": days,
+                "steps": steps_for(user, plan, trial=trial),
+                "amount_tzs": plan.price_tzs,
+                "payment_phone": phone,
+                "payment_network": network(phone) if phone else None,
+            }
+        )
+        response["Cache-Control"] = "private, no-store"
+        return response
 
 
 class AutoRenewView(APIView):

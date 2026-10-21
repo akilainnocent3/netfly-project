@@ -518,3 +518,32 @@ export function useUsage(enabled = true) {
     refetchIntervalInBackground: false,
   });
 }
+
+// -- verification & checkout ------------------------------------------------------------
+export type VerifyStatus = Schemas["VerifyStatus"];
+export type CodeSent = Schemas["CodeSent"];
+export type Checkout = Schemas["Checkout"];
+
+export function useVerifyStatus() {
+  return useQuery({
+    queryKey: ["verify-status"],
+    queryFn: () => unwrap(api.GET("/api/v1/auth/verify")),
+    staleTime: 0,
+  });
+}
+
+/** What's left before a paid plan / trial starts (null plan = not in a checkout). */
+export function useCheckout(plan: string | null, trial: boolean) {
+  return useQuery({
+    queryKey: ["checkout", plan, trial],
+    enabled: !!plan,
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/v1/billing/checkout", {
+          params: { query: { plan: plan!, trial: trial || undefined } },
+        }),
+      ),
+    staleTime: 0,
+    retry: false,
+  });
+}

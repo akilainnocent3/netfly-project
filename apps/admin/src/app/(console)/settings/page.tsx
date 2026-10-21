@@ -85,9 +85,9 @@ export default function SettingsPage() {
               </div>
               {group.key === "storage" ? (
                 <StorageForm entries={group.entries} />
-              ) : group.key === "intro" ? (
+              ) : group.key in TOOLS ? (
                 <>
-                  <IntroUpload />
+                  {TOOLS[group.key]!()}
                   <ul className="divide-line border-line divide-y border-t">
                     {group.entries.map((e) => (
                       <EntryRow key={e.key} entry={e} />
@@ -672,6 +672,204 @@ function StorageForm({ entries }: { entries: Entry[] }) {
 }
 
 /** Upload a replacement intro clip (MP4, H.264 + AAC, ≤ 15 s, ≤ 20 MB). */
+/** Extra controls shown above a group's settings. */
+const TOOLS: Record<string, () => React.ReactNode> = {
+  intro: () => <IntroUpload />,
+  email: () => <EmailTools />,
+  sms: () => <SmsTools />,
+  testing: () => <TestModeTools />,
+};
+
+type ToolResult = { ok: boolean; message: string };
+
+/** One "test" action: a button with a spinner, then the provider's answer inline. */
+function useTool() {
+  const [pending, setPending] = useState(false);
+  const [result, setResult] = useState<ToolResult | null>(null);
+  const run = async (fn: () => Promise<ToolResult>) => {
+    if (pending) return;
+    setPending(true);
+    setResult(null);
+    try {
+      setResult(await fn());
+    } catch (e) {
+      setResult({ ok: false, message: e instanceof ApiError ? e.message : "Request failed" });
+    } finally {
+      setPending(false);
+    }
+  };
+  return { pending, result, run };
+}
+
+function ToolResultLine({ result }: { result: ToolResult | null }) {
+  if (!result) return null;
+  return (
+    <p
+      role="status"
+      className={cn(
+        "flex items-center gap-1.5 text-[12.5px]",
+        result.ok ? "text-emerald-600 dark:text-emerald-400" : "text-red-500",
+      )}
+    >
+      {result.ok ? <Check className="size-3.5" /> : <CircleAlert className="size-3.5" />}
+      {result.message}
+    </p>
+  );
+}
+
+function EmailTools() {
+  const [to, setTo] = useState("");
+  const tool = useTool();
+  return (
+    <form
+      className="flex flex-wrap items-center gap-2 px-5 py-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void tool.run(() => unwrap(api.POST("/api/v1/admin/email/test", { body: { to } })));
+      }}
+    >
+      <p className="text-muted w-full text-[12.5px]">
+        Save the SMTP settings below, then send yourself a test email.
+      </p>
+      <Input
+        type="email"
+        required
+        placeholder="you@example.com"
+        aria-label="Send the test email to"
+        className="max-w-64"
+        value={to}
+        onChange={(e) => setTo(e.target.value)}
+      />
+      <Button type="submit" variant="secondary" loading={tool.pending} disabled={!to}>
+        <PlugZap className="size-3.5" /> Send test email
+      </Button>
+      <ToolResultLine result={tool.result} />
+    </form>
+  );
+}
+
+function SmsTools() {
+  const [to, setTo] = useState("");
+  const send = useTool();
+  const balance = useTool();
+  return (
+    <div className="space-y-3 px-5 py-4">
+      <p className="text-muted text-[12.5px]">
+        Beem Africa: save the API key, secret key and an approved sender ID below. Codes use our own
+        template by default so phones can fill them in automatically (WebOTP).
+      </p>
+      <form
+        className="flex flex-wrap items-center gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void send.run(() => unwrap(api.POST("/api/v1/admin/sms/test", { body: { to } })));
+        }}
+      >
+        <Input
+          type="tel"
+          required
+          placeholder="0712 345 678"
+          aria-label="Send the test SMS to"
+          className="max-w-48"
+          value={to}
+          onChange={(e) => setTo(e.target.value)}
+        />
+        <Button type="submit" variant="secondary" loading={send.pending} disabled={!to}>
+          <PlugZap className="size-3.5" /> Send test SMS
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          loading={balance.pending}
+          onClick={() => void balance.run(() => unwrap(api.GET("/api/v1/admin/sms/balance")))}
+        >
+          Check balance
+        </Button>
+      </form>
+      <ToolResultLine result={send.result} />
+      <ToolResultLine result={balance.result} />
+    </div>
+  );
+}
+
+/** Test mode: a warning while it's on, and the outbox of messages that weren't sent. */
+function TestModeTools() {
+  // Same query as the page: re-renders when the switch below is saved.
+  const groups = useQuery({
+    queryKey: ["config"],
+    queryFn: () => unwrap(api.GET("/api/v1/admin/config")),
+  }).data;
+  const on = !!groups?.flatMap((g) => g.entries).find((e) => e.key === "testing.mock_providers")
+    ?.value;
+  const [kind, setKind] = useState<"sms" | "email">("sms");
+  const [to, setTo] = useState("");
+  const outbox = useQuery({
+    queryKey: ["outbox", kind, to],
+    enabled: false,
+    queryFn: () =>
+      unwrap(api.GET("/api/v1/admin/testing/outbox", { params: { query: { kind, to } } })),
+  });
+  return (
+    <div className="space-y-3 px-5 py-4">
+      {on ? (
+        <p className="flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[12.5px] text-amber-700 dark:text-amber-300">
+          <CircleAlert className="size-4 shrink-0" /> Test mode is ON: no real SMS, email or
+          mobile-money requests are made. Turn it off before going live.
+        </p>
+      ) : null}
+      <form
+        className="flex flex-wrap items-center gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void outbox.refetch();
+        }}
+      >
+        <Select
+          aria-label="Message type"
+          value={kind}
+          onChange={(e) => setKind(e.target.value as "sms" | "email")}
+        >
+          <option value="sms">SMS</option>
+          <option value="email">Email</option>
+        </Select>
+        <Input
+          aria-label="Recipient"
+          placeholder={kind === "sms" ? "0712 345 678" : "viewer@example.com"}
+          className="max-w-56"
+          value={to}
+          onChange={(e) => setTo(e.target.value)}
+        />
+        <Button type="submit" variant="secondary" loading={outbox.isFetching} disabled={!to || !on}>
+          Show outbox
+        </Button>
+      </form>
+      {outbox.error ? (
+        <ToolResultLine
+          result={{
+            ok: false,
+            message: outbox.error instanceof ApiError ? outbox.error.message : "Request failed",
+          }}
+        />
+      ) : null}
+      {outbox.data ? (
+        outbox.data.length ? (
+          <ul className="space-y-2">
+            {outbox.data.map((m) => (
+              <li key={m.ref} className="border-line rounded-md border p-3 text-[12.5px]">
+                <p className="text-subtle">{new Date(m.at * 1000).toLocaleString()}</p>
+                {m.subject ? <p className="font-medium">{m.subject}</p> : null}
+                <pre className="mt-1 font-sans whitespace-pre-wrap">{m.body}</pre>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted text-[12.5px]">Nothing sent to {to} in the last hour.</p>
+        )
+      ) : null}
+    </div>
+  );
+}
+
 function IntroUpload() {
   const toast = useToast();
   const queryClient = useQueryClient();

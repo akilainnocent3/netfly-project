@@ -180,3 +180,13 @@ class ChoosePlanResultSerializer(serializers.Serializer):
 
 class AutoRenewSerializer(serializers.Serializer):
     on = serializers.BooleanField()
+
+
+class CheckoutSerializer(serializers.Serializer):
+    plan = PlanSerializer()
+    trial = serializers.BooleanField()
+    trial_days = serializers.IntegerField()
+    steps = serializers.ListField(child=serializers.CharField())
+    amount_tzs = serializers.IntegerField()
+    payment_phone = serializers.CharField(allow_blank=True)
+    payment_network = serializers.CharField(allow_null=True)

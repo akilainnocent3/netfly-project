@@ -20,6 +20,13 @@ test.describe("signed out", () => {
     await audit(page);
   });
 
+  test("/login/forgot", async ({ page }) => {
+    await page.goto("/login/forgot");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await page.waitForTimeout(400); // entrance animation
+    await audit(page);
+  });
+
   test("landing and public title page", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -73,6 +80,15 @@ test.describe("signed in", () => {
     await page.goto("/account/usage");
     await expect(page.getByTestId("usage-month")).toBeVisible();
     await audit(page);
+  });
+
+  test("/verify/email and /verify/phone (light layout)", async ({ page }) => {
+    for (const path of ["/verify/email?from=account", "/verify/phone?from=account"]) {
+      await page.goto(path);
+      await expect(page.getByRole("button", { name: "Send code" })).toBeVisible();
+      await page.waitForTimeout(400);
+      await audit(page);
+    }
   });
 
   test("/signup/plan (light layout)", async ({ page }) => {

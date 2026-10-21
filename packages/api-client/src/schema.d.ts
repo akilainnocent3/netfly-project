@@ -259,6 +259,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/email/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Settings → Email → Send test email (uses the saved SMTP settings). */
+        post: operations["admin_email_test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/episodes/{id}": {
         parameters: {
             query?: never;
@@ -617,6 +634,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/sms/balance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin_sms_balance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/sms/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Settings → SMS → Send test SMS. */
+        post: operations["admin_sms_test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/staff": {
         parameters: {
             query?: never;
@@ -816,6 +866,23 @@ export interface paths {
         put?: never;
         /** @description Members with their plan, status, period and usage; staff actions are audited. */
         post: operations["admin_subscriber_reset_usage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/testing/outbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Test mode only: what would have been sent to an address / number (newest first). */
+        get: operations["admin_outbox"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1299,6 +1366,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/password-reset/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description A correct code sets the new password, signs out every device and signs this one in. */
+        post: operations["auth_password_reset_confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password-reset/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Same answer whether or not the account exists (no account enumeration). */
+        post: operations["auth_password_reset_start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/refresh": {
         parameters: {
             query?: never;
@@ -1347,6 +1448,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["verify_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/verify/{channel}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["verify_confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/verify/{channel}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["verify_start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/billing/auto-renew": {
         parameters: {
             query?: never;
@@ -1357,6 +1506,23 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["billing_auto_renew"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description What's left before a paid plan or a trial starts (verify email → phone → pay / trial). */
+        get: operations["billing_checkout"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2138,6 +2304,21 @@ export interface components {
             current_password: string;
             new_password: string;
         };
+        /**
+         * @description * `email` - email
+         *     * `phone` - phone
+         * @enum {string}
+         */
+        ChannelEnum: "email" | "phone";
+        Checkout: {
+            plan: components["schemas"]["Plan"];
+            trial: boolean;
+            trial_days: number;
+            steps: string[];
+            amount_tzs: number;
+            payment_phone: string;
+            payment_network: string | null;
+        };
         ChoosePlanRequest: {
             plan: string;
             /** @default false */
@@ -2155,6 +2336,15 @@ export interface components {
          * @enum {string}
          */
         ChoosePlanResultStatusEnum: "applied" | "scheduled" | "needs";
+        CodeSent: {
+            channel: components["schemas"]["ChannelEnum"];
+            target: string;
+            sent_to: string;
+            expires_in: number;
+            resend_in: number;
+            length: number;
+            network: string | null;
+        };
         CollectionAdmin: {
             readonly id: number;
             name: string;
@@ -2213,6 +2403,14 @@ export interface components {
             description?: string;
             readonly entries: components["schemas"]["ConfigEntry"][];
         };
+        ConfirmRequest: {
+            code: string;
+        };
+        Contact: {
+            value: string | null;
+            verified: boolean;
+            pending: components["schemas"]["CodeSent"] | null;
+        };
         Dashboard: {
             range: string;
             active_viewers: number;
@@ -2241,6 +2439,10 @@ export interface components {
             };
             series: components["schemas"]["SeriesPoint"][];
             top_titles: components["schemas"]["TopTitle"][];
+        };
+        EmailTestRequestRequest: {
+            /** Format: email */
+            to: string;
         };
         Episode: {
             readonly id: number;
@@ -2561,6 +2763,13 @@ export interface components {
         };
         /** @enum {unknown} */
         NullEnum: null;
+        OutboxMessage: {
+            ref: string;
+            /** Format: double */
+            at: number;
+            subject: string;
+            body: string;
+        };
         PaginatedAdminUserList: {
             /** @example 123 */
             count: number;
@@ -3015,8 +3224,22 @@ export interface components {
         ReorderRequest: {
             ids: number[];
         };
+        ResetConfirmRequest: {
+            reset_token: string;
+            code: string;
+            new_password: string;
+            /** @default client */
+            app: components["schemas"]["AppEnum"];
+        };
         ResetPasswordResult: {
             temporary_password: string;
+        };
+        ResetStartRequest: {
+            identifier: string;
+        };
+        ResetStartResult: {
+            reset_token: string;
+            message: string;
         };
         Resets: {
             /** Format: date-time */
@@ -3115,11 +3338,17 @@ export interface components {
             updated_at: string;
             image: string | null;
         };
+        SmsTestRequestRequest: {
+            to: string;
+        };
         StaffInputRequest: {
             username: string;
             full_name?: string;
             role: components["schemas"]["RoleEnum"];
             password?: string;
+        };
+        StartRequest: {
+            value: string;
         };
         StorageTestRequestRequest: {
             bucket?: string;
@@ -3645,6 +3874,14 @@ export interface components {
          * @enum {string}
          */
         VariantEnum: "1080" | "720";
+        Verified: {
+            channel: components["schemas"]["ChannelEnum"];
+            user: components["schemas"]["User"];
+        };
+        VerifyStatus: {
+            email: components["schemas"]["Contact"];
+            phone: components["schemas"]["Contact"];
+        };
         VideoJob: {
             /** Format: uuid */
             readonly id: string;
@@ -4229,6 +4466,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Dashboard"];
+                };
+            };
+        };
+    };
+    admin_email_test: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailTestRequestRequest"];
+                "multipart/form-data": components["schemas"]["EmailTestRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageTestResult"];
                 };
             };
         };
@@ -5193,6 +5454,49 @@ export interface operations {
             };
         };
     };
+    admin_sms_balance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageTestResult"];
+                };
+            };
+        };
+    };
+    admin_sms_test: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SmsTestRequestRequest"];
+                "multipart/form-data": components["schemas"]["SmsTestRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageTestResult"];
+                };
+            };
+        };
+    };
     admin_staff_list: {
         parameters: {
             query?: never;
@@ -5534,6 +5838,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SubscriberDetail"];
+                };
+            };
+        };
+    };
+    admin_outbox: {
+        parameters: {
+            query?: {
+                kind?: "email" | "sms";
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutboxMessage"][];
                 };
             };
         };
@@ -6338,6 +6664,54 @@ export interface operations {
             };
         };
     };
+    auth_password_reset_confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetConfirmRequest"];
+                "multipart/form-data": components["schemas"]["ResetConfirmRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+        };
+    };
+    auth_password_reset_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetStartRequest"];
+                "multipart/form-data": components["schemas"]["ResetStartRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResetStartResult"];
+                };
+            };
+        };
+    };
     auth_refresh: {
         parameters: {
             query?: never;
@@ -6407,6 +6781,77 @@ export interface operations {
             };
         };
     };
+    verify_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerifyStatus"];
+                };
+            };
+        };
+    };
+    verify_confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channel: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmRequest"];
+                "multipart/form-data": components["schemas"]["ConfirmRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Verified"];
+                };
+            };
+        };
+    };
+    verify_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channel: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartRequest"];
+                "multipart/form-data": components["schemas"]["StartRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodeSent"];
+                };
+            };
+        };
+    };
     billing_auto_renew: {
         parameters: {
             query?: never;
@@ -6427,6 +6872,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Subscription"];
+                };
+            };
+        };
+    };
+    billing_checkout: {
+        parameters: {
+            query?: {
+                plan?: string;
+                trial?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Checkout"];
                 };
             };
         };

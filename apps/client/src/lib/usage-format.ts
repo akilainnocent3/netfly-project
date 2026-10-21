@@ -15,6 +15,12 @@ export function formatLeft(seconds: number | null | undefined): string {
   return `${s}s`;
 }
 
+/** "1:00", "0:42" — short countdowns (resend timers). */
+export function formatShortCountdown(seconds: number): string {
+  const s = Math.max(0, Math.ceil(seconds));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
 /** "05:12:09", or "3d 05:12:09" beyond a day. */
 export function formatCountdown(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));

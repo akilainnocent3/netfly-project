@@ -153,6 +153,29 @@ Ambiguities in the build brief, the option chosen, and why.
     countdowns re-synced every 30 s and from every heartbeat), one line in the profile menu, a toast at
     `usage.warn_at_minutes` while watching (never over the intro), and the limit overlay. Nothing on Home.
 
+## Verification & password reset
+
+39. **Email and phone are verified only when they're needed** — a paid plan or a free trial (skipping
+    whatever is already verified). Free members are never asked. A verified address / number belongs to
+    one account; verifying one that another account only *claimed* releases it from that account.
+40. **We generate SMS codes ourselves by default (`sms.otp_provider = own`).** Only an HMAC of the code is
+    stored, with its own expiry and attempt limit; a new code replaces the old one; sends are limited per
+    account (cooldown), per number / address (hourly) and per IP (`security.rate_otp_send`). Owning the
+    text lets the SMS end with the WebOTP line (`@domain #code`), so Android Chrome fills the boxes and
+    iOS offers the code above the keyboard (`autocomplete="one-time-code"`). `beem_otp` (Beem generates
+    and checks the PIN) is available, but loses automatic detection. Codes and message bodies are never
+    logged.
+41. **The code boxes are the one auto-submit in the app.** A complete code has nothing left to edit, so it
+    submits itself (paste, the iOS suggestion or WebOTP included). Everything else still submits only on
+    a button or Enter (decision 8).
+42. **Forgot password never reveals who has an account.** The first step always answers the same and
+    returns an opaque token (mapped server-side to an account or to nothing); the code goes to the
+    account's verified phone, else its verified email. A correct code + new password bumps
+    `token_version`, revokes every refresh token and signs this browser in.
+43. **Test mode (`testing.mock_providers`)** replaces SMS, email (and, later, mobile money) with an
+    outbox that only superadmins can read in Studio for an hour. It exists for staging and the e2e suite;
+    Studio shows a warning while it's on.
+
 ## Resilience
 
 32. **Errors are contained where they happen:** each home row and the hero have their own error boundary

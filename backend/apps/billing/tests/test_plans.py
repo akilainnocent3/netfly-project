@@ -187,3 +187,20 @@ def test_billing_stats(staff_api, user):
     assert stats["mrr_tzs"] == 2500
     assert stats["paid_by_plan"] == [{"plan": "Pendwa", "slug": "pendwa", "count": 1}]
     assert stats["renewals_due_48h"] == 1
+
+
+def test_checkout_lists_the_steps_left(auth_api):
+    from django.utils import timezone
+
+    res = auth_api.get("/api/v1/billing/checkout?plan=pendwa&trial=1")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["steps"] == ["email", "phone", "trial"] and body["amount_tzs"] == 2500
+    user = auth_api.user
+    user.email, user.email_verified_at = "a@example.com", timezone.now()
+    user.phone, user.phone_verified_at = "255754000000", timezone.now()
+    user.save()
+    body = auth_api.get("/api/v1/billing/checkout?plan=pendwa").json()
+    assert body["steps"] == ["payment"]
+    assert body["payment_phone"] == "255754000000" and body["payment_network"] == "vodacom"
+    assert auth_api.get("/api/v1/billing/checkout?plan=bure").status_code == 404

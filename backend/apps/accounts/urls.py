@@ -1,5 +1,6 @@
 from django.urls import path
 
+from . import verification_views as vv
 from . import views
 
 urlpatterns = [
@@ -14,4 +15,13 @@ urlpatterns = [
     ),
     path("me", views.MeView.as_view(), name="auth-me"),
     path("me/password", views.ChangePasswordView.as_view(), name="auth-change-password"),
+    path("verify", vv.VerifyStatusView.as_view(), name="verify-status"),
+    path("verify/<str:channel>/start", vv.VerifyStartView.as_view(), name="verify-start"),
+    path("verify/<str:channel>/confirm", vv.VerifyConfirmView.as_view(), name="verify-confirm"),
+    path("password-reset/start", vv.PasswordResetStartView.as_view(), name="password-reset-start"),
+    path(
+        "password-reset/confirm",
+        vv.PasswordResetConfirmView.as_view(),
+        name="password-reset-confirm",
+    ),
 ]

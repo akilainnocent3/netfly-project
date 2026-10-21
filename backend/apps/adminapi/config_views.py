@@ -1,4 +1,9 @@
-from drf_spectacular.utils import extend_schema, extend_schema_field, inline_serializer
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    extend_schema,
+    extend_schema_field,
+    inline_serializer,
+)
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -334,3 +339,123 @@ class LegalPageView(APIView):
             ip=client_ip(request),
         )
         return Response(data.data)
+
+
+# -- messaging: test buttons and the test-mode outbox ------------------------------------------
+class EmailTestView(APIView):
+    """Settings → Email → Send test email (uses the saved SMTP settings)."""
+
+    permission_classes = [SuperadminOnly]
+
+    @extend_schema(
+        request=inline_serializer("EmailTestRequest", {"to": serializers.EmailField()}),
+        responses=TestResult,
+        operation_id="admin_email_test",
+    )
+    def post(self, request):
+        from apps.messaging import email as mail
+        from apps.messaging.errors import MessagingError
+
+        to = serializers.EmailField().run_validation(request.data.get("to"))
+        site = config.get_str("branding.site_name", "NETFLY")
+        try:
+            mail.send(
+                to,
+                f"{site} test email",
+                f"This is a test email from {site}. Your SMTP settings work.",
+            )
+        except MessagingError as exc:
+            return Response({"ok": False, "message": exc.message})
+        record(request.user, "email.test", None, target_type="email", ip=client_ip(request))
+        return Response({"ok": True, "message": f"Sent a test email to {to}."})
+
+
+class SmsTestView(APIView):
+    """Settings → SMS → Send test SMS."""
+
+    permission_classes = [SuperadminOnly]
+
+    @extend_schema(
+        request=inline_serializer("SmsTestRequest", {"to": serializers.CharField()}),
+        responses=TestResult,
+        operation_id="admin_sms_test",
+    )
+    def post(self, request):
+        from apps.accounts import phone as phones
+        from apps.messaging import sms
+        from apps.messaging.errors import MessagingError
+
+        try:
+            to = phones.normalize(str(request.data.get("to") or ""))
+        except ValueError as exc:
+            return Response({"ok": False, "message": str(exc)})
+        site = config.get_str("branding.site_name", "NETFLY")
+        try:
+            ref = sms.send(to, f"This is a test SMS from {site}. Your SMS settings work.")
+        except MessagingError as exc:
+            return Response({"ok": False, "message": exc.message})
+        record(request.user, "sms.test", None, target_type="sms", ip=client_ip(request))
+        return Response(
+            {"ok": True, "message": f"Sent to {phones.masked(to)} (Beem request {ref})."}
+        )
+
+
+class SmsBalanceView(APIView):
+    permission_classes = [SuperadminOnly]
+
+    @extend_schema(responses=TestResult, operation_id="admin_sms_balance")
+    def get(self, request):
+        from apps.messaging import sms
+        from apps.messaging.errors import MessagingError
+
+        try:
+            credit = sms.balance()
+        except MessagingError as exc:
+            return Response({"ok": False, "message": exc.message})
+        return Response({"ok": True, "message": f"Beem balance: {credit:,.0f} SMS credits."})
+
+
+OutboxMessage = inline_serializer(
+    "OutboxMessage",
+    {
+        "ref": serializers.CharField(),
+        "at": serializers.FloatField(),
+        "subject": serializers.CharField(),
+        "body": serializers.CharField(),
+    },
+    many=True,
+)
+
+
+class OutboxView(APIView):
+    """Test mode only: what would have been sent to an address / number (newest first)."""
+
+    permission_classes = [SuperadminOnly]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("kind", str, enum=["email", "sms"]),
+            OpenApiParameter("to", str),
+        ],
+        responses=OutboxMessage,
+        operation_id="admin_outbox",
+    )
+    def get(self, request):
+        from apps.messaging import outbox
+
+        if not outbox.enabled():
+            raise APIError("Test mode is off.", "not_found", 404)
+        kind = request.query_params.get("kind", "")
+        to = request.query_params.get("to", "")
+        if kind not in ("email", "sms") or not to:
+            raise APIError("Choose kind and to.", "validation_error")
+        if kind == "sms":
+            from apps.accounts import phone as phones
+
+            try:
+                to = phones.normalize(to)
+            except ValueError as exc:
+                raise APIError(str(exc), "validation_error") from exc
+        response = Response(outbox.read(kind, to))
+        response["Cache-Control"] = "no-store"
+        return response

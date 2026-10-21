@@ -117,7 +117,7 @@ test("plan picker: Free preselected, same quality everywhere, paid plans continu
   await expect(page.getByTestId("plan-price").nth(2)).toHaveText("TSh 2,500/month");
   // A new member can start a trial (verification comes next, then payment / trial).
   await page.getByRole("button", { name: "Start free trial" }).click();
-  await expect(page).toHaveURL(/\/verify\?plan=pendwa.*trial=1/);
+  await expect(page).toHaveURL(/\/verify\/email\?plan=pendwa.*trial=1/);
 });
 
 test("plan picker on a phone: stacked, swipeable cards", async ({ page }) => {
