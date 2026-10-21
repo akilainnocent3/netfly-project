@@ -2,7 +2,7 @@ import base64
 import datetime as dt
 import os
 
-from django.contrib.postgres.search import TrigramSimilarity
+from django.contrib.postgres.search import TrigramSimilarity, TrigramWordSimilarity
 from django.core.cache import cache
 from django.db.models import CharField, Count, F, Func, Prefetch, Q, Value
 from django.db.models.functions import Greatest
@@ -462,48 +462,102 @@ class GenreTitlesView(APIView):
 
 
 class SearchView(APIView):
+    """Netflix-style search across titles, original titles, cast, directors and genres
+    (trigram, so typos still match), plus "Explore titles related to:" terms."""
+
     throttle_classes = [throttle("security.rate_search", per_user=True)]
 
     @extend_schema(
         parameters=[TRANSLATION, OpenApiParameter("q", str, required=True)],
-        responses=s.TitleCardSerializer(many=True),
+        responses=s.SearchResponseSerializer,
         operation_id="search",
     )
     def get(self, request):
         q = " ".join(request.query_params.get("q", "").split())[:80]
         mode = translation_mode(request)
         if len(q) < 1:
-            return Response([])
-        sim = Greatest(TrigramSimilarity("title", q), TrigramSimilarity("original_title", q))
+            return Response({"results": [], "related": []})
+        joined = lambda field: Func(  # noqa: E731
+            F(field), Value(" "), function="array_to_string", output_field=CharField()
+        )
+        title_sim = Greatest(TrigramSimilarity("title", q), TrigramSimilarity("original_title", q))
+        people_sim = Greatest(
+            TrigramWordSimilarity(q, "cast_text"), TrigramWordSimilarity(q, "directors_text")
+        )
         who = viewer_for(request)
-        ids = list(
+        genre_match = Q(name__iexact=q)
+        if len(q) >= 3:
+            genre_match |= Q(name__icontains=q) | Q(gs__gt=0.5)
+        genre_ids = list(
+            Genre.objects.annotate(gs=TrigramWordSimilarity(q, "name"))
+            .filter(genre_match)
+            .values_list("pk", flat=True)
+        )
+        rows = list(
             visible_titles(mode, bool(who and who.kids))
-            .annotate(
-                sim=sim,
-                cast_text=Func(
-                    F("cast"), Value(" "), function="array_to_string", output_field=CharField()
-                ),
-            )
+            .annotate(cast_text=joined("cast"), directors_text=joined("directors"))
+            .annotate(title_sim=title_sim, people_sim=people_sim)
+            .annotate(sim=Greatest(F("title_sim"), F("people_sim") * 0.9))
             .filter(
-                Q(sim__gt=0.18)
+                Q(title_sim__gt=0.18)
+                | Q(people_sim__gt=0.5)
                 | Q(title__icontains=q)
                 | Q(original_title__icontains=q)
-                | Q(genres__name__iexact=q)
+                | Q(genres__in=genre_ids)
                 | Q(cast_text__icontains=q)
+                | Q(directors_text__icontains=q)
                 | Q(translator_name__icontains=q)
             )
             .order_by("-sim", "-popularity")
-            .values_list("pk", flat=True)[:60]
+            .values_list("pk", flat=True)[:120]
         )
-        ids = list(dict.fromkeys(ids))
+        ids = list(dict.fromkeys(rows))[:60]
         _log_search(request, q, len(ids), mode)
-        return Response(
-            s.TitleCardSerializer(
-                cards_by_ids(ids),
-                many=True,
-                context={"viewer": viewer_state(who, ids), "badges": badge_context(mode)},
-            ).data
+        cards = cards_by_ids(ids)
+        response = Response(
+            {
+                "results": s.TitleCardSerializer(
+                    cards,
+                    many=True,
+                    context={"viewer": viewer_state(who, ids), "badges": badge_context(mode)},
+                ).data,
+                "related": _related_terms(q, cards),
+            }
         )
+        patch_vary_headers(response, ["Authorization", "X-Profile"])
+        return response
+
+
+def _related_terms(q: str, cards: list[Title], limit: int = 8) -> list[dict]:
+    """ "Explore titles related to: A | Dramas | Some Actor": the leading titles, the genres
+    most results share, and the people the query matched (or the leads of the top result)."""
+    from collections import Counter
+
+    needle = q.lower()
+    terms: list[dict] = []
+    seen = {needle}
+
+    def add(label: str, kind: str) -> None:
+        if label and label.lower() not in seen and len(terms) < limit:
+            seen.add(label.lower())
+            terms.append({"label": label, "kind": kind})
+
+    for card in cards[:2]:
+        add(card.title, "title")
+    genres = Counter(g.name for card in cards[:12] for g in card.genres.all())
+    for name, _ in genres.most_common(4):
+        add(name, "genre")
+    people = [
+        name
+        for card in cards[:12]
+        for name in [*card.directors, *card.cast]
+        if needle in name.lower()
+    ]
+    if not people and cards:
+        people = [*cards[0].directors[:1], *cards[0].cast[:2]]
+    for name in people:
+        add(name, "person")
+    return terms
 
 
 def _log_search(request, q: str, count: int, mode: str) -> None:
@@ -540,19 +594,15 @@ def _same_search(a: str, b: str) -> bool:
 
 
 class SearchSuggestionsView(APIView):
+    """Before typing: Top Searches (as titles, for the phone list) and the member's recent ones."""
+
     @extend_schema(
-        responses={
-            200: {
-                "type": "object",
-                "properties": {
-                    "top": {"type": "array", "items": {"type": "string"}},
-                    "recent": {"type": "array", "items": {"type": "string"}},
-                },
-            }
-        },
+        parameters=[TRANSLATION],
+        responses=s.SearchSuggestionsSerializer,
         operation_id="search_suggestions",
     )
     def get(self, request):
+        mode = translation_mode(request)
         top = cache.get("search:top")
         if top is None:
             since = timezone.now() - dt.timedelta(days=7)
@@ -564,6 +614,32 @@ class SearchSuggestionsView(APIView):
                 .order_by("-n")[:8]
             ]
             cache.set("search:top", top, 600)
+        who = viewer_for(request)
+        kids = bool(who and who.kids)
+        key = f"search:top-titles:{mode}:{int(kids)}:{catalog_version()}"
+        ids = cache.get(key)
+        if ids is None:
+            visible = visible_titles(mode, kids)
+            ids = []
+            # The title people searched for most, then what's popular.
+            for query in top:
+                hit = (
+                    visible.annotate(sim=TrigramSimilarity("title", query))
+                    .filter(Q(sim__gt=0.3) | Q(title__icontains=query))
+                    .order_by("-sim", "-popularity")
+                    .values_list("pk", flat=True)
+                    .first()
+                )
+                if hit and hit not in ids:
+                    ids.append(hit)
+            for pk in visible.order_by("-popularity", "-published_at").values_list("pk", flat=True)[
+                :20
+            ]:
+                if len(ids) >= 10:
+                    break
+                if pk not in ids:
+                    ids.append(pk)
+            cache.set(key, ids, 600)
         recent: list[str] = []
         if request.user.is_authenticated:
             for qtext in (
@@ -575,7 +651,19 @@ class SearchSuggestionsView(APIView):
                     recent.append(qtext)
                 if len(recent) >= 8:
                     break
-        return Response({"top": top, "recent": recent})
+        response = Response(
+            {
+                "top": top,
+                "recent": recent,
+                "top_titles": s.TitleCardSerializer(
+                    cards_by_ids(ids),
+                    many=True,
+                    context={"viewer": viewer_state(who, ids), "badges": badge_context(mode)},
+                ).data,
+            }
+        )
+        patch_vary_headers(response, ["Authorization", "X-Profile"])
+        return response
 
 
 class PosterWallView(APIView):

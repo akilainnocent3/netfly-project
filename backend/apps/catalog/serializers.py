@@ -348,3 +348,19 @@ class NewAndPopularSerializer(serializers.Serializer):
     everyone_watching = TitleCardSerializer(many=True)
     top10_series = TitleCardSerializer(many=True)
     top10_films = TitleCardSerializer(many=True)
+
+
+class RelatedTermSerializer(serializers.Serializer):
+    label = serializers.CharField()
+    kind = serializers.ChoiceField(choices=["title", "genre", "person"])
+
+
+class SearchResponseSerializer(serializers.Serializer):
+    results = TitleCardSerializer(many=True)
+    related = RelatedTermSerializer(many=True)
+
+
+class SearchSuggestionsSerializer(serializers.Serializer):
+    top = serializers.ListField(child=serializers.CharField())
+    recent = serializers.ListField(child=serializers.CharField())
+    top_titles = TitleCardSerializer(many=True)

@@ -6670,6 +6670,7 @@
         "/api/v1/search": {
             "get": {
                 "operationId": "search",
+                "description": "Netflix-style search across titles, original titles, cast, directors and genres\n(trigram, so typos still match), plus \"Explore titles related to:\" terms.",
                 "parameters": [
                     {
                         "in": "query",
@@ -6706,10 +6707,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/TitleCard"
-                                    }
+                                    "$ref": "#/components/schemas/SearchResponse"
                                 }
                             }
                         },
@@ -6721,6 +6719,21 @@
         "/api/v1/search/suggestions": {
             "get": {
                 "operationId": "search_suggestions",
+                "description": "Before typing: Top Searches (as titles, for the phone list) and the member's recent ones.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "translation",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "not_translated",
+                                "translated"
+                            ]
+                        }
+                    }
+                ],
                 "tags": [
                     "search"
                 ],
@@ -6735,21 +6748,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "top": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "recent": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        }
-                                    }
+                                    "$ref": "#/components/schemas/SearchSuggestions"
                                 }
                             }
                         },
@@ -11128,6 +11127,30 @@
                     "type"
                 ]
             },
+            "RelatedTerm": {
+                "type": "object",
+                "properties": {
+                    "label": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/RelatedTermKindEnum"
+                    }
+                },
+                "required": [
+                    "kind",
+                    "label"
+                ]
+            },
+            "RelatedTermKindEnum": {
+                "enum": [
+                    "title",
+                    "genre",
+                    "person"
+                ],
+                "type": "string",
+                "description": "* `title` - title\n* `genre` - genre\n* `person` - person"
+            },
             "Rendition": {
                 "type": "object",
                 "properties": {
@@ -11399,6 +11422,55 @@
                     "key",
                     "kind",
                     "title"
+                ]
+            },
+            "SearchResponse": {
+                "type": "object",
+                "properties": {
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TitleCard"
+                        }
+                    },
+                    "related": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RelatedTerm"
+                        }
+                    }
+                },
+                "required": [
+                    "related",
+                    "results"
+                ]
+            },
+            "SearchSuggestions": {
+                "type": "object",
+                "properties": {
+                    "top": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "recent": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "top_titles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TitleCard"
+                        }
+                    }
+                },
+                "required": [
+                    "recent",
+                    "top",
+                    "top_titles"
                 ]
             },
             "SeasonAdmin": {

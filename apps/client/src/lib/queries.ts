@@ -137,10 +137,13 @@ export function useSearch(q: string) {
   });
 }
 
+/** Before typing: Top Searches (titles, for the phone list) and recent searches. */
 export function useSearchSuggestions() {
+  const mode = useMode();
   return useQuery({
-    queryKey: ["search-suggestions"],
-    queryFn: () => unwrap(api.GET("/api/v1/search/suggestions")),
+    queryKey: ["search-suggestions", mode],
+    queryFn: () =>
+      unwrap(api.GET("/api/v1/search/suggestions", { params: { query: { translation: mode } } })),
     staleTime: 60_000,
   });
 }

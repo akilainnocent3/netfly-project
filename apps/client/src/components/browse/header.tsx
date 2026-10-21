@@ -182,68 +182,135 @@ function CompactNav({ pathname, nav }: { pathname: string; nav: typeof NAV }) {
   );
 }
 
+/**
+ * Netflix's desktop search: the icon opens a square, white-bordered box. The first keystroke
+ * from another page goes to /search (one history entry); after that the URL is replaced as you
+ * type. Clearing it returns to the page you came from; Esc closes it, and so does clicking
+ * outside while it's empty.
+ */
 function SearchBox() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const onSearchPage = pathname.startsWith("/search");
-  const [open, setOpen] = useState(onSearchPage);
-  const [value, setValue] = useState(onSearchPage ? (params.get("q") ?? "") : "");
+  const onSearch = pathname.startsWith("/search");
+  const urlQuery = onSearch ? (params.get("q") ?? "") : "";
+  // On /search (even before typing) the box is open: it's the page's search field.
+  const [open, setOpen] = useState(onSearch);
+  const [value, setValue] = useState(urlQuery);
   const input = useRef<HTMLInputElement>(null);
+  const box = useRef<HTMLDivElement>(null);
+  /** Where the first keystroke came from (we pushed /search on top of it). */
+  const origin = useRef<string | null>(null);
+  const written = useRef(urlQuery);
 
   useEffect(() => {
     if (open) input.current?.focus();
   }, [open]);
+
+  // Follow URL changes made elsewhere (a related term, Back) — never the echo of our own typing.
   useEffect(() => {
-    if (!onSearchPage) return;
+    if (onSearch) {
+      setOpen(true);
+      if (urlQuery !== written.current) {
+        written.current = urlQuery;
+        setValue(urlQuery);
+      }
+    } else if (!pathname.startsWith("/title/")) {
+      // Left search for another page (a title modal over the results keeps the box as it is).
+      origin.current = null;
+      written.current = "";
+      setValue("");
+      setOpen(false);
+    }
+  }, [onSearch, urlQuery, pathname]);
+
+  // While on /search, replace the URL as you type (debounced).
+  useEffect(() => {
+    if (!onSearch) return;
+    const q = value.trim();
+    if (q === (params.get("q") ?? "") || (!q && !written.current)) return;
     const timer = setTimeout(() => {
+      if (!q) {
+        // Cleared: back to the page the search started from.
+        written.current = "";
+        if (origin.current) {
+          origin.current = null;
+          router.back();
+        } else router.replace("/search", { scroll: false });
+        return;
+      }
+      written.current = q;
       const next = new URLSearchParams(params.toString());
-      if (value.trim()) next.set("q", value.trim());
-      else next.delete("q");
-      if ((params.get("q") ?? "") !== value.trim())
-        router.replace(`/search?${next.toString()}`, { scroll: false });
-    }, 200);
+      next.set("q", q);
+      router.replace(`/search?${next.toString()}`, { scroll: false });
+    }, 180);
     return () => clearTimeout(timer);
-  }, [value, onSearchPage, params, router]);
+  }, [value, onSearch, params, router]);
+
+  // Clicking outside an empty box closes it.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (!value && box.current && !box.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [open, value]);
+
+  const onType = (next: string) => {
+    setValue(next);
+    if (!onSearch && next.trim() && origin.current === null) {
+      // The first keystroke elsewhere: one history entry, right away (later keystrokes, even
+      // before the page has switched, only update the box; /search then replaces the URL).
+      origin.current = `${pathname}${params.size ? `?${params}` : ""}`;
+      written.current = next.trim();
+      router.push(`/search?q=${encodeURIComponent(next.trim())}`, { scroll: false });
+    }
+  };
 
   return (
-    <div className="hidden items-center md:flex">
+    <div ref={box} className="hidden items-center md:flex">
       <AnimatePresence initial={false} mode="popLayout">
         {open ? (
           <m.div
             key="open"
-            initial={{ width: 36, opacity: 0.6 }}
-            animate={{ width: 260, opacity: 1 }}
+            initial={{ width: 36 }}
+            animate={{ width: 280 }}
             exit={{ width: 36, opacity: 0 }}
-            className="flex h-9 items-center gap-2 overflow-hidden rounded-md border border-white/25 bg-black/70 px-2.5"
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            data-testid="search-box"
+            className="flex h-9 items-center gap-2 overflow-hidden border border-white bg-black/75 px-2"
           >
-            <Search className="size-4 shrink-0 text-white/70" />
+            <Search className="size-5 shrink-0 text-white" aria-hidden />
             <input
               ref={input}
               value={value}
-              onChange={(e) => {
-                setValue(e.target.value);
-                if (!onSearchPage && e.target.value)
-                  router.push(`/search?q=${encodeURIComponent(e.target.value)}`);
+              onChange={(e) => onType(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key !== "Escape") return;
+                setValue("");
+                setOpen(false);
               }}
-              onBlur={() => !value && !onSearchPage && setOpen(false)}
-              onKeyDown={(e) => e.key === "Escape" && (setValue(""), setOpen(false))}
               type="search"
               enterKeyHint="search"
               placeholder="Titles, people, genres"
               aria-label="Search"
-              className="text-body min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-white/45 [&::-webkit-search-cancel-button]:hidden"
+              className="text-body min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-[#b3b3b3] focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
             />
-            {value && (
+            {value ? (
               <IconButton
                 variant="ghost"
                 size="sm"
                 label="Clear search"
-                onClick={() => setValue("")}
+                className="size-7 rounded-none hover:bg-transparent"
+                onClick={() => {
+                  setValue("");
+                  input.current?.focus();
+                }}
               >
                 <X />
               </IconButton>
-            )}
+            ) : null}
           </m.div>
         ) : (
           <m.div key="closed">

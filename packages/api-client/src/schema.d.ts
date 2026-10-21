@@ -2177,6 +2177,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Netflix-style search across titles, original titles, cast, directors and genres
+         *     (trigram, so typos still match), plus "Explore titles related to:" terms.
+         */
         get: operations["search"];
         put?: never;
         post?: never;
@@ -2193,6 +2197,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description Before typing: Top Searches (as titles, for the phone list) and the member's recent ones. */
         get: operations["search_suggestions"];
         put?: never;
         post?: never;
@@ -3459,6 +3464,17 @@ export interface components {
             status?: components["schemas"]["TitleStatusEnum"];
             translation_status: components["schemas"]["TranslationStatusEnum"];
         };
+        RelatedTerm: {
+            label: string;
+            kind: components["schemas"]["RelatedTermKindEnum"];
+        };
+        /**
+         * @description * `title` - title
+         *     * `genre` - genre
+         *     * `person` - person
+         * @enum {string}
+         */
+        RelatedTermKindEnum: "title" | "genre" | "person";
         Rendition: {
             name: string;
             height: number;
@@ -3534,6 +3550,15 @@ export interface components {
             title: string;
             items: components["schemas"]["TitleCard"][];
             seed?: string | null;
+        };
+        SearchResponse: {
+            results: components["schemas"]["TitleCard"][];
+            related: components["schemas"]["RelatedTerm"][];
+        };
+        SearchSuggestions: {
+            top: string[];
+            recent: string[];
+            top_titles: components["schemas"]["TitleCard"][];
         };
         SeasonAdmin: {
             readonly id: number;
@@ -8117,14 +8142,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TitleCard"][];
+                    "application/json": components["schemas"]["SearchResponse"];
                 };
             };
         };
     };
     search_suggestions: {
         parameters: {
-            query?: never;
+            query?: {
+                translation?: "all" | "not_translated" | "translated";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -8136,10 +8163,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        top?: string[];
-                        recent?: string[];
-                    };
+                    "application/json": components["schemas"]["SearchSuggestions"];
                 };
             };
         };

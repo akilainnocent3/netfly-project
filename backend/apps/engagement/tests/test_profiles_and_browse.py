@@ -100,7 +100,7 @@ def test_kids_profile_sees_only_kids_ratings(auth_api, profiles_on):
     home = {i["id"] for r in api.get("/api/v1/browse/home").json()["rows"] for i in r["items"]}
     assert family.pk in home and grown.pk not in home
     assert api.get(f"/api/v1/titles/{grown.slug}").status_code == 404
-    assert [t["id"] for t in api.get("/api/v1/search?q=Grown").json()] == []
+    assert [t["id"] for t in api.get("/api/v1/search?q=Grown").json()["results"]] == []
     assert api.get(f"/api/v1/playback/{grown.slug}").status_code == 404
 
 

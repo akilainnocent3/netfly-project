@@ -1,6 +1,7 @@
 import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
+from rest_framework.test import APIClient
 
 from apps.catalog.models import Billboard
 from apps.core.config import config
@@ -40,6 +41,8 @@ ENDPOINTS = [
 def _titles(body):
     if isinstance(body, dict) and "rows" in body:
         return [i for r in body["rows"] for i in r["items"]]
+    if isinstance(body, dict) and "results" in body:
+        return body["results"]
     if isinstance(body, list):
         return [b["title"] if "title" in b and isinstance(b["title"], dict) else b for b in body]
     return []
@@ -160,7 +163,7 @@ def test_continue_watching_other_mode_badge(auth_api):
 
 def test_search_is_typo_tolerant_and_logged(auth_api):
     TitleFactory(title="Kingdom of Ash", translation_status="translated")
-    results = auth_api.get("/api/v1/search?q=kingdm&translation=translated").json()
+    results = auth_api.get("/api/v1/search?q=kingdm&translation=translated").json()["results"]
     assert [r["title"] for r in results] == ["Kingdom of Ash"]
     auth_api.get("/api/v1/search?q=kingdom&translation=translated")
     from apps.engagement.models import SearchLog
@@ -178,3 +181,50 @@ def test_infinite_feed_paginates(auth_api, catalog):
         f"/api/v1/browse/home?translation=translated&cursor={first['next']}"
     ).json()
     assert {r["key"] for r in second["rows"]}.isdisjoint({r["key"] for r in first["rows"]})
+
+
+def test_search_matches_people_and_genres_and_explains_related_terms(api, auth_api):
+    from apps.catalog.models import Genre
+
+    comedy = Genre.objects.create(name="Comedy", slug="comedy")
+    drama = Genre.objects.create(name="Drama", slug="drama")
+    laugh = TitleFactory(
+        title="Laugh Lines",
+        translation_status="translated",
+        directors=["Amina Mrisho"],
+        cast=["Juma Kassim", "Neema Joseph"],
+    )
+    laugh.genres.add(comedy)
+    tears = TitleFactory(title="Quiet Tears", translation_status="translated", cast=["Juma Kassim"])
+    tears.genres.add(drama)
+
+    def titles(q):
+        body = auth_api.get(f"/api/v1/search?q={q}&translation=translated").json()
+        return [r["title"] for r in body["results"]], body["related"]
+
+    assert titles("Amina Mrisho")[0] == ["Laugh Lines"]  # director
+    assert titles("amna mrisho")[0] == ["Laugh Lines"]  # …with a typo (trigram)
+    found, related = titles("Juma Kassim")  # cast
+    assert set(found) == {"Laugh Lines", "Quiet Tears"}
+    kinds = {(t["label"], t["kind"]) for t in related}
+    assert ("Comedy", "genre") in kinds and ("Drama", "genre") in kinds
+    assert ("Laugh Lines", "title") in kinds or ("Quiet Tears", "title") in kinds
+    assert not any(t["label"].lower() == "juma kassim" for t in related)  # never the query itself
+    assert titles("comedy")[0] == ["Laugh Lines"]  # genre
+    # Signed-out visitors can search too, and get the same shape.
+    anon = APIClient().get("/api/v1/search?q=Laugh&translation=translated").json()
+    assert [r["title"] for r in anon["results"]] == ["Laugh Lines"] and "related" in anon
+
+
+def test_top_searches_come_as_titles(auth_api):
+    TitleFactory(title="Kingdom of Ash", translation_status="translated", popularity=1)
+    TitleFactory(title="Popular One", translation_status="translated", popularity=99)
+    auth_api.get("/api/v1/search?q=kingdom&translation=translated")
+    from django.core.cache import cache
+
+    cache.delete("search:top")
+    body = APIClient().get("/api/v1/search/suggestions?translation=translated").json()
+    assert body["top"] == ["kingdom"]
+    names = [t["title"] for t in body["top_titles"]]
+    assert names[0] == "Kingdom of Ash" and "Popular One" in names
+    assert body["recent"] == []
