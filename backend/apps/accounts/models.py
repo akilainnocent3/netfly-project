@@ -41,6 +41,12 @@ class User(AbstractBaseUser):
 
     username = models.CharField(max_length=30, unique=True, validators=[USERNAME_VALIDATOR])
     full_name = models.CharField(max_length=120)
+    # Contact details: only needed (and verified) for paid plans and free trials.
+    email = models.EmailField(max_length=254, null=True, blank=True)
+    email_verified_at = models.DateTimeField(null=True, blank=True)
+    # E.164 digits without "+", e.g. 255712345678 (see apps.accounts.phone).
+    phone = models.CharField(max_length=15, null=True, blank=True)
+    phone_verified_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     role = models.CharField(max_length=20, choices=Role.choices, blank=True)
@@ -65,11 +71,27 @@ class User(AbstractBaseUser):
     class Meta:
         constraints = [
             models.UniqueConstraint(Lower("username"), name="user_username_ci_unique"),
+            models.UniqueConstraint(
+                Lower("email"),
+                condition=models.Q(email__isnull=False),
+                name="user_email_ci_unique",
+            ),
+            models.UniqueConstraint(
+                "phone", condition=models.Q(phone__isnull=False), name="user_phone_unique"
+            ),
         ]
         indexes = [models.Index(fields=["is_staff"]), models.Index(fields=["-created_at"])]
 
     def __str__(self) -> str:
         return self.username
+
+    @property
+    def email_verified(self) -> bool:
+        return bool(self.email and self.email_verified_at)
+
+    @property
+    def phone_verified(self) -> bool:
+        return bool(self.phone and self.phone_verified_at)
 
     def has_role(self, *roles: str) -> bool:
         if not (self.is_active and self.is_staff):
@@ -109,6 +131,8 @@ class RefreshToken(models.Model):
     revoked_at = models.DateTimeField(null=True, blank=True)
     user_agent = models.CharField(max_length=255, blank=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
+    # "Remember me" off = the cookie lives for the browser session only (kept across rotation).
+    persistent = models.BooleanField(default=True)
 
     def __str__(self) -> str:
         return f"refresh:{self.user_id}:{self.family}"

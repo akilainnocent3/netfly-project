@@ -56,7 +56,13 @@ class IssuedRefresh:
 
 
 def issue_refresh_token(
-    user: User, app: str, *, family=None, user_agent: str = "", ip: str | None = None
+    user: User,
+    app: str,
+    *,
+    family=None,
+    user_agent: str = "",
+    ip: str | None = None,
+    persistent: bool = True,
 ) -> IssuedRefresh:
     raw = secrets.token_urlsafe(48)
     days = config.get_int("auth.refresh_token_days", 30)
@@ -67,6 +73,7 @@ def issue_refresh_token(
         expires_at=timezone.now() + dt.timedelta(days=days),
         user_agent=user_agent[:255],
         ip_address=ip,
+        persistent=persistent,
         **({"family": family} if family else {}),
     )
     return IssuedRefresh(raw, record)
@@ -110,7 +117,12 @@ def rotate_refresh_token(
             # the new cookie was lost (navigation aborted it, or two tabs refreshed at once).
             # Not theft — issue another token in the same family instead of revoking it.
             issued = issue_refresh_token(
-                record.user, app, family=record.family, user_agent=user_agent, ip=ip
+                record.user,
+                app,
+                family=record.family,
+                user_agent=user_agent,
+                ip=ip,
+                persistent=record.persistent,
             )
             return record.user, issued
         if record.used_at or record.revoked_at:
@@ -121,7 +133,12 @@ def rotate_refresh_token(
             record.used_at = now
             record.save(update_fields=["used_at"])
             issued = issue_refresh_token(
-                record.user, app, family=record.family, user_agent=user_agent, ip=ip
+                record.user,
+                app,
+                family=record.family,
+                user_agent=user_agent,
+                ip=ip,
+                persistent=record.persistent,
             )
             return record.user, issued
     # Reuse of a rotated/revoked token: assume theft and kill the whole family

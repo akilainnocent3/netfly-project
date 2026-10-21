@@ -1,3 +1,4 @@
+import re
 import secrets
 
 from django.contrib.auth.hashers import check_password, make_password
@@ -46,7 +47,14 @@ def refresh_cookie_name(app: str) -> str:
 
 
 def _session_response(
-    request, user: User, app: str, *, family=None, refresh=None, status_code=200
+    request,
+    user: User,
+    app: str,
+    *,
+    family=None,
+    refresh=None,
+    status_code=200,
+    persistent: bool = True,
 ) -> Response:
     access, expires_in = issue_access_token(user)
     if refresh is None:
@@ -56,6 +64,7 @@ def _session_response(
             family=family,
             user_agent=request.META.get("HTTP_USER_AGENT", ""),
             ip=client_ip(request),
+            persistent=persistent,
         )
     csrf = secrets.token_urlsafe(24)
     response = Response(
@@ -69,7 +78,10 @@ def _session_response(
     )
     secure = config.get_bool("auth.cookie_secure", True)
     domain = config.get_str("auth.cookie_domain") or None
-    max_age = config.get_int("auth.refresh_token_days", 30) * 86400
+    # "Remember me" off: session cookies (gone when the browser closes), even after rotation.
+    max_age = (
+        config.get_int("auth.refresh_token_days", 30) * 86400 if refresh.record.persistent else None
+    )
     response.set_cookie(
         refresh_cookie_name(app),
         refresh.raw,
@@ -146,22 +158,24 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username, password, app = (
-            serializer.validated_data[k] for k in ("username", "password", "app")
+        identifier, password, app, remember = (
+            serializer.validated_data[k] for k in ("username", "password", "app", "remember")
         )
-        if lockout.is_locked(username):
+        user = find_login_user(identifier)
+        # Lock the account, not the spelling: username / email / phone share one counter.
+        lock_key = f"user:{user.pk}" if user else identifier.strip().lower()
+        if lockout.is_locked(lock_key):
             minutes = config.get_int("auth.login_lockout_minutes", 15)
             raise APIError(
                 f"Too many failed attempts. Try again in {minutes} minutes.", "account_locked", 429
             )
-        user = User.objects.filter(username__iexact=username).first()
         if user is None:
             check_password(password, _DUMMY_HASH)  # equalise timing
             valid = False
         else:
             valid = user.check_password(password) and user.is_active
         if not valid:
-            locked = lockout.register_failure(username)
+            locked = lockout.register_failure(lock_key)
             message = (
                 "Too many failed attempts. Your account is locked for a few minutes."
                 if locked
@@ -174,8 +188,27 @@ class LoginView(APIView):
             )
         if app == "admin" and not user.is_staff:
             raise APIError("This account doesn't have staff access.", "not_staff", 403)
-        lockout.clear(username)
-        return _session_response(request, user, app)
+        lockout.clear(lock_key)
+        return _session_response(request, user, app, persistent=remember)
+
+
+def find_login_user(identifier: str) -> User | None:
+    """Username, or a *verified* email / phone. Unverified contact details never sign anyone in
+    (otherwise claiming someone else's address on your own account would be a way in)."""
+    from . import phone as phones
+
+    value = identifier.strip()
+    if "@" in value:
+        return User.objects.filter(email__iexact=value, email_verified_at__isnull=False).first()
+    if re.fullmatch(r"[+\d\s()\-.]{7,20}", value) and re.search(
+        r"\d{7,}", re.sub(r"\D", "", value)
+    ):
+        try:
+            number = phones.normalize(value)
+        except ValueError:
+            return None
+        return User.objects.filter(phone=number, phone_verified_at__isnull=False).first()
+    return User.objects.filter(username__iexact=value).first()
 
 
 class RefreshView(APIView):

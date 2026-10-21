@@ -7020,7 +7020,7 @@
                     "username": {
                         "type": "string",
                         "minLength": 1,
-                        "maxLength": 30
+                        "maxLength": 254
                     },
                     "password": {
                         "type": "string",
@@ -7034,6 +7034,10 @@
                             }
                         ],
                         "default": "client"
+                    },
+                    "remember": {
+                        "type": "boolean",
+                        "default": true
                     }
                 },
                 "required": [
@@ -10383,13 +10387,36 @@
                     "subtitles_language": {
                         "type": "string",
                         "maxLength": 12
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "email_verified": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "phone": {
+                        "type": "string",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "phone_verified": {
+                        "type": "boolean",
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "created_at",
+                    "email",
+                    "email_verified",
                     "full_name",
                     "id",
                     "is_staff",
+                    "phone",
+                    "phone_verified",
                     "role",
                     "username"
                 ]

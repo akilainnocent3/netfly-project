@@ -2114,6 +2114,8 @@ export interface components {
             password: string;
             /** @default client */
             app: components["schemas"]["AppEnum"];
+            /** @default true */
+            remember: boolean;
         };
         NewAndPopular: {
             coming_soon: components["schemas"]["Upcoming"][];
@@ -2994,6 +2996,11 @@ export interface components {
             autoplay_next?: boolean;
             autoplay_previews?: boolean;
             subtitles_language?: string;
+            /** Format: email */
+            readonly email: string | null;
+            readonly email_verified: boolean;
+            readonly phone: string | null;
+            readonly phone_verified: boolean;
         };
         UserDetail: {
             user: components["schemas"]["AdminUser"];

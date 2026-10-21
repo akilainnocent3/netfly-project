@@ -168,7 +168,7 @@ function Panel({
   );
 }
 
-/** Saves on blur (and Enter) with a "Saved" toast; disabled while saving. */
+/** Explicit save only (button or Enter) — nothing on this page submits itself. */
 function NameField({
   user,
   saving,
@@ -182,8 +182,9 @@ function NameField({
   useEffect(() => {
     setName(user.full_name);
   }, [user.full_name]);
+  const changed = !!name.trim() && name.trim() !== user.full_name;
   const commit = () => {
-    if (name.trim() && name.trim() !== user.full_name) onSave(name.trim());
+    if (changed && !saving) onSave(name.trim());
   };
   return (
     <form
@@ -198,10 +199,18 @@ function NameField({
         autoComplete="name"
         value={name}
         disabled={saving}
-        indicator={saving ? "checking" : "none"}
         onChange={(e) => setName(e.target.value)}
-        onBlur={commit}
       />
+      {changed && (
+        <div className="mt-3 flex gap-2">
+          <Button type="submit" variant="play" size="sm" loading={saving}>
+            Save
+          </Button>
+          <Button type="button" size="sm" disabled={saving} onClick={() => setName(user.full_name)}>
+            Cancel
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

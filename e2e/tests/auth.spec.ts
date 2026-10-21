@@ -1,16 +1,19 @@
 import { expect, PASSWORD, signUp, test, uniqueName } from "./helpers";
 
-test("sign up never submits on its own; the button does", async ({ page }) => {
+test("sign up never submits on its own; Finish does", async ({ page }) => {
   let posts = 0;
   page.on("request", (r) => r.method() === "POST" && r.url().endsWith("/api/v1/auth/signup") && posts++);
   await page.goto("/signup");
-  await page.locator("input[name=username]").pressSequentially(uniqueName("idle"), { delay: 10 });
   await page.locator("input[name=name]").fill("Idle Viewer");
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.locator("input[name=username]").pressSequentially(uniqueName("idle"), { delay: 10 });
+  await expect(page.getByText("Nice — it’s yours if you want it.")).toBeVisible();
+  await page.getByRole("button", { name: "Next" }).click();
   await page.locator("input[name=password]").fill(PASSWORD);
   await page.waitForTimeout(2500); // the old auto-submit fired after ~0.6 s
   expect(posts).toBe(0);
-  await expect(page).toHaveURL(/\/signup/);
-  await page.getByRole("button", { name: "Get started" }).click();
+  await expect(page).toHaveURL(/\/signup\/password/);
+  await page.getByRole("button", { name: "Finish" }).click();
   await page.waitForURL("**/browse**");
   expect(posts).toBe(1);
   await expect(page.getByRole("radiogroup", { name: "Translation filter" })).toBeVisible();
@@ -19,9 +22,12 @@ test("sign up never submits on its own; the button does", async ({ page }) => {
 test("taken usernames are flagged live", async ({ page }) => {
   const name = await signUp(page);
   await page.context().clearCookies();
-  await page.goto("/signup");
+  await page.goto("/signup/name");
+  await page.locator("input[name=name]").fill("Someone Else");
+  await page.getByRole("button", { name: "Next" }).click();
   await page.locator("input[name=username]").pressSequentially(name.toUpperCase(), { delay: 10 });
   await expect(page.getByText("That username is taken.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
 });
 
 test("log in submits on Enter only and wrong passwords explain themselves", async ({ page }) => {

@@ -35,7 +35,8 @@ export async function middleware(request: NextRequest) {
     url.pathname = pathname.replace(/^\/genre\//, "/categories/");
     return NextResponse.redirect(url);
   }
-  if (signedIn && (pathname === "/login" || pathname === "/signup" || pathname === "/")) {
+  const signupStep = /^\/signup(\/(name|username|password))?$/.test(pathname);
+  if (signedIn && (pathname === "/login" || signupStep || pathname === "/")) {
     // Already signed in: go where the visitor was headed (validated), else home.
     const target = safeNext(request.nextUrl.searchParams.get("next"));
     return NextResponse.redirect(new URL(target, request.url));

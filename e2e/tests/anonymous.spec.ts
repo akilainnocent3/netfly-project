@@ -1,25 +1,13 @@
-import type { Page } from "@playwright/test";
 import {
+  completeSignupSteps,
   createAccount,
   expect,
   homeRows,
-  PASSWORD,
   submitSignIn,
   test,
   titleBySlug,
-  uniqueName,
   viewerToken,
 } from "./helpers";
-
-/** Complete sign-up from wherever the gate sent us (the signup page keeps `next`). */
-async function completeSignup(page: Page): Promise<void> {
-  await page.waitForURL(/\/signup/);
-  await page.locator("input[name=username]").pressSequentially(uniqueName(), { delay: 10 });
-  await expect(page.getByText("Nice — it’s yours if you want it.")).toBeVisible();
-  await page.locator("input[name=name]").fill("Gate Viewer");
-  await page.locator("input[name=password]").fill(PASSWORD);
-  await page.getByRole("button", { name: "Get started" }).click();
-}
 
 async function myList(username: string): Promise<number[]> {
   const token = await viewerToken(username);
@@ -71,7 +59,7 @@ test("My List from a title page → Create account → back on the title, added"
   const gate = page.getByTestId("auth-gate");
   await expect(gate).toContainText(`add ${title.title} to My List`);
   await gate.getByRole("link", { name: "Create account" }).click();
-  await completeSignup(page);
+  await completeSignupSteps(page);
   await page.waitForURL(/\/title\/paper-kings/);
   await expect(page.getByText(`Added ${title.title} to My List`)).toBeVisible();
   await expect(page).not.toHaveURL(/intent=/);

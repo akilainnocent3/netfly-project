@@ -1,6 +1,7 @@
 "use client";
 
 import { ApiError, unwrap } from "@netfly/api-client";
+import { Check } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -9,58 +10,75 @@ import { useAuth } from "@/components/providers/auth";
 import { useConfig } from "@/components/providers/config";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
-import { api } from "@/lib/api";
 import { goAfterAuth } from "@/lib/after-auth";
+import { api } from "@/lib/api";
 import { safeNext } from "@/lib/safe-next";
 
-/** Submits only on the button or Enter (never on its own). */
+/**
+ * Netflix-style sign in: username, email or phone + password (SHOW), Remember me.
+ * Submits only on the button or Enter — never on its own.
+ */
 export function LoginForm() {
   const config = useConfig();
-  const next = safeNext(useSearchParams().get("next"));
+  const rawNext = useSearchParams().get("next");
+  const next = safeNext(rawNext);
   const { signIn } = useAuth();
-  const [username, setUsername] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [show, setShow] = useState(false);
+  const [remember, setRemember] = useState(true);
+  const [errors, setErrors] = useState<{ identifier?: string; password?: string; form?: string }>(
+    {},
+  );
   const [submitting, setSubmitting] = useState(false);
   const minLength = config.num("auth.password_min_length", 8);
-  const usernameOk = /^[A-Za-z0-9_]{3,30}$/.test(username.trim());
+  const site = config.str("branding.site_name", "NETFLY");
 
   const submit = async () => {
     if (submitting) return;
-    if (!usernameOk) return setError("Enter your username (3–30 letters, numbers or underscores).");
+    const problems: typeof errors = {};
+    if (!identifier.trim()) problems.identifier = "Enter your username, email or phone number.";
     if (password.length < minLength)
-      return setError(`Your password has at least ${minLength} characters.`);
+      problems.password = `Your password must contain at least ${minLength} characters.`;
+    setErrors(problems);
+    if (Object.keys(problems).length) return;
     setSubmitting(true);
-    setError("");
     try {
       signIn(
         await unwrap(
           api.POST("/api/v1/auth/login", {
-            body: { username: username.trim(), password, app: "client" },
+            body: { username: identifier.trim(), password, app: "client", remember },
           }),
         ),
       );
       goAfterAuth(next);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Something went wrong. Please try again.");
+      setErrors({
+        form: e instanceof ApiError ? e.message : "Something went wrong. Please try again.",
+      });
       setSubmitting(false);
     }
   };
 
+  const signupHref = rawNext ? `/signup?next=${encodeURIComponent(next)}` : "/signup";
   return (
     <AuthShell
-      title="Sign in"
-      subtitle={config.str("branding.tagline")}
+      title="Sign In"
       footer={
         <>
-          New to {config.str("branding.site_name", "NETFLY")}?{" "}
-          <Link href="/signup" className="font-semibold text-white hover:underline">
+          New to {site}?{" "}
+          <Link href={signupHref} className="font-semibold text-white hover:underline">
             Sign up now
           </Link>
           .
         </>
       }
     >
+      {errors.form && (
+        <p role="alert" className="text-body mb-5 rounded bg-[#e87c03] px-5 py-3.5 text-white">
+          {errors.form}
+        </p>
+      )}
       <form
         noValidate
         onSubmit={(e) => {
@@ -70,26 +88,44 @@ export function LoginForm() {
         className="space-y-4"
       >
         <Field
-          label="Username"
+          label="Email, phone or username"
           name="username"
           autoComplete="username"
           autoCapitalize="none"
           spellCheck={false}
           autoFocus
-          value={username}
-          onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))}
+          maxLength={254}
+          value={identifier}
+          error={errors.identifier}
+          onChange={(e) => {
+            setIdentifier(e.target.value);
+            setErrors((s) => ({ ...s, identifier: undefined, form: undefined }));
+          }}
         />
         <Field
           label="Password"
           name="password"
-          type="password"
+          type={show ? "text" : "password"}
           autoComplete="current-password"
           value={password}
-          error={error}
+          error={errors.password}
           onChange={(e) => {
             setPassword(e.target.value);
-            setError("");
+            setErrors((s) => ({ ...s, password: undefined, form: undefined }));
           }}
+          trailing={
+            password ? (
+              <button
+                type="button"
+                onClick={() => setShow((s) => !s)}
+                aria-pressed={show}
+                aria-label={show ? "Hide password" : "Show password"}
+                className="text-meta text-muted mr-1 self-center rounded px-3 py-2 font-semibold tracking-wide uppercase hover:text-white focus-visible:outline-2 focus-visible:outline-white"
+              >
+                {show ? "Hide" : "Show"}
+              </button>
+            ) : null
+          }
         />
         <Button
           type="submit"
@@ -97,10 +133,27 @@ export function LoginForm() {
           size="lg"
           fullWidth
           loading={submitting}
-          className="mt-2"
+          className="mt-2 h-12 rounded"
         >
-          {submitting ? "Signing in…" : "Sign in"}
+          Sign In
         </Button>
+        <div className="text-body flex items-center justify-between gap-4 pt-1">
+          <label className="text-muted flex cursor-pointer items-center gap-2.5 select-none">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              className="peer sr-only"
+            />
+            <span
+              aria-hidden
+              className="grid size-[18px] place-items-center rounded-sm border border-white/70 bg-black/40 peer-checked:border-white peer-checked:bg-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-white [&>svg]:opacity-0 peer-checked:[&>svg]:opacity-100"
+            >
+              <Check className="size-3.5 text-black" strokeWidth={3.5} />
+            </span>
+            Remember me
+          </label>
+        </div>
       </form>
     </AuthShell>
   );

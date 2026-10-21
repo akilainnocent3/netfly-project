@@ -36,7 +36,9 @@ function LoginForm() {
     try {
       signIn(
         await unwrap(
-          api.POST("/api/v1/auth/login", { body: { username, password, app: "admin" } }),
+          api.POST("/api/v1/auth/login", {
+            body: { username, password, app: "admin", remember: true },
+          }),
         ),
       );
       router.replace(next);

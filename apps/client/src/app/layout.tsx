@@ -56,6 +56,8 @@ export async function generateViewport(): Promise<Viewport> {
     width: "device-width",
     initialScale: 1,
     viewportFit: "cover",
+    // Android: the on-screen keyboard resizes the layout, so sticky step buttons stay above it.
+    interactiveWidget: "resizes-content",
   };
 }
 

@@ -45,8 +45,25 @@ class UserSerializer(serializers.ModelSerializer):
             "autoplay_next",
             "autoplay_previews",
             "subtitles_language",
+            "email",
+            "email_verified",
+            "phone",
+            "phone_verified",
         ]
-        read_only_fields = ["id", "username", "is_staff", "role", "created_at"]
+        read_only_fields = [
+            "id",
+            "username",
+            "is_staff",
+            "role",
+            "created_at",
+            "email",
+            "email_verified",
+            "phone",
+            "phone_verified",
+        ]
+
+    email_verified = serializers.BooleanField(read_only=True)
+    phone_verified = serializers.BooleanField(read_only=True)
 
     def validate_full_name(self, value: str) -> str:
         value = value.strip()
@@ -83,9 +100,11 @@ class SignupSerializer(serializers.Serializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=30)
+    # Username, verified email or verified phone (the field keeps its name for old clients).
+    username = serializers.CharField(max_length=254)
     password = serializers.CharField(write_only=True, trim_whitespace=False)
     app = serializers.ChoiceField(choices=APP_CHOICES, default="client")
+    remember = serializers.BooleanField(default=True, required=False)
 
 
 class AppSerializer(serializers.Serializer):

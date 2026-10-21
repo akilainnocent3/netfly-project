@@ -5,12 +5,19 @@ import { Slot, Slottable } from "@radix-ui/react-slot";
 import { forwardRef } from "react";
 import { Spinner } from "./spinner";
 
-export type ButtonVariant = "play" | "secondary" | "accent" | "ghost" | "icon-circle";
+export type ButtonVariant =
+  | "play"
+  | "secondary"
+  | "accent"
+  | "ghost"
+  | "icon-circle"
+  /** Primary action on the white registration pages (blue focus ring on white). */
+  | "accent-light";
 export type ButtonSize = "sm" | "md" | "lg";
 
 const BASE =
   "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap font-bold transition-[transform,background-color,border-color,color,opacity] duration-150 ease-out " +
-  "active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white " +
+  "active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white " +
   "disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 " +
   "pointer-coarse:min-h-11 pointer-coarse:min-w-11";
 
@@ -18,7 +25,11 @@ const VARIANT: Record<ButtonVariant, string> = {
   play: "rounded-md bg-white text-black hover:bg-white/75",
   secondary:
     "rounded-md bg-secondary-btn text-white backdrop-blur-sm hover:bg-[rgb(109_109_110/0.45)]",
-  accent: "rounded-md bg-accent text-accent-fg hover:brightness-110",
+  // Netflix red #E50914 → hover #C11119 → pressed #B20710, derived from the brand accent.
+  accent:
+    "rounded-md bg-accent text-accent-fg hover:bg-[color-mix(in_srgb,var(--accent)_84%,black)] active:bg-[color-mix(in_srgb,var(--accent)_78%,black)]",
+  "accent-light":
+    "rounded-[4px] bg-accent text-accent-fg hover:bg-[color-mix(in_srgb,var(--accent)_84%,black)] active:bg-[color-mix(in_srgb,var(--accent)_78%,black)] focus-visible:outline-[#0071eb]",
   ghost: "rounded-md text-white/80 hover:bg-white/10 hover:text-white",
   "icon-circle": "rounded-full border-2 border-white/50 bg-black/45 text-white hover:border-white",
 };
@@ -63,7 +74,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   const circle = variant === "icon-circle";
   const Comp = asChild ? Slot : "button";
   const isDisabled = disabled || loading;
-  const lead = loading ? <Spinner className={circle ? "" : "size-[1.1em]"} /> : icon;
+  // Loading: the label stays (transparent, so the width and accessible name don't change) and a
+  // spinner is centred over it.
+  const veiled = loading && !asChild;
   return (
     <Comp
       ref={ref}
@@ -73,6 +86,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       aria-busy={loading || undefined}
       className={cn(
         BASE,
+        "relative",
         VARIANT[variant],
         SIZE[circle ? "circle" : "rect"][size],
         fullWidth && "w-full",
@@ -82,10 +96,23 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     >
       {/* Flat children (no fragment): Slot needs to see Slottable directly for asChild. */}
       {circle && loading ? <Spinner /> : null}
-      {!circle && lead ? (
-        <span className="inline-flex shrink-0 [&_svg]:size-[1.15em]">{lead}</span>
+      {!circle && icon ? (
+        <span className={cn("inline-flex shrink-0 [&_svg]:size-[1.15em]", veiled && "opacity-0")}>
+          {icon}
+        </span>
       ) : null}
-      {circle && loading ? null : <Slottable>{children}</Slottable>}
+      {circle && loading ? null : asChild ? (
+        <Slottable>{children}</Slottable>
+      ) : children != null && children !== false ? (
+        <span className={cn("inline-flex items-center gap-2", veiled && "opacity-0")}>
+          {children}
+        </span>
+      ) : null}
+      {veiled && !circle ? (
+        <span aria-hidden className="absolute inset-0 grid place-items-center">
+          <Spinner className="size-[1.2em]" />
+        </span>
+      ) : null}
     </Comp>
   );
 });
