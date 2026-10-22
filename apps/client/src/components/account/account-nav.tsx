@@ -71,7 +71,7 @@ export function AccountPanel({
   return (
     <section
       data-testid={testId}
-      className={cn("bg-surface overflow-hidden rounded-md ring-1 ring-white/8", className)}
+      className={cn("bg-surface overflow-clip rounded-md ring-1 ring-white/8", className)}
     >
       {title ? (
         <div className="px-6 pt-6">

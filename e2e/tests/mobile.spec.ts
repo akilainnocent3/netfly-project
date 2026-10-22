@@ -136,6 +136,45 @@ test("tapping a tab shows the logo loader in its place until the page has loaded
   await expect(tab).toHaveAttribute("aria-current", "page");
 });
 
+test("account: a form's actions are a banner below its fields that docks above the tab bar", async ({
+  page,
+}) => {
+  test.skip((page.viewportSize()?.width ?? 0) >= 1024, "The docked banner is a phone layout.");
+  await signIn(page);
+  await page.goto("/account");
+  const name = page.getByLabel("Full name");
+  await name.fill("Banner Check");
+  const save = page.getByRole("button", { name: "Save" });
+  await expect(save).toBeVisible();
+  const measure = () =>
+    page.evaluate(() => {
+      const form = document.querySelector("input[name=name]")!.closest("form")!;
+      const field = form.firstElementChild!.getBoundingClientRect();
+      const banner = form.lastElementChild!.getBoundingClientRect();
+      const bar = document.querySelector('nav[data-tabbar=""]')!.getBoundingClientRect();
+      return {
+        fieldBottom: field.bottom,
+        bannerTop: banner.top,
+        bannerBottom: banner.bottom,
+        barTop: bar.top,
+      };
+    });
+  // In place: below the field, never over it.
+  await page
+    .getByRole("heading", { name: "Profile", exact: true })
+    .evaluate((el) => el.scrollIntoView({ block: "start" }));
+  let m = await measure();
+  expect(m.bannerTop).toBeGreaterThanOrEqual(m.fieldBottom);
+  // The banner's own spot just under the tab bar's top edge: it docks right above the bar instead.
+  await name.evaluate((el) => {
+    const top = el.getBoundingClientRect().top + scrollY;
+    scrollTo(0, top - innerHeight + 210);
+  });
+  m = await measure();
+  expect(Math.abs(m.bannerBottom - m.barTop)).toBeLessThanOrEqual(1);
+  await expect(save).toBeInViewport();
+});
+
 test("phone search: Top Searches list, then a 3-column poster grid while typing", async ({
   page,
 }) => {

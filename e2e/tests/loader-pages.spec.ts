@@ -33,7 +33,11 @@ for (const size of SIZES) {
     test("a saving button keeps its width and shows the small loader", async ({ page }) => {
       const username = await createAccount();
       await page.goto("/login");
-      await hold(page, (u, r) => u.pathname === "/api/v1/auth/login" && r.request().method() === "POST", 2500);
+      await hold(
+        page,
+        (u, r) => u.pathname === "/api/v1/auth/login" && r.request().method() === "POST",
+        2500,
+      );
       const button = page.getByRole("button", { name: /^Sign in$/i });
       const width = (await button.boundingBox())!.width;
       await submitSignIn(page, username);
@@ -52,7 +56,8 @@ for (const size of SIZES) {
       test.skip(dev, "route fallbacks need prefetching, which only production builds do");
       await page.goto("/categories");
       // Hold the navigation's RSC request, not the prefetch (which carries the loading boundary).
-      const navigation = (r: Route) => !!r.request().headers()["rsc"] && !r.request().headers()["next-router-prefetch"];
+      const navigation = (r: Route) =>
+        !!r.request().headers()["rsc"] && !r.request().headers()["next-router-prefetch"];
       await hold(page, (u, r) => u.pathname.startsWith("/categories/") && navigation(r), 3000);
       await page.locator('main a[href^="/categories/"]').first().click();
       const loader = page.locator("[aria-busy] > .nf-loader[data-size=lg]:has(svg)");
@@ -106,7 +111,11 @@ test.describe("buttons that start a navigation behave like saving buttons", () =
 
   test("Get Started (a link) and the sign-up Next button", async ({ page }) => {
     const slow = (prefix: string) =>
-      hold(page, (u, r) => u.pathname.startsWith(prefix) && r.request().resourceType() !== "image", 2500);
+      hold(
+        page,
+        (u, r) => u.pathname.startsWith(prefix) && r.request().resourceType() !== "image",
+        2500,
+      );
     await page.goto("/");
     await slow("/signup");
     const start = page.getByRole("link", { name: /Get Started/i }).first();
@@ -124,6 +133,39 @@ test.describe("buttons that start a navigation behave like saving buttons", () =
     await loaderShown(next.locator(".nf-loader:has(svg)"));
     await page.screenshot({ path: "../docs/screenshots/loader-button-next-1440.png" });
     await page.waitForURL(/\/signup\/username/);
+  });
+
+  test("navigation links: the header link and the Studio sidebar item show the loader until their page loads", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await hold(page, (u) => u.pathname === "/films", 2500);
+    const films = page
+      .getByRole("navigation", { name: "Primary" })
+      .first()
+      .getByRole("link", { name: "Films" });
+    await films.click();
+    await expect(films.locator(".nf-pending[data-pending] .nf-loader")).toBeVisible();
+    expect(await films.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
+    await page.waitForURL(/\/films/);
+    await expect(films.locator(".nf-pending[data-pending]")).toHaveCount(0);
+    await page.unrouteAll({ behavior: "wait" });
+
+    const ADMIN = process.env.NETFLY_ADMIN_URL ?? "http://localhost:3001";
+    await page.goto(`${ADMIN}/login`);
+    await page.getByLabel("Username").fill(process.env.NETFLY_ADMIN_USER ?? "admin");
+    await page.getByLabel("Password").fill(process.env.NETFLY_ADMIN_PASSWORD ?? "netfly-dev-admin");
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+    await hold(page, (u) => u.pathname === "/audit", 2500);
+    const audit = page
+      .getByRole("navigation", { name: "Main" })
+      .first()
+      .getByRole("link", { name: /Audit/ });
+    await audit.click();
+    await expect(audit.locator(".nf-pending[data-pending] .nf-loader")).toBeVisible();
+    await page.waitForURL(/\/audit/);
+    await expect(audit.locator(".nf-pending[data-pending]")).toHaveCount(0);
   });
 
   test("Studio: a button inside a link", async ({ page }) => {

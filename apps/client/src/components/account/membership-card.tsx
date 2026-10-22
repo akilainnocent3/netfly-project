@@ -66,7 +66,7 @@ export function MembershipCard({ detailed = false }: { detailed?: boolean }) {
   const data = membership.data;
   if (!data)
     return (
-      <div aria-hidden className="bg-surface overflow-hidden rounded-md ring-1 ring-white/8">
+      <div aria-hidden className="bg-surface overflow-clip rounded-md ring-1 ring-white/8">
         <Skeleton className="h-28 rounded-none" />
         <div className="space-y-3 p-6">
           <Skeleton className="h-5 w-1/2" />
@@ -149,7 +149,7 @@ function Card({ sub, detailed }: { sub: Sub; detailed: boolean }) {
   return (
     <section
       data-testid="membership-card"
-      className="bg-surface overflow-hidden rounded-md ring-1 ring-white/8"
+      className="bg-surface overflow-clip rounded-md ring-1 ring-white/8"
     >
       <div className="relative px-6 pt-6 pb-5" style={{ background: planGradient(plan.order) }}>
         <div className="flex flex-wrap items-center gap-2">
