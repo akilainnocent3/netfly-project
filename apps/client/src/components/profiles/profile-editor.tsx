@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { useProfiles, type Profile } from "../providers/profile";
 import { Button } from "../ui/button";
 import { Field } from "../ui/field";
+import { FormActions } from "../ui/form-actions";
 import { SwitchRow } from "../ui/switch";
 import { useToast } from "../ui/toast";
 import { Avatar } from "./avatar";
@@ -82,7 +83,7 @@ export function ProfileEditor({
         <Dialog.Overlay className="fixed inset-0 z-[120] bg-black/80" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="bg-bg fixed top-1/2 left-1/2 z-[121] max-h-[92dvh] w-[min(560px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-md p-6 ring-1 ring-white/10 md:p-8"
+          className="bg-bg fixed top-1/2 left-1/2 z-[121] max-h-[92dvh] w-[min(560px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-md p-6 ring-1 ring-white/10 [--panel-pad:1.5rem] md:p-8 md:[--panel-pad:2rem]"
         >
           <Dialog.Title className="text-h2 mb-6 font-bold">
             {profile ? "Edit Profile" : "Add Profile"}
@@ -136,17 +137,29 @@ export function ProfileEditor({
               checked={kids}
               onChange={setKids}
             />
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Button type="submit" variant="play" loading={busy === "save"} disabled={!!busy}>
+            <FormActions inDialog className="bg-bg">
+              <Button
+                type="submit"
+                variant="accent"
+                className="rounded"
+                loading={busy === "save"}
+                disabled={!!busy}
+              >
                 Save
               </Button>
-              <Button type="button" variant="ghost" onClick={onClose} disabled={!!busy}>
+              <Button
+                type="button"
+                variant="secondary"
+                className="rounded"
+                onClick={onClose}
+                disabled={!!busy}
+              >
                 Cancel
               </Button>
               {profile && (
                 <Button
                   variant={confirmDelete ? "accent" : "ghost"}
-                  className="ml-auto"
+                  className="rounded sm:ml-auto"
                   loading={busy === "delete"}
                   disabled={!!busy && busy !== "delete"}
                   onClick={() => void remove()}
@@ -154,7 +167,7 @@ export function ProfileEditor({
                   {confirmDelete ? "Delete — this can't be undone" : "Delete profile"}
                 </Button>
               )}
-            </div>
+            </FormActions>
           </form>
         </Dialog.Content>
       </Dialog.Portal>

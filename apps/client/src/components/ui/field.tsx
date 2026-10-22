@@ -4,6 +4,7 @@ import { cn, LazyLogoLoader } from "@netfly/ui";
 import { AnimatePresence, m } from "framer-motion";
 import { Check, CircleX, X } from "lucide-react";
 import { forwardRef, useId } from "react";
+import { useEarlyInput } from "./early-input";
 
 export type FieldIndicator = "none" | "checking" | "ok" | "bad";
 
@@ -22,6 +23,7 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
   ref,
 ) {
   const id = useId();
+  const inputRef = useEarlyInput(ref, props.value, props.onChange);
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   return (
     <div className={cn("group relative", className)}>
@@ -34,7 +36,7 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
       >
         <div className="relative min-w-0 flex-1">
           <input
-            ref={ref}
+            ref={inputRef}
             id={id}
             placeholder=" "
             aria-invalid={!!error}

@@ -1,12 +1,14 @@
 "use client";
 
-import { cn } from "@netfly/ui";
+import { cn, NavPending } from "@netfly/ui";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Clapperboard, Cpu, Gauge, Menu, Users, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useRouteChangePending } from "@/lib/use-pending";
 import { useAuth } from "../providers/auth";
+import { LinkPending } from "../ui/link-pending";
 import { NAV, type NavItem } from "./nav";
 
 /** The sections staff use most on a phone; everything else is under "More". */
@@ -38,6 +40,8 @@ export function MobileNav() {
   const pathname = usePathname();
   const { can } = useAuth();
   const [more, setMore] = useState(false);
+  // The sheet closes (unmounting its links) on select, so the More tab carries the loader.
+  const leaving = useRouteChangePending();
   const groups = NAV.map((g) => ({
     ...g,
     items: g.items.filter((item) => !item.roles || can(...item.roles)),
@@ -64,7 +68,9 @@ export function MobileNav() {
                   aria-current={active ? "page" : undefined}
                   className={cn(tab, active ? "text-fg" : "text-muted")}
                 >
-                  <item.icon className={cn("size-5", active && "text-accent")} />
+                  <LinkPending className="[--nf-pending-size:20px]">
+                    <item.icon className={cn("size-5", active && "text-accent")} />
+                  </LinkPending>
                   {item.label}
                 </Link>
               </li>
@@ -77,7 +83,9 @@ export function MobileNav() {
               aria-haspopup="dialog"
               className={cn(tab, "w-full", moreActive ? "text-fg" : "text-muted")}
             >
-              <Menu className={cn("size-5", moreActive && "text-accent")} />
+              <NavPending pending={leaving.pending} className="[--nf-pending-size:20px]">
+                <Menu className={cn("size-5", moreActive && "text-accent")} />
+              </NavPending>
               More
             </button>
           </li>
@@ -113,7 +121,10 @@ export function MobileNav() {
                           <Link
                             href={item.href}
                             aria-current={active ? "page" : undefined}
-                            onClick={() => setMore(false)}
+                            onClick={() => {
+                              if (!active) leaving.mark();
+                              setMore(false);
+                            }}
                             className={cn(
                               "flex h-11 items-center gap-3 rounded-md px-2 text-[14px]",
                               active ? "bg-hover text-fg font-medium" : "text-muted",

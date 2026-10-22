@@ -6,3 +6,4 @@ export * from "./logo-mark";
 export * from "./loader-timeline";
 export { LoaderPresence, useLoaderPresence } from "./loader-presence";
 export { LazyLogoLoader } from "./logo-loader-lazy";
+export { NavPending } from "./nav-pending";

@@ -1,14 +1,14 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { RegistrationShell, StepActions, StepHeading } from "@/components/auth/registration-shell";
 import { Button } from "@/components/ui/button";
 import { LightField } from "@/components/ui/light-field";
+import { useNavigate } from "@/lib/use-navigate";
 import { useSignupDraft } from "../draft";
 
 export default function SignupNameStep() {
-  const router = useRouter();
+  const nav = useNavigate();
   const draft = useSignupDraft();
   const [name, setName] = useState(draft.name);
   const [error, setError] = useState(draft.errors.name ?? "");
@@ -21,7 +21,7 @@ export default function SignupNameStep() {
     if (!value) return setError("Please tell us your name.");
     if (value.length > 120) return setError("That name is too long.");
     draft.set({ name: value, errors: { ...draft.errors, name: undefined } });
-    router.push(draft.href("/signup/username"));
+    nav.push(draft.href("/signup/username"));
   };
 
   return (
@@ -60,6 +60,7 @@ export default function SignupNameStep() {
             variant="accent-light"
             size="lg"
             fullWidth
+            loading={nav.pending}
             className="text-h3 h-14 font-medium"
           >
             Next

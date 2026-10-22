@@ -56,7 +56,7 @@ export function NewAndPopular() {
         <StateMessage
           tone="error"
           title="We couldn't load New & Popular"
-          action={{ label: "Try again", onClick: () => void data.refetch() }}
+          action={{ label: "Try again", onClick: () => data.refetch() }}
         >
           Check your connection and try again.
         </StateMessage>

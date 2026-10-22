@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@netfly/ui";
+import { cn, NavPending } from "@netfly/ui";
 import { AnimatePresence, m } from "framer-motion";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDown, Search, X } from "lucide-react";
@@ -12,6 +12,8 @@ import { Logo } from "../brand/logo";
 import { useAuth } from "../providers/auth";
 import { BackButton } from "../ui/back-button";
 import { Button, IconButton } from "../ui/button";
+import { LinkPending } from "../ui/link-pending";
+import { useRouteChangePending } from "@/lib/use-navigate";
 import { TranslationSwitcher } from "./translation-switcher";
 import { tabBarInset } from "./tab-bar";
 
@@ -89,7 +91,7 @@ export function Header() {
       )}
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      <div className="relative flex h-[var(--header-h)] items-center gap-4 px-[max(4vw,16px)] xl:gap-7">
+      <div className="relative flex h-[var(--header-h)] items-center gap-4 px-[max(4vw,16px)] max-[359px]:gap-2 max-[359px]:px-3 xl:gap-7">
         {sub && <BackButton className="md:hidden" />}
         <Logo className={sub ? "max-md:hidden" : undefined} />
         <nav aria-label="Primary" className="hidden items-center gap-5 xl:flex">
@@ -106,12 +108,12 @@ export function Header() {
                   : "text-[#e5e5e5] hover:text-[#b3b3b3]",
               )}
             >
-              {item.label}
+              <LinkPending>{item.label}</LinkPending>
             </Link>
           ))}
         </nav>
         <CompactNav pathname={pathname} nav={nav} />
-        <div className="ml-auto flex items-center gap-1.5 md:gap-3">
+        <div className="ml-auto flex items-center gap-1.5 max-[359px]:gap-1 md:gap-3">
           <TranslationSwitcher compact />
           <SearchBox />
           {status === "anonymous" ? (
@@ -159,7 +161,7 @@ function MobileChips({ pathname }: { pathname: string }) {
                 : "border-white/50 text-white",
             )}
           >
-            {chip.label}
+            <LinkPending>{chip.label}</LinkPending>
           </span>
         </Link>
       ))}
@@ -182,10 +184,13 @@ function SignInButton() {
 /** Below xl the destinations collapse into a "Browse" menu (phones use the tab bar). */
 function CompactNav({ pathname, nav }: { pathname: string; nav: typeof NAV }) {
   const current = nav.find((item) => isActive(pathname, item.href));
+  // The menu closes (and its links unmount) on select, so the trigger carries the loader.
+  const leaving = useRouteChangePending();
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger className="text-meta hidden items-center gap-1 font-semibold text-white outline-none focus-visible:outline-2 focus-visible:outline-white md:flex xl:hidden">
-        {current?.label ?? "Browse"} <ChevronDown className="size-4" />
+        <NavPending pending={leaving.pending}>{current?.label ?? "Browse"}</NavPending>{" "}
+        <ChevronDown className="size-4" />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
@@ -198,6 +203,9 @@ function CompactNav({ pathname, nav }: { pathname: string; nav: typeof NAV }) {
             <DropdownMenu.Item key={item.href} asChild>
               <Link
                 href={item.href}
+                onClick={() => {
+                  if (!isActive(pathname, item.href)) leaving.mark();
+                }}
                 className={cn(
                   "text-meta block h-11 leading-[44px] outline-none data-[highlighted]:bg-white/8",
                   isActive(pathname, item.href) ? "font-bold text-white" : "text-[#b3b3b3]",

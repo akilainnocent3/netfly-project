@@ -58,7 +58,10 @@ export function SegmentedControl<V extends string>({
             onClick={() => onChange(option.value)}
             className={cn(
               "relative z-10 rounded-full font-semibold whitespace-nowrap transition-colors duration-150 pointer-coarse:min-h-11",
-              size === "sm" ? "text-meta px-3 py-1.5" : "text-body px-4 py-1.5",
+              // The narrowest phones (320 px) need the header row to fit: tighter pills there.
+              size === "sm"
+                ? "text-meta max-[359px]:text-caption px-3 py-1.5 max-[359px]:px-1.5"
+                : "text-body px-4 py-1.5",
               active
                 ? tone === "accent"
                   ? "text-accent-fg"

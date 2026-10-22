@@ -3,6 +3,7 @@
 import { m } from "framer-motion";
 import Link from "next/link";
 import { Logo } from "../brand/logo";
+import { Button } from "../ui/button";
 import { useAuth } from "../providers/auth";
 import { useConfig } from "../providers/config";
 
@@ -30,13 +31,9 @@ export function RegistrationShell({
       <header className="flex h-[76px] shrink-0 items-center justify-between border-b border-[#e6e6e6] px-[max(4vw,16px)] md:h-[90px]">
         <Logo href="/" tone="light" compact={false} className="[&_img]:h-7 md:[&_img]:h-9" />
         {status === "authenticated" ? (
-          <button
-            type="button"
-            onClick={() => void signOut()}
-            className="text-lead rounded font-bold text-[#333] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0071eb]"
-          >
+          <Button variant="ghost-light" className="text-lead font-bold" onClick={() => signOut()}>
             Sign Out
-          </button>
+          </Button>
         ) : (
           <Link
             href={signInHref}

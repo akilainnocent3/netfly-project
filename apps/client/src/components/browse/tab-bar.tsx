@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { Avatar } from "../profiles/avatar";
 import { useAuth } from "../providers/auth";
+import { LinkPending } from "../ui/link-pending";
 import { useProfiles } from "../providers/profile";
 
 const TABS = [
@@ -130,14 +131,17 @@ export function TabBar({ inModal = false }: { inModal?: boolean }) {
                   current ? "text-white" : "text-[#808080]",
                 )}
               >
-                {href === "/account" && active ? (
-                  <Avatar
-                    avatarKey={active.avatar_key}
-                    className={cn("size-[22px] rounded-sm", current && "ring-2 ring-white")}
-                  />
-                ) : (
-                  <Icon className="size-[22px]" strokeWidth={current ? 2.4 : 1.8} />
-                )}
+                {/* The icon turns into the logo loader until the tab's page has loaded. */}
+                <LinkPending className="[--nf-pending-size:22px]">
+                  {href === "/account" && active ? (
+                    <Avatar
+                      avatarKey={active.avatar_key}
+                      className={cn("size-[22px] rounded-sm", current && "ring-2 ring-white")}
+                    />
+                  ) : (
+                    <Icon className="size-[22px]" strokeWidth={current ? 2.4 : 1.8} />
+                  )}
+                </LinkPending>
                 {label}
               </Link>
             </li>

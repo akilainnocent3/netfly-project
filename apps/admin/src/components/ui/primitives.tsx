@@ -4,6 +4,7 @@ import { cn, LazyLogoLoader } from "@netfly/ui";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
 
 import { forwardRef } from "react";
+import { useBusyClick } from "@/lib/use-pending";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 const VARIANTS: Record<ButtonVariant, string> = {
@@ -21,14 +22,17 @@ export const Button = forwardRef<
     loading?: boolean;
   }
 >(function Button(
-  { variant = "secondary", size = "md", loading, className, children, disabled, ...props },
+  { variant = "secondary", size = "md", loading, className, children, disabled, onClick, ...props },
   ref,
 ) {
+  // Also busy while an async onClick runs, or after a click on a button inside a link.
+  const [clickBusy, handleClick] = useBusyClick(onClick);
+  const busy = loading || clickBusy;
   return (
     <button
       ref={ref}
-      disabled={disabled || loading}
-      aria-busy={loading || undefined}
+      disabled={disabled || busy}
+      aria-busy={busy || undefined}
       className={cn(
         "inline-flex items-center justify-center gap-1.5 rounded-md font-medium whitespace-nowrap transition-colors select-none disabled:pointer-events-none disabled:opacity-50",
         size === "sm" ? "h-7 px-2.5 text-[12.5px]" : "h-8 px-3 text-[13px]",
@@ -36,8 +40,9 @@ export const Button = forwardRef<
         className,
       )}
       {...props}
+      onClick={handleClick}
     >
-      {loading && <LazyLogoLoader size="sm" decorative className="text-current [--nf-size:14px]" />}
+      {busy && <LazyLogoLoader size="sm" decorative className="text-current [--nf-size:14px]" />}
       {children}
     </button>
   );

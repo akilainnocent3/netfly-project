@@ -76,6 +76,8 @@ export async function JsonLd({ data }: { data: object }) {
     <script
       type="application/ld+json"
       nonce={nonce}
+      // Browsers hide a nonce from the DOM once parsed, so hydration would see nonce="".
+      suppressHydrationWarning
       // `<` is escaped so catalog text can never close the script element.
       dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }}
     />

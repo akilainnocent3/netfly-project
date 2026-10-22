@@ -112,7 +112,7 @@ function Gate({ manage: manageInitially, dismissible }: { manage: boolean; dismi
             <div className="mt-12 flex gap-3">
               {manage ? (
                 <Button
-                  variant="play"
+                  variant="accent"
                   size="lg"
                   onClick={() =>
                     manageInitially && dismissible ? p.closeGate() : setManage(false)

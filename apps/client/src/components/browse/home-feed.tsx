@@ -56,14 +56,16 @@ export function HomeFeed({
           headingLevel={heading || backdrop ? "h2" : "h1"}
         />
       </ErrorBoundary>
-      <div className="relative z-10 -mt-[11vh] space-y-[clamp(18px,2.4vw,40px)] md:-mt-[13vh]">
+      {/* Rows tuck under the full-bleed billboard from md; on phones the hero is a poster card
+          with its own buttons at the bottom, so the first row starts below it, never over it. */}
+      <div className="relative z-10 space-y-[clamp(18px,2.4vw,40px)] md:-mt-[13vh]">
         {home.isPending &&
           Array.from({ length: 4 }, (_, i) => <RowSkeleton key={i} titleWidth={140 + i * 30} />)}
         {home.isError && !rows.length && (
           <StateMessage
             tone="error"
             title={navigatorOffline() ? "You're offline" : "We couldn't load your rows"}
-            action={{ label: "Try again", onClick: () => void home.refetch() }}
+            action={{ label: "Try again", onClick: () => home.refetch() }}
           >
             {navigatorOffline()
               ? "Reconnect and we'll pick up where you left off."

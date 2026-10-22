@@ -1,9 +1,10 @@
 "use client";
 
-import { cn } from "@netfly/ui";
+import { cn, LazyLogoLoader } from "@netfly/ui";
 import { ChevronLeft } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { useRouteChangePending } from "@/lib/use-navigate";
 
 // How many in-app steps "back" would undo: +1 per client navigation, −1 per history pop.
 let depth = 0;
@@ -46,17 +47,28 @@ export function parentRoute(pathname: string): string {
 export function BackButton({ className, fallback }: { className?: string; fallback?: string }) {
   const router = useRouter();
   const pathname = usePathname();
+  const leaving = useRouteChangePending();
   return (
     <button
       type="button"
       aria-label="Back"
-      onClick={() => (canGoBack() ? router.back() : router.push(fallback ?? parentRoute(pathname)))}
+      aria-busy={leaving.pending || undefined}
+      disabled={leaving.pending}
+      onClick={() => {
+        leaving.mark();
+        if (canGoBack()) router.back();
+        else router.push(fallback ?? parentRoute(pathname));
+      }}
       className={cn(
         "-ml-2.5 grid size-11 shrink-0 place-items-center rounded-full text-white transition-colors hover:bg-white/10",
         className,
       )}
     >
-      <ChevronLeft className="size-7" strokeWidth={2.2} />
+      {leaving.pending ? (
+        <LazyLogoLoader size="sm" decorative delay={0} />
+      ) : (
+        <ChevronLeft className="size-7" strokeWidth={2.2} />
+      )}
     </button>
   );
 }

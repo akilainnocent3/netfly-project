@@ -7,6 +7,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../providers/auth";
 import { useConfig } from "../providers/config";
+import { LinkPending } from "../ui/link-pending";
 import { NAV } from "./nav";
 
 export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
@@ -59,7 +60,9 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
                             : "text-muted hover:bg-hover hover:text-fg",
                         )}
                       >
-                        <item.icon className={cn("size-4 shrink-0", active && "text-accent")} />
+                        <LinkPending className="[--nf-pending-size:16px]">
+                          <item.icon className={cn("size-4 shrink-0", active && "text-accent")} />
+                        </LinkPending>
                         {!collapsed && <span className="truncate">{item.label}</span>}
                       </Link>
                     </li>

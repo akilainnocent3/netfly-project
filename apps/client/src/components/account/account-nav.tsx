@@ -4,6 +4,8 @@ import { cn } from "@netfly/ui";
 import { CreditCard, Gauge, House, ShieldCheck, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { FormActions } from "../ui/form-actions";
+import { LinkPending } from "../ui/link-pending";
 
 export const ACCOUNT_SECTIONS = [
   { href: "/account", label: "Overview", icon: House },
@@ -37,7 +39,9 @@ export function AccountNav() {
                     : "text-[#b3b3b3] hover:bg-white/5 hover:text-white",
                 )}
               >
-                <Icon className="size-5 shrink-0" aria-hidden />
+                <LinkPending className="[--nf-pending-size:20px]">
+                  <Icon className="size-5 shrink-0" aria-hidden />
+                </LinkPending>
                 {label}
               </Link>
             </li>
@@ -48,18 +52,18 @@ export function AccountNav() {
   );
 }
 
-/** A white-on-dark account card with a heading. */
+/** A white-on-dark account card with a heading; its buttons go in the footer banner (`actions`). */
 export function AccountPanel({
   title,
   description,
-  action,
+  actions,
   children,
   className,
   testId,
 }: {
   title?: string;
   description?: React.ReactNode;
-  action?: React.ReactNode;
+  actions?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
   testId?: string;
@@ -70,15 +74,15 @@ export function AccountPanel({
       className={cn("bg-surface overflow-hidden rounded-md ring-1 ring-white/8", className)}
     >
       {title ? (
-        <div className="flex flex-wrap items-start justify-between gap-3 px-6 pt-6">
-          <div>
-            <h2 className="text-h3 font-bold">{title}</h2>
-            {description ? <p className="text-meta mt-1 text-[#b3b3b3]">{description}</p> : null}
-          </div>
-          {action}
+        <div className="px-6 pt-6">
+          <h2 className="text-h3 font-bold">{title}</h2>
+          {description ? <p className="text-meta mt-1 text-[#b3b3b3]">{description}</p> : null}
         </div>
       ) : null}
-      <div className={cn("p-6", title && "pt-5")}>{children}</div>
+      <div className={cn("p-6 [--panel-pad:1.5rem]", title && "pt-5")}>
+        {children}
+        {actions ? <FormActions>{actions}</FormActions> : null}
+      </div>
     </section>
   );
 }
@@ -107,12 +111,14 @@ export function AccountLinkRow({
         <span className="text-body block font-semibold group-hover:underline">{label}</span>
         {hint ? <span className="text-meta block truncate text-[#b3b3b3]">{hint}</span> : null}
       </span>
-      <span
-        aria-hidden
-        className="text-lead text-[#a3a3a3] transition-transform group-hover:translate-x-0.5"
-      >
-        ›
-      </span>
+      <LinkPending className="[--nf-pending-size:20px]">
+        <span
+          aria-hidden
+          className="text-lead text-[#a3a3a3] transition-transform group-hover:translate-x-0.5"
+        >
+          ›
+        </span>
+      </LinkPending>
     </Link>
   );
 }

@@ -13,7 +13,7 @@ export default function NotFound() {
         <p className="text-lead text-muted mx-auto mt-3 max-w-md">
           We can&apos;t find that page. There&apos;s plenty to explore on the home page.
         </p>
-        <Button asChild variant="play" size="lg" className="mt-8">
+        <Button asChild variant="accent" size="lg" className="mt-8">
           <Link href="/">Back to home</Link>
         </Button>
       </div>

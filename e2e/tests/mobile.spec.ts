@@ -32,7 +32,9 @@ async function expectNoHorizontalScroll(page: Page) {
     .poll(
       async () => {
         try {
-          return await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+          return await page.evaluate(
+            () => document.documentElement.scrollWidth - window.innerWidth,
+          );
         } catch {
           return Number.POSITIVE_INFINITY;
         }
@@ -64,12 +66,20 @@ async function expectEndClearsTabBar(page: Page) {
     )) {
       const r = el.getBoundingClientRect();
       const style = getComputedStyle(el);
-      if (!r.width || !r.height || style.visibility === "hidden" || el.closest("[aria-hidden=true]")) continue;
+      if (
+        !r.width ||
+        !r.height ||
+        style.visibility === "hidden" ||
+        el.closest("[aria-hidden=true]")
+      )
+        continue;
       if (r.bottom > lastBottom) [lastBottom, what] = [r.bottom, el.outerHTML.slice(0, 120)];
     }
     return { lastBottom, barTop: bar.top, what };
   });
-  expect(lastBottom, `${what} hidden behind the tab bar on ${page.url()}`).toBeLessThanOrEqual(barTop + 0.5);
+  expect(lastBottom, `${what} hidden behind the tab bar on ${page.url()}`).toBeLessThanOrEqual(
+    barTop + 0.5,
+  );
 }
 
 test("phone layout: tab bar and compact switcher", async ({ page }) => {
@@ -81,8 +91,58 @@ test("phone layout: tab bar and compact switcher", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Categories" })).toBeVisible();
 });
 
-test("phone search: Top Searches list, then a 3-column poster grid while typing", async ({ page }) => {
-  test.skip(test.info().project.name !== "mobile", "Layout-specific: covered on the Pixel 7 profile.");
+test("home: the first row starts below the phone hero's buttons, never over them", async ({
+  page,
+}) => {
+  test.skip((page.viewportSize()?.width ?? 0) >= 768, "Phones only (the poster hero).");
+  await signIn(page);
+  const heading = page.getByRole("heading", { level: 2 }).filter({ hasText: /\S/ }).first();
+  const myList = page
+    .locator("section[aria-label=Featured]")
+    .getByRole("button", { name: /My List/ })
+    .last();
+  await expect(myList).toBeVisible();
+  await expect(heading).toBeVisible();
+  const buttons = (await myList.boundingBox())!;
+  const row = (await heading.boundingBox())!;
+  expect(row.y).toBeGreaterThanOrEqual(buttons.y + buttons.height);
+  // Every header control fits on screen, down to 320 px.
+  const overflow = await page.evaluate(() => {
+    const controls = document.querySelectorAll("header a, header button, header [role=radiogroup]");
+    return Math.max(...[...controls].map((el) => el.getBoundingClientRect().right)) - innerWidth;
+  });
+  expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test("tapping a tab shows the logo loader in its place until the page has loaded; a second tap is ignored", async ({
+  page,
+}) => {
+  test.skip((page.viewportSize()?.width ?? 0) >= 1024, "The tab bar is below lg.");
+  await signIn(page);
+  // Hold the My List page's server render so the navigation stays pending.
+  await page.route("**/my-list**", async (route) => {
+    await new Promise((r) => setTimeout(r, 2500));
+    await route.fallback();
+  });
+  const tab = pageTabBar(page).getByRole("link", { name: "My List" });
+  await tab.click();
+  await expect(tab.locator(".nf-pending[data-pending] .nf-loader")).toBeVisible();
+  // Busy: the link takes no more taps until its page arrives.
+  expect(await tab.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
+  await page.waitForTimeout(900); // let the ribbon finish drawing on for the screenshot
+  await page.screenshot({ path: shot("tab-loading") });
+  await page.waitForURL(/\/my-list/);
+  await expect(tab.locator(".nf-pending[data-pending]")).toHaveCount(0);
+  await expect(tab).toHaveAttribute("aria-current", "page");
+});
+
+test("phone search: Top Searches list, then a 3-column poster grid while typing", async ({
+  page,
+}) => {
+  test.skip(
+    test.info().project.name !== "mobile",
+    "Layout-specific: covered on the Pixel 7 profile.",
+  );
   await signUp(page);
   await page.goto("/search");
   const input = page.getByRole("searchbox", { name: "Search" });
@@ -202,7 +262,10 @@ test("on-screen keyboard: the tab bar gets out of the way while typing", async (
   // (Emulation also reports that as the screen size, so keep it portrait: a real keyboard never
   // rotates the screen.)
   const size = page.viewportSize()!;
-  await page.setViewportSize({ width: size.width, height: Math.max(size.width + 1, size.height - 320) });
+  await page.setViewportSize({
+    width: size.width,
+    height: Math.max(size.width + 1, size.height - 320),
+  });
   await expect(bar).toBeHidden();
   await expect(page.locator("html")).toHaveAttribute("data-keyboard", "");
   await page.setViewportSize(size);
@@ -213,7 +276,10 @@ test("on-screen keyboard: the tab bar gets out of the way while typing", async (
 });
 
 test("nested pages have a back chevron: history back, else the parent page", async ({ page }) => {
-  test.skip((page.viewportSize()?.width ?? 0) >= 768, "Phones only (md and up show the full header).");
+  test.skip(
+    (page.viewportSize()?.width ?? 0) >= 768,
+    "Phones only (md and up show the full header).",
+  );
   await signIn(page);
   await page.goto("/categories");
   await page.locator('#content a[href^="/categories/"]').first().click();
@@ -244,7 +310,9 @@ async function smallTapTargets(page: Page): Promise<string[]> {
     )) {
       const cs = getComputedStyle(el);
       // A checkbox or radio is tapped through its label.
-      const label = /^(checkbox|radio)$/.test((el as HTMLInputElement).type) ? el.closest("label") : null;
+      const label = /^(checkbox|radio)$/.test((el as HTMLInputElement).type)
+        ? el.closest("label")
+        : null;
       const r = (label ?? el).getBoundingClientRect();
       if (!r.width || !r.height || cs.visibility === "hidden") continue;
       if (el.closest("[aria-hidden=true], [inert]") || r.top > innerHeight * 3) continue;
@@ -259,16 +327,28 @@ async function smallTapTargets(page: Page): Promise<string[]> {
 }
 
 test("tap targets are at least 44 × 44 on the main phone pages", async ({ page }) => {
-  test.skip((page.viewportSize()?.width ?? 0) >= 768, "Phones (touch targets of the phone layout).");
+  test.skip(
+    (page.viewportSize()?.width ?? 0) >= 768,
+    "Phones (touch targets of the phone layout).",
+  );
   await signIn(page);
-  for (const route of ["/browse", "/search", "/categories", "/account", "/my-list", "/new-and-popular"]) {
+  for (const route of [
+    "/browse",
+    "/search",
+    "/categories",
+    "/account",
+    "/my-list",
+    "/new-and-popular",
+  ]) {
     await page.goto(route);
     await page.waitForLoadState("networkidle");
     expect(await smallTapTargets(page), route).toEqual([]);
   }
 });
 
-test("landscape: no horizontal scroll; the tab bar stays at the bottom below lg", async ({ page }) => {
+test("landscape: no horizontal scroll; the tab bar stays at the bottom below lg", async ({
+  page,
+}) => {
   await signIn(page);
   const { width, height } = page.viewportSize()!;
   await page.setViewportSize({ width: height, height: width });
@@ -276,14 +356,23 @@ test("landscape: no horizontal scroll; the tab bar stays at the bottom below lg"
     await page.goto(route);
     await page.waitForLoadState("networkidle");
     await expectNoHorizontalScroll(page);
-    if (height < 1024 && !route.startsWith("/legal")) await expectAtViewportBottom(page, pageTabBar(page));
+    if (height < 1024 && !route.startsWith("/legal"))
+      await expectAtViewportBottom(page, pageTabBar(page));
   }
   await page.goto("/browse");
   await page.screenshot({ path: shot("landscape") });
 });
 
 test("public pages: no horizontal scroll at any phone width", async ({ page }) => {
-  for (const route of ["/", "/login", "/signup", "/legal/terms", "/browse", "/title/neon-tide", "/search"]) {
+  for (const route of [
+    "/",
+    "/login",
+    "/signup",
+    "/legal/terms",
+    "/browse",
+    "/title/neon-tide",
+    "/search",
+  ]) {
     await page.goto(route);
     await page.waitForLoadState("networkidle");
     await expectNoHorizontalScroll(page);
@@ -322,9 +411,23 @@ test("Studio: the phone tab bar and More sheet reach every section", async ({ pa
   const sheet = page.getByRole("dialog", { name: "All sections" });
   await expect(sheet).toBeVisible();
   await page.screenshot({ path: shot("studio-more") });
-  const hrefs = await sheet.getByRole("link").evaluateAll((links) => links.map((a) => a.getAttribute("href")!));
+  const hrefs = await sheet
+    .getByRole("link")
+    .evaluateAll((links) => links.map((a) => a.getAttribute("href")!));
   expect(hrefs).toEqual(
-    expect.arrayContaining(["/", "/titles", "/categories", "/home-layout", "/transcoding", "/plans", "/subscribers", "/users", "/staff", "/settings", "/audit"]),
+    expect.arrayContaining([
+      "/",
+      "/titles",
+      "/categories",
+      "/home-layout",
+      "/transcoding",
+      "/plans",
+      "/subscribers",
+      "/users",
+      "/staff",
+      "/settings",
+      "/audit",
+    ]),
   );
   await page.keyboard.press("Escape");
   for (const href of hrefs.filter((h) => h !== "/")) {

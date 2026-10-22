@@ -13,7 +13,8 @@ export function StateMessage({
   title: string;
   children?: React.ReactNode;
   tone?: "empty" | "error";
-  action?: { label: string; onClick: () => void };
+  /** A promise returned by onClick keeps the button busy until it settles. */
+  action?: { label: string; onClick: () => unknown };
   className?: string;
 }) {
   const Icon = tone === "error" ? CloudOff : Film;
@@ -31,7 +32,7 @@ export function StateMessage({
       <h2 className="text-h3 font-bold tracking-tight">{title}</h2>
       {children && <p className="text-muted text-body mt-2 leading-relaxed">{children}</p>}
       {action && (
-        <Button variant="play" className="mt-6" onClick={action.onClick}>
+        <Button variant="accent" className="mt-6" onClick={action.onClick}>
           {action.label}
         </Button>
       )}

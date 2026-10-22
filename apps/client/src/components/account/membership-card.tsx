@@ -11,6 +11,7 @@ import { useMembership, useUsage, type Membership } from "@/lib/queries";
 import { formatCountdown, limitPhrase, useCountdown } from "@/lib/usage-format";
 import { planGradient, priceLabel } from "../billing/plan-picker";
 import { Button } from "../ui/button";
+import { FormActions } from "../ui/form-actions";
 import { ConfirmDialog } from "../ui/confirm-dialog";
 import { Skeleton } from "../ui/skeleton";
 import { useToast } from "../ui/toast";
@@ -168,7 +169,7 @@ function Card({ sub, detailed }: { sub: Sub; detailed: boolean }) {
           {priceLabel(plan)}
         </p>
       </div>
-      <div className="p-6">
+      <div className="p-6 [--panel-pad:1.5rem]">
         {detailed && notice ? (
           <div
             role="status"
@@ -227,7 +228,7 @@ function Card({ sub, detailed }: { sub: Sub; detailed: boolean }) {
             ) : null}
           </p>
         ) : null}
-        <div className="mt-6 flex flex-wrap gap-3">
+        <FormActions>
           {detailed && due ? (
             <Button
               variant="accent"
@@ -238,7 +239,8 @@ function Card({ sub, detailed }: { sub: Sub; detailed: boolean }) {
               Renew now
             </Button>
           ) : null}
-          <Button asChild variant="play" className="rounded">
+          {/* One red primary: Renew when a payment is due, else Change plan. */}
+          <Button asChild variant={detailed && due ? "secondary" : "accent"} className="rounded">
             <Link href="/signup/plan?from=account">Change plan</Link>
           </Button>
           {detailed && paid ? (
@@ -261,7 +263,7 @@ function Card({ sub, detailed }: { sub: Sub; detailed: boolean }) {
               </Button>
             )
           ) : null}
-        </div>
+        </FormActions>
       </div>
       <ConfirmDialog
         open={confirm}

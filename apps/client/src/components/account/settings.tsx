@@ -7,6 +7,7 @@ import { useAuth } from "@/components/providers/auth";
 import { useConfig } from "@/components/providers/config";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
+import { FormActions } from "@/components/ui/form-actions";
 import { SwitchRow } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/toast";
 import { api } from "@/lib/api";
@@ -167,14 +168,19 @@ function NameField({
         onChange={(e) => setName(e.target.value)}
       />
       {changed && (
-        <div className="mt-3 flex gap-2">
-          <Button type="submit" variant="play" size="sm" loading={saving}>
+        <FormActions>
+          <Button type="submit" variant="accent" className="rounded" loading={saving}>
             Save
           </Button>
-          <Button type="button" size="sm" disabled={saving} onClick={() => setName(user.full_name)}>
+          <Button
+            type="button"
+            className="rounded"
+            disabled={saving}
+            onClick={() => setName(user.full_name)}
+          >
             Cancel
           </Button>
-        </div>
+        </FormActions>
       )}
     </form>
   );
@@ -271,11 +277,11 @@ export function PasswordForm() {
         error={errors.confirm}
         onChange={(e) => setAgain(e.target.value)}
       />
-      <div className="flex justify-end pt-1">
-        <Button type="submit" variant="accent" loading={submitting}>
+      <FormActions>
+        <Button type="submit" variant="accent" className="rounded" loading={submitting}>
           {submitting ? "Changing password…" : "Change password"}
         </Button>
-      </div>
+      </FormActions>
     </form>
   );
 }

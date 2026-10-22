@@ -270,6 +270,22 @@ Ambiguities in the build brief, the option chosen, and why.
       loads show nothing; once shown it stays at least `minDuration` (400 ms) and fades out over 150 ms.
       The minimum only needs JS where the state toggles on the client (`LoaderPresence` /
       `LoaderTimeline`); server fallbacks use `LogoLoader` alone.
+    * **Every button that starts something behaves the same.** It disables at once and shows the
+      `sm` logo loader (after the delay) until the work is done: the `loading` prop for saves; an
+      `onClick` that returns a promise (automatic, both apps); a link button (`asChild`, or a Studio
+      button inside a link) until the next page has loaded; programmatic navigation through
+      `useNavigate()` (`router.push` in a transition); history back via `useRouteChangePending()`.
+      A link that only changes the query on the same page isn't waited for (nothing loads).
+    * **Navigation items too.** A tapped tab, header link, account section or Studio sidebar item
+      turns its icon (or label) into the `sm` logo loader, in the same box, until its page has loaded,
+      and takes no more taps meanwhile (`NavPending` / `LinkPending`, fed by Next's `useLinkStatus`,
+      so it clears itself when the page lands). Where the link unmounts on select (the "Browse" menu,
+      Studio's More sheet) the menu's trigger carries the loader instead.
+    * **One look for actions.** Primary actions are red (`accent`); white (`play`) is only for starting
+      playback (Play, Resume, Continue watching). A form's or card's actions live in `FormActions`
+      — a banner across the card's bottom edge, primary first, Cancel next, destructive last — which
+      docks to the bottom of the screen (above the tab bar) or of the dialog on phones while its form
+      is in view, like the sign-up steps' `StepActions`. Cards never put actions in their header.
     * **Accessibility.** `role="status"` + `aria-live="polite"` with a hidden label ("Loading…" by
       default); `decorative` (aria-hidden) inside a container that already has `aria-busy`. Reduced
       motion: no travelling light, draw-on or scaling; only a 2 s opacity pulse (0.6 ↔ 1).
@@ -299,6 +315,11 @@ Ambiguities in the build brief, the option chosen, and why.
       `minmax(0, 1fr)` (an `auto` track grew to its widest content and pushed pages sideways).
       Studio tables scroll inside their card (`relative` scroller, so absolutely positioned `sr-only`
       labels can't escape it). The Next dev-tools badge is off: it sat on top of the tab bar.
+    * **Home on phones.** The rows tuck under the billboard only from `md`; on phones the hero is a
+      poster card with its buttons at the bottom, so the first row starts below it (it used to overlap
+      "Top picks for you" with Play / My List). At 320 px the header's pills tighten so every control fits.
+    * **Typed before hydration.** `Field` / `LightField` hand text typed before the page hydrated to
+      `onChange` on mount, so a quick typist on a slow phone never loses it.
 
 ## Resilience
 

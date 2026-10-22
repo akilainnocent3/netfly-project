@@ -7,6 +7,7 @@ import type { PlaybackInfo } from "@/lib/playback";
 import { RatingButton } from "../browse/rating-button";
 import { Button, IconButton } from "../ui/button";
 import { NetflyImage } from "../ui/netfly-image";
+import { useRouteChangePending } from "@/lib/use-navigate";
 
 type Next = NonNullable<PlaybackInfo["next"]>;
 
@@ -103,6 +104,7 @@ export function StillWatching({
   onContinue: () => void;
   onExit: () => void;
 }) {
+  const leaving = useRouteChangePending();
   return (
     <m.div
       initial={{ opacity: 0 }}
@@ -116,7 +118,15 @@ export function StillWatching({
           <Button variant="play" size="lg" autoFocus onClick={onContinue}>
             Continue watching
           </Button>
-          <Button variant="secondary" size="lg" onClick={onExit}>
+          <Button
+            variant="secondary"
+            size="lg"
+            loading={leaving.pending}
+            onClick={() => {
+              leaving.mark();
+              onExit();
+            }}
+          >
             Back to browse
           </Button>
         </div>
@@ -135,6 +145,7 @@ export function EndScreen({
   onReplay: () => void;
   onExit: () => void;
 }) {
+  const leaving = useRouteChangePending();
   const card = { id: info.title.id, slug: info.title.slug, title: info.title.title, rating: null };
   return (
     <m.div
@@ -154,7 +165,15 @@ export function EndScreen({
           <Button variant="secondary" size="lg" icon={<RotateCcw />} onClick={onReplay}>
             Watch again
           </Button>
-          <Button variant="play" size="lg" onClick={onExit}>
+          <Button
+            variant="accent"
+            size="lg"
+            loading={leaving.pending}
+            onClick={() => {
+              leaving.mark();
+              onExit();
+            }}
+          >
             Back to browse
           </Button>
         </div>

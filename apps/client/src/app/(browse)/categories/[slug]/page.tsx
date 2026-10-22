@@ -39,7 +39,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
         <StateMessage
           tone="error"
           title="We couldn't load this category"
-          action={{ label: "Try again", onClick: () => void titles.refetch() }}
+          action={{ label: "Try again", onClick: () => titles.refetch() }}
         />
       ) : items.length ? (
         <TitleGrid

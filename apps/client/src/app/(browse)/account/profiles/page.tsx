@@ -17,9 +17,9 @@ export default function ProfilesPage() {
         <AccountPanel
           title="Profiles"
           description="Each profile has its own Continue Watching, My List and recommendations."
-          action={
+          actions={
             <Button
-              variant="secondary"
+              variant="accent"
               className="rounded"
               icon={<Pencil />}
               onClick={() => profiles.openGate("manage")}

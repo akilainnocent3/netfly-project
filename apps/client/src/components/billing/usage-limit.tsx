@@ -7,6 +7,7 @@ import Link from "next/link";
 import { formatCountdown, useCountdown } from "@/lib/usage-format";
 import { SCOPE_POSSESSIVE, tightestScope, type UsageSnapshot } from "@/lib/usage";
 import { Button, IconButton } from "../ui/button";
+import { useRouteChangePending } from "@/lib/use-navigate";
 
 const UPGRADE_HREF = "/signup/plan?from=account";
 
@@ -24,6 +25,7 @@ function LimitBody({
   titleAs?: React.ElementType;
   titleId?: string;
 }) {
+  const leaving = useRouteChangePending();
   const scope = (snapshot && tightestScope(snapshot)) ?? "day";
   const resetsAt = snapshot?.resets_at[scope] ?? null;
   const left = useCountdown(resetsAt, snapshot?.server_time);
@@ -56,7 +58,16 @@ function LimitBody({
         <Button asChild variant="accent" size="lg" className="h-12 rounded px-8">
           <Link href={UPGRADE_HREF}>Upgrade plan</Link>
         </Button>
-        <Button variant="secondary" size="lg" className="h-12 rounded px-8" onClick={onBack}>
+        <Button
+          variant="secondary"
+          size="lg"
+          className="h-12 rounded px-8"
+          loading={leaving.pending}
+          onClick={() => {
+            leaving.mark();
+            onBack();
+          }}
+        >
           {backLabel}
         </Button>
       </div>

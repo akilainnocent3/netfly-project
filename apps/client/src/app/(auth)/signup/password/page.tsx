@@ -12,6 +12,7 @@ import { LightField } from "@/components/ui/light-field";
 import { useGoAfterAuth } from "@/lib/after-auth";
 import { api } from "@/lib/api";
 import { safeNext } from "@/lib/safe-next";
+import { useNavigate } from "@/lib/use-navigate";
 import { clearSignupDraft, useSignupDraft } from "../draft";
 
 const BAR = ["bg-[#e50914]", "bg-[#e87c03]", "bg-[#d9a400]", "bg-[#5aa02c]", "bg-[#2f9e44]"];
@@ -19,6 +20,7 @@ const BAR = ["bg-[#e50914]", "bg-[#e87c03]", "bg-[#d9a400]", "bg-[#5aa02c]", "bg
 export default function SignupPasswordStep() {
   const goAfterAuth = useGoAfterAuth();
   const router = useRouter();
+  const back = useNavigate();
   const config = useConfig();
   const draft = useSignupDraft();
   const { signIn } = useAuth();
@@ -161,13 +163,14 @@ export default function SignupPasswordStep() {
             Finish
           </Button>
         </StepActions>
-        <button
-          type="button"
-          onClick={() => router.push(draft.href("/signup/username"))}
-          className="text-body mt-4 self-start rounded text-[#333] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[#0071eb]"
+        <Button
+          variant="ghost-light"
+          loading={back.pending}
+          onClick={() => back.push(draft.href("/signup/username"))}
+          className="mt-4 self-start"
         >
           Back
-        </button>
+        </Button>
       </form>
     </RegistrationShell>
   );

@@ -28,7 +28,7 @@ export function PageError({
       </StateMessage>
       <div className="-mt-12 flex justify-center pb-16">
         <Button
-          variant="play"
+          variant="accent"
           loading={pending}
           onClick={() =>
             start(() => {

@@ -5,6 +5,7 @@ import { cn, LazyLogoLoader } from "@netfly/ui";
 import * as Dialog from "@radix-ui/react-dialog";
 
 import { createContext, forwardRef, useCallback, useContext, useRef, useState } from "react";
+import { useBusyClick } from "@/lib/use-pending";
 import { useToast } from "../providers/toast";
 import { Button } from "./primitives";
 
@@ -18,17 +19,19 @@ export const IconButton = forwardRef<
     size?: "sm" | "md";
   }
 >(function IconButton(
-  { label, loading, tone = "ghost", size = "md", className, children, disabled, ...props },
+  { label, loading, tone = "ghost", size = "md", className, children, disabled, onClick, ...props },
   ref,
 ) {
+  const [clickBusy, handleClick] = useBusyClick(onClick);
+  const busy = loading || clickBusy;
   return (
     <button
       ref={ref}
       type="button"
       aria-label={label}
       title={label}
-      disabled={disabled || loading}
-      aria-busy={loading || undefined}
+      disabled={disabled || busy}
+      aria-busy={busy || undefined}
       className={cn(
         "inline-grid shrink-0 place-items-center rounded-md transition-colors disabled:pointer-events-none disabled:opacity-50",
         size === "sm" ? "size-6" : "size-8",
@@ -38,8 +41,9 @@ export const IconButton = forwardRef<
         className,
       )}
       {...props}
+      onClick={handleClick}
     >
-      {loading ? (
+      {busy ? (
         <LazyLogoLoader size="sm" decorative delay={0} className="text-current [--nf-size:14px]" />
       ) : (
         children

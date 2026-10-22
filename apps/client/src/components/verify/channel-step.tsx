@@ -3,7 +3,7 @@
 import { LazyLogoLoader } from "@netfly/ui";
 import { ApiError, unwrap } from "@netfly/api-client";
 import { useQueryClient } from "@tanstack/react-query";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { RegistrationShell, StepActions, StepHeading } from "@/components/auth/registration-shell";
 import { useAuth } from "@/components/providers/auth";
@@ -17,6 +17,7 @@ import { networkOf } from "@/lib/phone";
 import { useVerifyStatus, type CodeSent } from "@/lib/queries";
 import { CodeInput, useWebOtp, type CodeInputHandle } from "./code-input";
 import { NetworkChip, PhoneField, phoneForApi } from "./phone-field";
+import { useNavigate } from "@/lib/use-navigate";
 
 type Channel = "email" | "phone";
 
@@ -54,7 +55,6 @@ export function ChannelStep({ channel }: { channel: Channel }) {
   const pathname = usePathname();
   const ctx = readCheckout(params);
   const stage = params.get("stage") === "code" ? "code" : "entry";
-  const router = useRouter();
   const toast = useToast();
   const queryClient = useQueryClient();
   const { setUser } = useAuth();
@@ -72,12 +72,14 @@ export function ChannelStep({ channel }: { channel: Channel }) {
   const [resendAt, setResendAt] = useState(0);
   const [now, setNow] = useState(() => Date.now());
   const codeRef = useRef<CodeInputHandle>(null);
+  const nav = useNavigate();
+  const back = useNavigate();
   const leaving = useRef(false);
 
   const goNext = async () => {
     leaving.current = true;
     if (ctx.fromAccount || !ctx.plan) {
-      router.push(ctx.fromAccount ? "/account/security" : ctx.next);
+      nav.push(ctx.fromAccount ? "/account/security" : ctx.next);
       return;
     }
     const checkout = await queryClient.fetchQuery({
@@ -90,7 +92,7 @@ export function ChannelStep({ channel }: { channel: Channel }) {
         ),
       staleTime: 0,
     });
-    router.push(stepHref(checkout.steps[0] ?? "payment", ctx));
+    nav.push(stepHref(checkout.steps[0] ?? "payment", ctx));
   };
 
   // Prefill a claimed-but-unverified value; restore a pending code after a reload; skip a step
@@ -142,7 +144,7 @@ export function ChannelStep({ channel }: { channel: Channel }) {
       setCode("");
       setCodeError("");
       if (stage === "code") toast({ message: `We sent a new code to ${result.sent_to}.` });
-      else router.push(`${pathname}${checkoutQuery(ctx, { stage: "code" })}`);
+      else nav.push(`${pathname}${checkoutQuery(ctx, { stage: "code" })}`);
     } catch (e) {
       const err = e instanceof ApiError ? e : null;
       if (err?.code === "resend_cooldown") {
@@ -240,14 +242,15 @@ export function ChannelStep({ channel }: { channel: Channel }) {
             >
               {resendIn > 0 ? `Resend code in ${formatShortCountdown(resendIn)}` : "Resend code"}
             </Button>
-            <button
-              type="button"
+            <Button
+              variant="ghost-light"
               disabled={checking}
-              onClick={() => router.push(`${pathname}${checkoutQuery(ctx)}`)}
-              className="text-body rounded font-semibold text-[#333] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[#0071eb] disabled:opacity-50"
+              loading={back.pending}
+              onClick={() => back.push(`${pathname}${checkoutQuery(ctx)}`)}
+              className="text-body h-auto !px-0 py-1"
             >
               {copy.change}
-            </button>
+            </Button>
           </div>
           <StepActions>
             <Button
@@ -310,22 +313,23 @@ export function ChannelStep({ channel }: { channel: Channel }) {
               variant="accent-light"
               size="lg"
               fullWidth
-              loading={sending}
+              loading={sending || nav.pending}
               className="text-h3 h-14 font-medium"
             >
               Send code
             </Button>
           </StepActions>
           {!ctx.fromAccount && ctx.plan ? (
-            <button
-              type="button"
+            <Button
+              variant="ghost-light"
+              loading={back.pending}
               onClick={() =>
-                router.push(`/signup/plan?plan=${ctx.plan}&next=${encodeURIComponent(ctx.next)}`)
+                back.push(`/signup/plan?plan=${ctx.plan}&next=${encodeURIComponent(ctx.next)}`)
               }
-              className="text-body mt-4 self-start rounded text-[#333] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[#0071eb]"
+              className="mt-4 self-start"
             >
               Back to plans
-            </button>
+            </Button>
           ) : null}
         </form>
       )}

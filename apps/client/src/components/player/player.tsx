@@ -55,6 +55,7 @@ import { EpisodeDrawer } from "./episode-drawer";
 import { IntroPreroll } from "./intro-preroll";
 import { EndScreen, NextEpisodeCard, StillWatching } from "./overlays";
 import { Scrubber } from "./scrubber";
+import { useRouteChangePending } from "@/lib/use-navigate";
 import { canGoBack } from "../ui/back-button";
 
 const QUALITY_KEY = "netfly-quality";
@@ -171,6 +172,7 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
     current < ep.intro_end - 1;
   const showNext =
     !!info.next && creditsAt !== null && current >= creditsAt && !nextDismissed && !ended;
+  const leaving = useRouteChangePending();
   const exitHref = `/title/${info.title.slug}`;
 
   // -- engine + tracking --------------------------------------------------------
@@ -728,7 +730,12 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
           {/* Back to wherever the viewer came from (else the title); 44 px, inside the safe area. */}
           <PlayerButton
             label="Back"
-            onClick={() => (canGoBack() ? router.back() : router.push(exitHref))}
+            loading={leaving.pending}
+            onClick={() => {
+              leaving.mark();
+              if (canGoBack()) router.back();
+              else router.push(exitHref);
+            }}
           >
             <ArrowLeft />
           </PlayerButton>
@@ -994,7 +1001,7 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
         <div className="absolute inset-0 grid place-items-center bg-black/80 p-6 text-center">
           <div>
             <p className="text-h3 font-bold">{fatal}</p>
-            <Button variant="play" className="mt-5" onClick={() => location.reload()}>
+            <Button variant="accent" className="mt-5" onClick={() => location.reload()}>
               Try again
             </Button>
           </div>
@@ -1029,11 +1036,13 @@ function PlayerButton({
   onClick,
   children,
   big,
+  loading,
 }: {
   label: string;
   onClick: () => void;
   children: React.ReactNode;
   big?: boolean;
+  loading?: boolean;
 }) {
   return (
     <UiIconButton
@@ -1041,6 +1050,7 @@ function PlayerButton({
       size="lg"
       label={label}
       onClick={onClick}
+      loading={loading}
       className={cn("hover:scale-110 [&_svg]:size-7", big && "size-14 [&_svg]:size-8")}
     >
       {children}

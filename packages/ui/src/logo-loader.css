@@ -115,6 +115,32 @@
   animation: nf-out 120ms ease-out var(--nf-delay, 200ms) forwards;
 }
 
+/* <NavPending>: a nav item's icon/label swaps to the loader in place (same box, no shift). */
+.nf-pending {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+.nf-pending__content {
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+}
+.nf-pending__loader {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.nf-pending__loader .nf-loader {
+  --nf-size: var(--nf-pending-size, 1.25em);
+}
+/* One tap is enough: the link or button can't be clicked again until its page has loaded. */
+:where(a, button):has(.nf-pending[data-pending]) {
+  pointer-events: none;
+  cursor: progress;
+}
+
 @keyframes nf-in {
   from {
     opacity: 0;

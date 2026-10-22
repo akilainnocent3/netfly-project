@@ -96,3 +96,48 @@ test.describe("reduced motion", () => {
       .toEqual({ light: "none", animation: "nf-pulse", transform: "none" });
   });
 });
+
+test.describe("buttons that start a navigation behave like saving buttons", () => {
+  /** Disabled (busy) at once; the logo loader shows after its delay; the label stays for its width. */
+  async function expectBusy(button: import("@playwright/test").Locator) {
+    await expect(button).toHaveAttribute("aria-busy", "true");
+    await expect(button.locator(".nf-loader:has(svg)")).toBeVisible();
+  }
+
+  test("Get Started (a link) and the sign-up Next button", async ({ page }) => {
+    const slow = (prefix: string) =>
+      hold(page, (u, r) => u.pathname.startsWith(prefix) && r.request().resourceType() !== "image", 2500);
+    await page.goto("/");
+    await slow("/signup");
+    const start = page.getByRole("link", { name: /Get Started/i }).first();
+    await start.click();
+    await expectBusy(start);
+    await page.waitForURL(/\/signup\/name/);
+    await page.unrouteAll({ behavior: "wait" });
+
+    await page.locator("input[name=name]").fill("Loader Check");
+    await slow("/signup/username");
+    const next = page.getByRole("button", { name: "Next", exact: true });
+    await next.click();
+    await expectBusy(next);
+    await expect(next).toBeDisabled();
+    await loaderShown(next.locator(".nf-loader:has(svg)"));
+    await page.screenshot({ path: "../docs/screenshots/loader-button-next-1440.png" });
+    await page.waitForURL(/\/signup\/username/);
+  });
+
+  test("Studio: a button inside a link", async ({ page }) => {
+    const ADMIN = process.env.NETFLY_ADMIN_URL ?? "http://localhost:3001";
+    await page.goto(`${ADMIN}/login`);
+    await page.getByLabel("Username").fill(process.env.NETFLY_ADMIN_USER ?? "admin");
+    await page.getByLabel("Password").fill(process.env.NETFLY_ADMIN_PASSWORD ?? "netfly-dev-admin");
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+    await page.goto(`${ADMIN}/titles`);
+    await hold(page, (u) => u.pathname === "/titles/new", 2500);
+    const create = page.getByRole("button", { name: /New title/ });
+    await create.click();
+    await expectBusy(create);
+    await page.waitForURL(/\/titles\/new/);
+  });
+});

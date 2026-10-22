@@ -3,6 +3,7 @@
 import { cn, LazyLogoLoader } from "@netfly/ui";
 import { CircleAlert, CircleCheck } from "lucide-react";
 import { forwardRef, useId } from "react";
+import { useEarlyInput } from "./early-input";
 import type { FieldIndicator } from "./field";
 
 interface LightFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -25,6 +26,7 @@ export const LightField = forwardRef<HTMLInputElement, LightFieldProps>(function
   ref,
 ) {
   const id = useId();
+  const inputRef = useEarlyInput(ref, props.value, props.onChange);
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   const bad = !!error || indicator === "bad";
   return (
@@ -39,7 +41,7 @@ export const LightField = forwardRef<HTMLInputElement, LightFieldProps>(function
         {leading}
         <div className="relative min-w-0 flex-1">
           <input
-            ref={ref}
+            ref={inputRef}
             id={id}
             placeholder=" "
             aria-invalid={bad || undefined}

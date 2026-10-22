@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import type { FieldIndicator } from "@/components/ui/field";
 import { LightField } from "@/components/ui/light-field";
 import { api } from "@/lib/api";
+import { useNavigate } from "@/lib/use-navigate";
 import { useSignupDraft } from "../draft";
 
 const USERNAME_RE = /^[A-Za-z0-9_]{3,30}$/;
@@ -21,6 +22,8 @@ function formatError(value: string): string {
 
 export default function SignupUsernameStep() {
   const router = useRouter();
+  const nav = useNavigate();
+  const back = useNavigate();
   const config = useConfig();
   const draft = useSignupDraft();
   const [username, setUsername] = useState(draft.username);
@@ -77,7 +80,7 @@ export default function SignupUsernameStep() {
   const submit = () => {
     if (!ok) return;
     draft.set({ username: trimmed, errors: { ...draft.errors, username: undefined } });
-    router.push(draft.href("/signup/password"));
+    nav.push(draft.href("/signup/password"));
   };
 
   return (
@@ -127,18 +130,20 @@ export default function SignupUsernameStep() {
             size="lg"
             fullWidth
             disabled={!ok}
+            loading={nav.pending}
             className="text-h3 h-14 font-medium"
           >
             Next
           </Button>
         </StepActions>
-        <button
-          type="button"
-          onClick={() => router.push(draft.href("/signup/name"))}
-          className="text-body mt-4 self-start rounded text-[#333] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-[#0071eb]"
+        <Button
+          variant="ghost-light"
+          loading={back.pending}
+          onClick={() => back.push(draft.href("/signup/name"))}
+          className="mt-4 self-start"
         >
           Back
-        </button>
+        </Button>
       </form>
     </RegistrationShell>
   );
