@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Brand loader + mark, shared with the viewer app. */
+@import "@netfly/ui/logo-loader.css" layer(components);
 
 @custom-variant dark (&:where(.dark, .dark *));
 

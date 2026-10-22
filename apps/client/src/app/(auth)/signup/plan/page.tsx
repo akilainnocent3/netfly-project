@@ -10,6 +10,7 @@ import { useConfig } from "@/components/providers/config";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { useGoAfterAuth } from "@/lib/after-auth";
+import { SkeletonArea } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { setFlash } from "@/lib/flash";
 import { useMembership, usePlans } from "@/lib/queries";
@@ -102,11 +103,13 @@ export default function PlanPage() {
         </StepHeading>
       </div>
       {plans.isPending || membership.isPending ? (
-        <div aria-hidden className="grid gap-4 md:grid-cols-4">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="h-96 animate-pulse rounded-2xl bg-[#eee]" />
-          ))}
-        </div>
+        <SkeletonArea loaderClassName="bottom-auto h-96">
+          <div className="grid gap-4 md:grid-cols-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-96 animate-pulse rounded-2xl bg-[#eee]" />
+            ))}
+          </div>
+        </SkeletonArea>
       ) : (
         <PlanPicker plans={list} selected={selected} current={current} onSelect={setSelected} />
       )}

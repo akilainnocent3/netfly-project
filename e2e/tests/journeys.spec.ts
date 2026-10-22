@@ -92,10 +92,10 @@ test("double-clicking a submit sends exactly one request", async ({ page }) => {
   await page.context().clearCookies();
   await page.goto("/signup/name");
   await page.locator("input[name=name]").fill("Double Click");
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.locator("input[name=username]").pressSequentially(uniqueName("dbl"), { delay: 10 });
   await expect(page.getByText("Nice — it’s yours if you want it.")).toBeVisible();
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.locator("input[name=password]").fill(PASSWORD);
   expect(
     await countRequests(page, /^POST \/api\/v1\/auth\/signup$/, async () => {

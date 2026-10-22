@@ -5,10 +5,10 @@ test("sign up never submits on its own; Finish does", async ({ page }) => {
   page.on("request", (r) => r.method() === "POST" && r.url().endsWith("/api/v1/auth/signup") && posts++);
   await page.goto("/signup");
   await page.locator("input[name=name]").fill("Idle Viewer");
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.locator("input[name=username]").pressSequentially(uniqueName("idle"), { delay: 10 });
   await expect(page.getByText("Nice — it’s yours if you want it.")).toBeVisible();
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.locator("input[name=password]").fill(PASSWORD);
   await page.waitForTimeout(2500); // the old auto-submit fired after ~0.6 s
   expect(posts).toBe(0);
@@ -25,10 +25,10 @@ test("taken usernames are flagged live", async ({ page }) => {
   await page.context().clearCookies();
   await page.goto("/signup/name");
   await page.locator("input[name=name]").fill("Someone Else");
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.locator("input[name=username]").pressSequentially(name.toUpperCase(), { delay: 10 });
   await expect(page.getByText("That username is taken.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Next", exact: true })).toBeDisabled();
 });
 
 test("log in submits on Enter only and wrong passwords explain themselves", async ({ page }) => {

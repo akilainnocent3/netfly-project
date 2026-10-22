@@ -1,8 +1,9 @@
 "use client";
 
+import { LazyLogoLoader } from "@netfly/ui";
 import { unwrap } from "@netfly/api-client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeftRight, ArrowRight, Link2, Loader2, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowLeftRight, ArrowRight, Link2, Plus, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { IconButton, useAction, useConfirm } from "@/components/ui/actions";
 import { Button, Card, Empty, Input, Skeleton, Switch } from "@/components/ui/primitives";
@@ -151,7 +152,7 @@ export function RelatedTab({ titleId, readOnly }: { titleId: number; readOnly: b
                   {linked.has(t.id) ? (
                     <span className="text-subtle text-[11.5px]">linked</span>
                   ) : adding === t.id ? (
-                    <Loader2 className="text-subtle size-3.5 animate-spin" />
+                    <LazyLogoLoader size="sm" label="Linking" className="[--nf-size:14px]" />
                   ) : (
                     <Plus className="text-subtle size-3.5" />
                   )}
@@ -205,7 +206,11 @@ function LinkRow({
         </p>
       </div>
       <label className="text-muted flex items-center gap-2 text-[12px]">
-        {update.pending ? <Loader2 className="size-3 animate-spin" /> : `Weight ${weight}`}
+        {update.pending ? (
+          <LazyLogoLoader size="sm" label="Saving weight" className="[--nf-size:12px]" />
+        ) : (
+          `Weight ${weight}`
+        )}
         <input
           type="range"
           min={1}

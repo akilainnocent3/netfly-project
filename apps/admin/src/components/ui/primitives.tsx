@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@netfly/ui";
+import { cn, LazyLogoLoader } from "@netfly/ui";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
-import { Loader2 } from "lucide-react";
+
 import { forwardRef } from "react";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
@@ -37,7 +37,7 @@ export const Button = forwardRef<
       )}
       {...props}
     >
-      {loading && <Loader2 className="size-3.5 animate-spin" />}
+      {loading && <LazyLogoLoader size="sm" decorative className="text-current [--nf-size:14px]" />}
       {children}
     </button>
   );

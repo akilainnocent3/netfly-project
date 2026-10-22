@@ -1,5 +1,6 @@
 "use client";
 
+import { LazyLogoLoader } from "@netfly/ui";
 import { ApiError, unwrap } from "@netfly/api-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -8,7 +9,6 @@ import { RegistrationShell, StepActions, StepHeading } from "@/components/auth/r
 import { useAuth } from "@/components/providers/auth";
 import { Button } from "@/components/ui/button";
 import { LightField } from "@/components/ui/light-field";
-import { Spinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
 import { api } from "@/lib/api";
 import { formatShortCountdown } from "@/lib/usage-format";
@@ -188,7 +188,7 @@ export function ChannelStep({ channel }: { channel: Channel }) {
     <RegistrationShell>
       {status.isPending ? (
         <div className="grid flex-1 place-items-center" aria-busy>
-          <Spinner className="size-8 text-[#e50914]" label="Loading" />
+          <LazyLogoLoader size="md" />
         </div>
       ) : showCode && sent ? (
         <form
@@ -225,7 +225,7 @@ export function ChannelStep({ channel }: { channel: Channel }) {
           >
             {checking ? (
               <>
-                <Spinner className="size-4" /> Checking your code…
+                <LazyLogoLoader size="sm" decorative delay={0} /> Checking your code…
               </>
             ) : null}
           </p>

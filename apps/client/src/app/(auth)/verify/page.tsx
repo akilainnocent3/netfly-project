@@ -1,12 +1,12 @@
 "use client";
 
+import { LazyLogoLoader } from "@netfly/ui";
 import { ApiError } from "@netfly/api-client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
 import { RegistrationShell, StepHeading } from "@/components/auth/registration-shell";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { readCheckout, stepHref } from "@/lib/checkout";
 import { useCheckout } from "@/lib/queries";
 
@@ -38,7 +38,7 @@ function VerifyRouter() {
   return (
     <RegistrationShell>
       <div className="grid flex-1 place-items-center" aria-busy>
-        <Spinner className="size-8 text-[#e50914]" label="Loading" />
+        <LazyLogoLoader size="md" />
       </div>
     </RegistrationShell>
   );

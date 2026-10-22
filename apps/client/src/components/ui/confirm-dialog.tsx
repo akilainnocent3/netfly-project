@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Button } from "./button";
 
 /**
- * Netflix-style confirmation (dark, scale-in). The confirm button shows a spinner while the
+ * Netflix-style confirmation (dark, scale-in). The confirm button shows the loader while the
  * action runs and the dialog can't be dismissed mid-request; it closes when the action resolves.
  */
 export function ConfirmDialog({

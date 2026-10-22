@@ -1,5 +1,5 @@
 import { createHmac } from "node:crypto";
-import { test as base, expect, type BrowserContext, type Page } from "@playwright/test";
+import { test as base, expect, type BrowserContext, type Locator, type Page } from "@playwright/test";
 import { E2E_WEBHOOK_SECRET } from "../global-setup";
 
 export { expect };
@@ -48,11 +48,11 @@ export async function completeSignupSteps(
 ): Promise<string> {
   await page.waitForURL(/\/signup\/name/);
   await page.locator("input[name=name]").fill("E2E Viewer");
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.waitForURL(/\/signup\/username/);
   await page.locator("input[name=username]").pressSequentially(username, { delay: 10 });
   await expect(page.getByText("Nice — it’s yours if you want it.")).toBeVisible();
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.waitForURL(/\/signup\/password/);
   await page.locator("input[name=password]").fill(PASSWORD);
   await page.getByRole("button", { name: "Finish" }).click();
@@ -318,4 +318,14 @@ export async function snippeWebhook(
   });
   expect(res.status).toBe(200);
   expect(await res.text()).toBe("OK");
+}
+
+/**
+ * Wait until a brand loader is fully on screen (faded in, ribbon drawn on), e.g. before a
+ * screenshot. "Visible" alone passes during its delay, while it is still transparent.
+ */
+export async function loaderShown(loader: Locator): Promise<void> {
+  await expect(loader).toBeVisible();
+  await expect.poll(() => loader.evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
+  await loader.page().waitForTimeout(700);
 }

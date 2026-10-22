@@ -26,15 +26,17 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: name, template: `%s · ${name}` },
     description: tagline,
     applicationName: name,
+    // public/{favicon.ico,icon.svg,apple-icon.png} come from scripts/brand/brand-icons.mjs. Not
+    // app/ file conventions: those always win over metadata, and `branding.favicon_url` must win.
     icons: {
       icon:
         typeof favicon === "string" && favicon
           ? [{ url: favicon }]
           : [
-              { url: "/brand/netfly-app-icon.v1.svg", type: "image/svg+xml" },
-              { url: "/brand/favicon-32.v1.png", sizes: "32x32", type: "image/png" },
+              { url: "/favicon.ico", sizes: "48x48" },
+              { url: "/icon.svg", type: "image/svg+xml" },
             ],
-      apple: [{ url: "/brand/apple-touch-icon.v1.png", sizes: "180x180" }],
+      apple: [{ url: "/apple-icon.png", sizes: "180x180" }],
     },
     manifest: "/manifest.webmanifest",
     robots: { index, follow: index },

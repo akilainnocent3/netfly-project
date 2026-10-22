@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@netfly/ui";
-import { Loader2 } from "lucide-react";
+import { cn, LazyLogoLoader } from "@netfly/ui";
+
 import { Badge } from "../ui/primitives";
 
 export const PRIORITY_LEVELS = [
@@ -87,7 +87,9 @@ export function PrioritySegmented({
               pending != null && pending !== level.value && "opacity-50",
             )}
           >
-            {pending === level.value && <Loader2 className="size-3 animate-spin" />}
+            {pending === level.value && (
+              <LazyLogoLoader size="sm" decorative className="text-current [--nf-size:12px]" />
+            )}
             {size === "sm" ? level.short : level.label}
           </button>
         );

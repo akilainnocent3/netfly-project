@@ -1,9 +1,8 @@
 "use client";
 
-import { cn } from "@netfly/ui";
+import { cn, LazyLogoLoader } from "@netfly/ui";
 import { CircleAlert, CircleCheck } from "lucide-react";
 import { forwardRef, useId } from "react";
-import { Spinner } from "./spinner";
 import type { FieldIndicator } from "./field";
 
 interface LightFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -55,7 +54,7 @@ export const LightField = forwardRef<HTMLInputElement, LightFieldProps>(function
             {label}
           </label>
           <span className="absolute top-1/2 right-3.5 -translate-y-1/2" aria-hidden>
-            {indicator === "checking" && <Spinner className="size-4 text-[#737373]" />}
+            {indicator === "checking" && <LazyLogoLoader size="sm" decorative />}
             {indicator === "ok" && <CircleCheck className="size-5 text-[#2f9e44]" />}
             {bad && indicator !== "checking" && <CircleAlert className="size-5 text-[#e50914]" />}
           </span>

@@ -10,6 +10,7 @@ import type { Episode, TitleDetail } from "@/lib/types";
 import { PlayLink } from "../auth/auth-gate";
 import { Button } from "../ui/button";
 import { NetflyImage } from "../ui/netfly-image";
+import { SkeletonArea } from "../ui/skeleton";
 
 const SEASON_KEY = (slug: string) => `netfly-season:${slug}`;
 
@@ -88,11 +89,13 @@ export function Episodes({
         )}
       </div>
       {episodes.isPending ? (
-        <div className="space-y-3">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="skeleton h-28 rounded-lg" />
-          ))}
-        </div>
+        <SkeletonArea label="Loading episodes">
+          <div className="space-y-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="skeleton h-28 rounded-lg" />
+            ))}
+          </div>
+        </SkeletonArea>
       ) : items.length > 30 ? (
         <VirtualList
           items={items}

@@ -1,10 +1,10 @@
 "use client";
 
 import { ApiError, unwrap, type Schemas } from "@netfly/api-client";
-import { cn } from "@netfly/ui";
+import { cn, LazyLogoLoader } from "@netfly/ui";
 import * as Popover from "@radix-ui/react-popover";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, CircleAlert, History, KeyRound, Loader2, PlugZap, ShieldCheck } from "lucide-react";
+import { Check, CircleAlert, History, KeyRound, PlugZap, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useToast } from "@/components/providers/toast";
 import {
@@ -162,7 +162,7 @@ function EntryRow({ entry }: { entry: Entry }) {
           <p className="font-medium">{prettyKey(entry)}</p>
           {entry.is_public && <Badge>public</Badge>}
           <HistoryButton entry={entry} />
-          {saving && <Loader2 className="text-subtle size-3.5 animate-spin" aria-label="Saving" />}
+          {saving && <LazyLogoLoader size="sm" label="Saving" className="[--nf-size:14px]" />}
         </div>
         <p className="text-muted mt-0.5 text-[12.5px]">{entry.description}</p>
         <code className="text-subtle mt-1 block text-[11px]">{entry.key}</code>
@@ -495,7 +495,7 @@ function HistoryButton({ entry }: { entry: Entry }) {
         >
           <p className="mb-2 font-medium">History</p>
           {history.isPending ? (
-            <Loader2 className="text-muted size-4 animate-spin" />
+            <LazyLogoLoader size="sm" label="Loading history" />
           ) : history.data?.length ? (
             <ul className="max-h-64 space-y-2 overflow-y-auto">
               {history.data.map((h) => {
@@ -989,7 +989,9 @@ function IntroUpload() {
             aria-hidden
             className="border-line bg-panel hover:bg-hover peer-focus-visible:ring-accent inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border px-3 text-[13px] font-medium peer-focus-visible:ring-2 peer-disabled:pointer-events-none peer-disabled:opacity-50"
           >
-            {busy === variant && <Loader2 className="size-3.5 animate-spin" />}
+            {busy === variant && (
+              <LazyLogoLoader size="sm" decorative className="text-current [--nf-size:14px]" />
+            )}
             Upload {variant}p intro
           </span>
           <span className="sr-only">Upload {variant}p intro</span>

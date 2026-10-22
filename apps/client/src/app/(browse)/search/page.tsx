@@ -10,6 +10,7 @@ import { Card, titleHref } from "@/components/browse/card";
 import { GridSkeleton, TitleGrid } from "@/components/browse/title-grid";
 import { Button, IconButton } from "@/components/ui/button";
 import { NetflyImage } from "@/components/ui/netfly-image";
+import { SkeletonArea } from "@/components/ui/skeleton";
 import { useSearch, useSearchSuggestions } from "@/lib/queries";
 import { clearRecent, pushRecent, readRecent } from "@/lib/recent-searches";
 import type { TitleCard } from "@/lib/types";
@@ -302,11 +303,13 @@ function MobileIdle({
 
 function PosterGridSkeleton() {
   return (
-    <ul aria-hidden className="grid grid-cols-3 gap-2">
-      {Array.from({ length: 9 }, (_, i) => (
-        <li key={i} className="skeleton aspect-[2/3] rounded-sm" />
-      ))}
-    </ul>
+    <SkeletonArea loaderClassName="bottom-auto h-[min(40vh,320px)]" label="Searching">
+      <ul className="grid grid-cols-3 gap-2">
+        {Array.from({ length: 9 }, (_, i) => (
+          <li key={i} className="skeleton aspect-[2/3] rounded-sm" />
+        ))}
+      </ul>
+    </SkeletonArea>
   );
 }
 

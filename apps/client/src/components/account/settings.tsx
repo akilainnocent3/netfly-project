@@ -1,13 +1,12 @@
 "use client";
 
 import { ApiError, unwrap, type User } from "@netfly/api-client";
-import { passwordStrength } from "@netfly/ui";
+import { LoaderPresence, passwordStrength } from "@netfly/ui";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/providers/auth";
 import { useConfig } from "@/components/providers/config";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
-import { Spinner } from "@/components/ui/spinner";
 import { SwitchRow } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/toast";
 import { api } from "@/lib/api";
@@ -30,7 +29,7 @@ const QUALITIES = [
 const SELECT =
   "text-body h-12 w-full rounded-[4px] border border-[rgb(128_128_128/0.7)] bg-[rgb(22_22_22/0.7)] px-3 outline-none focus:border-white focus:ring-2 focus:ring-white/40 disabled:cursor-not-allowed disabled:opacity-60";
 
-/** One preference at a time; the control being saved is disabled and shows a spinner. */
+/** One preference at a time; the control being saved is disabled and shows the loader. */
 export function useSavePref() {
   const { setUser } = useAuth();
   const toast = useToast();
@@ -74,7 +73,7 @@ export function PlaybackSettings({ user }: { user: User }) {
       <label className="block">
         <span className="text-body mb-2 flex items-center gap-2 font-semibold">
           Default quality{" "}
-          {saving === "preferred_quality" && <Spinner className="text-muted" label="Saving" />}
+          <LoaderPresence active={saving === "preferred_quality"} size="sm" label="Saving" />
         </span>
         <select
           value={user.preferred_quality || "auto"}
@@ -92,7 +91,7 @@ export function PlaybackSettings({ user }: { user: User }) {
       <label className="block">
         <span className="text-body mb-2 flex items-center gap-2 font-semibold">
           Subtitles by default{" "}
-          {saving === "subtitles_language" && <Spinner className="text-muted" label="Saving" />}
+          <LoaderPresence active={saving === "subtitles_language"} size="sm" label="Saving" />
         </span>
         <select
           value={user.subtitles_language || ""}

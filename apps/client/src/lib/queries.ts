@@ -176,7 +176,7 @@ export function removeFromHome(queryClient: ReturnType<typeof useQueryClient>, t
 type RatingValue = -1 | 1 | 2 | null;
 type TitleRef = Pick<TitleCard, "id" | "slug" | "title">;
 
-/** Per-title pending flag (for rendering the spinner). */
+/** Per-title pending flag (for rendering the loader). */
 export function usePendingFor(
   kind: "rate" | "mylist" | "reminder" | "cw-hide",
   titleId: number,

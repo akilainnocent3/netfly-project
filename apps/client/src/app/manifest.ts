@@ -14,10 +14,16 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     background_color: "#141414",
     theme_color: "#141414",
     icons: [
-      { src: "/brand/netfly-app-icon-192.v1.png", sizes: "192x192", type: "image/png" },
-      { src: "/brand/netfly-app-icon-512.v1.png", sizes: "512x512", type: "image/png" },
+      { src: "/brand/icon-192.v2.png", sizes: "192x192", type: "image/png" },
+      { src: "/brand/icon-512.v2.png", sizes: "512x512", type: "image/png" },
       {
-        src: "/brand/netfly-app-icon-512.v1.png",
+        src: "/brand/icon-maskable-192.v2.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/brand/icon-maskable-512.v2.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",

@@ -1,6 +1,6 @@
 "use client";
 
-import { cn, formatRuntime } from "@netfly/ui";
+import { cn, formatRuntime, LazyLogoLoader } from "@netfly/ui";
 import { Play, RotateCcw, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
@@ -120,6 +120,7 @@ function TitleContent({
             showMute
             delayMs={600}
             controlsClassName="absolute right-[5%] bottom-[10%] z-20"
+            loaderClassName="absolute right-[calc(5%+12px)] bottom-[calc(10%+12px)] z-20"
           />
         )}
         <div className="from-surface via-surface/20 absolute inset-0 bg-gradient-to-t to-transparent" />
@@ -370,10 +371,13 @@ function Meta({ label, value }: { label: string; value: string }) {
 
 function TitleSkeleton({ onClose }: { onClose: () => void }) {
   return (
-    <div aria-hidden className="relative">
+    <div aria-busy className="relative">
       <CloseButton onClose={onClose} />
-      <div className="skeleton aspect-video max-h-[62vh] w-full md:rounded-t-xl" />
-      <div className="space-y-3 px-[5%] py-8">
+      <div className="relative grid aspect-video max-h-[62vh] w-full place-items-center">
+        <div aria-hidden className="skeleton absolute inset-0 md:rounded-t-xl" />
+        <LazyLogoLoader size="md" />
+      </div>
+      <div aria-hidden className="space-y-3 px-[5%] py-8">
         <div className="skeleton h-5 w-56 rounded" />
         <div className="skeleton h-4 w-full rounded" />
         <div className="skeleton h-4 w-4/5 rounded" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { unwrap } from "@netfly/api-client";
-import { cn, formatBytes, formatDuration } from "@netfly/ui";
+import { cn, formatBytes, formatDuration, LazyLogoLoader } from "@netfly/ui";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Cpu, RotateCcw } from "lucide-react";
 import { useState } from "react";
@@ -108,10 +108,14 @@ export default function TranscodingPage() {
       </div>
       <Card className="overflow-hidden">
         {jobs.isPending ? (
-          <div className="space-y-2 p-4">
+          <div aria-busy className="relative space-y-2 p-4">
             {[0, 1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-12" />
             ))}
+            {/* Nothing is known yet: the loader. Jobs then show their real progress. */}
+            <div className="absolute inset-0 grid place-items-center">
+              <LazyLogoLoader size="md" label="Loading jobs" />
+            </div>
           </div>
         ) : jobs.data?.results.length ? (
           <ul className="divide-line divide-y">

@@ -1,10 +1,10 @@
 "use client";
 
 import { ApiError, unwrap } from "@netfly/api-client";
-import { cn } from "@netfly/ui";
+import { cn, LazyLogoLoader } from "@netfly/ui";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Crop, ImagePlus, Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { Crop, ImagePlus, RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import { useToast } from "@/components/providers/toast";
@@ -173,7 +173,7 @@ export function ImageSlot({
         {(uploading || current?.status === "processing") && (
           <div className="absolute inset-0 grid place-items-center bg-black/40 text-[12px] font-medium text-white backdrop-blur-[1px]">
             <span className="flex items-center gap-1.5">
-              <Loader2 className="size-3.5 animate-spin" />{" "}
+              <LazyLogoLoader size="sm" decorative delay={0} className="[--nf-size:14px]" />{" "}
               {uploading ? "Uploading…" : "Rendering sizes…"}
             </span>
           </div>

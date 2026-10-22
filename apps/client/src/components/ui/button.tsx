@@ -1,9 +1,8 @@
 "use client";
 
-import { cn } from "@netfly/ui";
+import { cn, LazyLogoLoader } from "@netfly/ui";
 import { Slot, Slottable } from "@radix-ui/react-slot";
 import { forwardRef } from "react";
-import { Spinner } from "./spinner";
 
 export type ButtonVariant =
   | "play"
@@ -50,9 +49,9 @@ const SIZE: Record<"rect" | "circle", Record<ButtonSize, string>> = {
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
-  /** Disables the button and swaps the icon for a spinner (width stays stable). */
+  /** Disables the button and shows the brand loader over the label (width stays stable). */
   loading?: boolean;
-  /** Leading icon (replaced by the spinner while loading). */
+  /** Leading icon (hidden under the loader while loading). */
   icon?: React.ReactNode;
   /** Render the child (e.g. a Next <Link>) with button styling. */
   asChild?: boolean;
@@ -78,8 +77,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   const circle = variant === "icon-circle";
   const Comp = asChild ? Slot : "button";
   const isDisabled = disabled || loading;
-  // Loading: the label stays (transparent, so the width and accessible name don't change) and a
-  // spinner is centred over it.
+  // Loading: the label stays in place (so the width and accessible name don't change) and fades
+  // out only when the loader appears, after the loader's delay: a fast save never flickers.
   const veiled = loading && !asChild;
   return (
     <Comp
@@ -99,22 +98,24 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       {...props}
     >
       {/* Flat children (no fragment): Slot needs to see Slottable directly for asChild. */}
-      {circle && loading ? <Spinner /> : null}
+      {circle && loading ? (
+        <LazyLogoLoader size="sm" decorative delay={0} className="text-current" />
+      ) : null}
       {!circle && icon ? (
-        <span className={cn("inline-flex shrink-0 [&_svg]:size-[1.15em]", veiled && "opacity-0")}>
+        <span className={cn("inline-flex shrink-0 [&_svg]:size-[1.15em]", veiled && "nf-veil")}>
           {icon}
         </span>
       ) : null}
       {circle && loading ? null : asChild ? (
         <Slottable>{children}</Slottable>
       ) : children != null && children !== false ? (
-        <span className={cn("inline-flex items-center gap-2", veiled && "opacity-0")}>
+        <span className={cn("inline-flex items-center gap-2", veiled && "nf-veil")}>
           {children}
         </span>
       ) : null}
       {veiled && !circle ? (
         <span aria-hidden className="absolute inset-0 grid place-items-center">
-          <Spinner className="size-[1.2em]" />
+          <LazyLogoLoader size="sm" decorative className="text-current [--nf-size:1.25em]" />
         </span>
       ) : null}
     </Comp>
@@ -164,7 +165,7 @@ export const IconButton = forwardRef<
       </Button>
     );
   }
-  // Ghost / play icon buttons: round, icon-sized (spinner replaces the icon while loading).
+  // Ghost / play icon buttons: round, icon-sized (the loader covers the icon while loading).
   return (
     <Button
       ref={ref}

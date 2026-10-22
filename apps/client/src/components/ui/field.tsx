@@ -1,10 +1,9 @@
 "use client";
 
-import { cn } from "@netfly/ui";
+import { cn, LazyLogoLoader } from "@netfly/ui";
 import { AnimatePresence, m } from "framer-motion";
 import { Check, CircleX, X } from "lucide-react";
 import { forwardRef, useId } from "react";
-import { Spinner } from "./spinner";
 
 export type FieldIndicator = "none" | "checking" | "ok" | "bad";
 
@@ -50,7 +49,7 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
             {label}
           </label>
           <span className="absolute top-1/2 right-4 -translate-y-1/2" aria-hidden>
-            {indicator === "checking" && <Spinner className="text-muted size-4" />}
+            {indicator === "checking" && <LazyLogoLoader size="sm" decorative />}
             {indicator === "ok" && <Check className="size-4 text-[#46d369]" strokeWidth={3} />}
             {indicator === "bad" && <X className="size-4 text-[#eb3942]" strokeWidth={3} />}
           </span>

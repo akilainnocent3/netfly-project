@@ -1,5 +1,6 @@
 "use client";
 
+import { LazyLogoLoader } from "@netfly/ui";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, use, useEffect, useState } from "react";
@@ -51,7 +52,7 @@ function Watch({ slug }: { slug: string }) {
   if (!result) {
     return (
       <main className="fixed inset-0 grid place-items-center bg-black" aria-busy>
-        <div className="border-t-accent size-16 animate-spin rounded-full border-[3px] border-white/20" />
+        <LazyLogoLoader size="lg" label="Loading player" />
       </main>
     );
   }

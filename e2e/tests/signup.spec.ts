@@ -25,7 +25,7 @@ test("one question per screen, each with its own URL; Back keeps what was typed"
   await page.locator("input[name=username]").pressSequentially(username, { delay: 10 });
   await expect(page.getByText("Nice — it’s yours if you want it.")).toBeVisible();
   await page.screenshot({ path: "../docs/screenshots/signup-step-2-username.png" });
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
 
   await expect(page).toHaveURL(/\/signup\/password$/);
   await page.locator("input[name=password]").fill("correct horse battery staple");
@@ -46,9 +46,9 @@ test("Next waits for a valid, available username", async ({ page }) => {
   const taken = await createAccount();
   await page.goto("/signup/name");
   await page.locator("input[name=name]").fill("Juma");
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   const field = page.locator("input[name=username]");
-  const next = page.getByRole("button", { name: "Next" });
+  const next = page.getByRole("button", { name: "Next", exact: true });
   await expect(next).toBeDisabled();
   await field.pressSequentially("bad name!", { delay: 10 });
   await expect(page.getByText("Use only letters, numbers and underscores.")).toBeVisible();
@@ -66,10 +66,10 @@ test("a server error is mapped back to the step that owns the field", async ({ p
   const username = uniqueName("race");
   await page.goto("/signup/name");
   await page.locator("input[name=name]").fill("Racer");
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.locator("input[name=username]").pressSequentially(username, { delay: 10 });
   await expect(page.getByText("Nice — it’s yours if you want it.")).toBeVisible();
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await createAccount(username); // someone else takes it in the meantime
   await page.locator("input[name=password]").fill(PASSWORD);
   await page.getByRole("button", { name: "Finish" }).click();
@@ -81,11 +81,11 @@ test("the steps keep `next` and send the new member there", async ({ page }) => 
   await page.goto(`/signup?next=${encodeURIComponent("/new-and-popular")}`);
   await expect(page).toHaveURL(/\/signup\/name\?next=%2Fnew-and-popular/);
   await page.locator("input[name=name]").fill("Next Viewer");
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page).toHaveURL(/\/signup\/username\?next=%2Fnew-and-popular/);
   await page.locator("input[name=username]").pressSequentially(uniqueName("nx"), { delay: 10 });
   await expect(page.getByText("Nice — it’s yours if you want it.")).toBeVisible();
-  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.locator("input[name=password]").fill(PASSWORD);
   await page.getByRole("button", { name: "Finish" }).click();
   // Every new member picks a plan next; `next` rides along.

@@ -51,7 +51,11 @@ export function Header() {
   const pathname = usePathname();
   // The header hydrates late (inside a Suspense boundary), often after the session refresh has
   // settled: render what the server saw ("loading") until hydration is done, then the real status.
-  const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
+  const hydrated = useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
   const auth = useAuth();
   const status = hydrated ? auth.status : "loading";
   const nav = navFor(status !== "anonymous");

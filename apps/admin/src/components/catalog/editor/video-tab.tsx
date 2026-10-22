@@ -1,7 +1,7 @@
 "use client";
 
 import { ApiError, unwrap } from "@netfly/api-client";
-import { cn, formatBytes, formatDuration } from "@netfly/ui";
+import { cn, formatBytes, formatDuration, LazyLogoLoader } from "@netfly/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type Hls from "hls.js";
 import {
@@ -9,7 +9,6 @@ import {
   Film,
   Flag,
   Languages,
-  Loader2,
   RotateCcw,
   Trash2,
   Upload,
@@ -167,8 +166,12 @@ function VideoSlot({
       ) : null}
       {uploading && (
         <p className="bg-accent/5 flex items-center gap-2 rounded-md px-3 py-2 text-[12.5px]">
-          <Loader2 className="text-accent size-3.5 animate-spin" /> Uploading {uploading.filename} —{" "}
-          {Math.round((uploading.loaded / uploading.size) * 100)}% (see the upload panel)
+          {/* The percentage is the progress; the loader only fills in until the first bytes land. */}
+          {uploading.loaded === 0 && (
+            <LazyLogoLoader size="sm" decorative className="[--nf-size:14px]" />
+          )}
+          Uploading {uploading.filename} — {Math.round((uploading.loaded / uploading.size) * 100)}%
+          (see the upload panel)
         </p>
       )}
       {asset && !readOnly && !uploading && (

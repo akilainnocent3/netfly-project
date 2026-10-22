@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Brand loader + mark (one stylesheet for both apps; utilities still override it). */
+@import "@netfly/ui/logo-loader.css" layer(components);
 
 /* Runtime brand tokens are set on <html> from DB config (see layout.tsx); the
    values in :root are the defaults (and the fallback when config is unreachable). */
@@ -93,6 +95,8 @@
   --line: rgb(255 255 255 / 0.1);
   --match: #46d369;
   --header-h: 68px;
+  /* The brand mark follows branding.accent_color. */
+  --nf-mark: var(--accent);
   color-scheme: dark;
 }
 
@@ -147,7 +151,13 @@ html[data-intro] body::before {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, var(--surface) 0%, var(--elevated) 50%, var(--surface) 100%);
+  /* Shimmer tinted faintly towards the brand. */
+  background: linear-gradient(
+    90deg,
+    var(--surface) 0%,
+    color-mix(in srgb, var(--elevated) 93%, var(--accent)) 50%,
+    var(--surface) 100%
+  );
   background-size: 200% 100%;
   animation: var(--animate-shimmer);
 }

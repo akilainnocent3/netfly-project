@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { PageShell } from "@/components/browse/title-grid";
 import { NetflyImage } from "@/components/ui/netfly-image";
+import { SkeletonArea } from "@/components/ui/skeleton";
 import { StateMessage } from "@/components/ui/state-message";
 import { useGenres } from "@/lib/queries";
 
@@ -11,11 +12,13 @@ export default function CategoriesPage() {
   return (
     <PageShell title="Categories" subtitle="Find something for every mood.">
       {genres.isPending ? (
-        <ul aria-hidden className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 8 }, (_, i) => (
-            <li key={i} className="skeleton aspect-[16/8] rounded-xl" />
-          ))}
-        </ul>
+        <SkeletonArea loaderClassName="bottom-auto h-[min(40vh,320px)]">
+          <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }, (_, i) => (
+              <li key={i} className="skeleton aspect-[16/8] rounded-xl" />
+            ))}
+          </ul>
+        </SkeletonArea>
       ) : genres.data?.length ? (
         <ul
           className={`grid grid-cols-2 gap-3 transition-opacity md:grid-cols-3 xl:grid-cols-4 ${genres.isPlaceholderData ? "opacity-50" : ""}`}

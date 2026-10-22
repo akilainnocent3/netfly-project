@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Row as RowData } from "@/lib/types";
 import { PageDots } from "../ui/page-dots";
 import { RowArrow } from "../ui/row-arrow";
+import { SkeletonArea } from "../ui/skeleton";
 import { Card } from "./card";
 
 // The scroller's content box is the viewport minus both gutters; cards fill it plus the right
@@ -196,7 +197,20 @@ function SkeletonCards() {
   );
 }
 
-export function RowSkeleton({ titleWidth = 180 }: { titleWidth?: number }) {
+/** `loader`: this row is the page's first placeholder, so it carries the one loader. */
+export function RowSkeleton({
+  titleWidth = 180,
+  loader = false,
+}: {
+  titleWidth?: number;
+  loader?: boolean;
+}) {
+  if (loader)
+    return (
+      <SkeletonArea>
+        <RowSkeleton titleWidth={titleWidth} />
+      </SkeletonArea>
+    );
   return (
     <div aria-hidden className="mb-10">
       <div className="skeleton mx-[max(4vw,16px)] mb-3 h-5 rounded" style={{ width: titleWidth }} />

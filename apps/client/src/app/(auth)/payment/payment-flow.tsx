@@ -1,7 +1,7 @@
 "use client";
 
 import { ApiError, unwrap } from "@netfly/api-client";
-import { priceLabel } from "@netfly/ui";
+import { LazyLogoLoader, priceLabel } from "@netfly/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,7 +10,6 @@ import { RegistrationShell, StepActions, StepHeading } from "@/components/auth/r
 import { Approval, Success } from "@/components/checkout/approval";
 import { useConfig } from "@/components/providers/config";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
 import { NetworkChip, PhoneField, phoneForApi } from "@/components/verify/phone-field";
 import { useGoAfterAuth } from "@/lib/after-auth";
@@ -179,7 +178,7 @@ export function PaymentFlow() {
           />
         ) : (
           <div className="grid flex-1 place-items-center" aria-busy>
-            <Spinner className="size-8 text-[#e50914]" label="Loading" />
+            <LazyLogoLoader size="md" />
           </div>
         )}
       </RegistrationShell>
@@ -256,7 +255,7 @@ export function PaymentFlow() {
           </>
         ) : (
           <div className="grid flex-1 place-items-center" aria-busy>
-            <Spinner className="size-8 text-[#e50914]" label="Loading" />
+            <LazyLogoLoader size="md" />
           </div>
         )
       ) : (

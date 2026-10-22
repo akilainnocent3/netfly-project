@@ -1,5 +1,6 @@
 "use client";
 
+import { LoaderPresence } from "@netfly/ui";
 import type Hls from "hls.js";
 import { AnimatePresence, m } from "framer-motion";
 import { RotateCcw, Volume2, VolumeX } from "lucide-react";
@@ -38,6 +39,7 @@ export function PreviewVideo({
   delayMs = 0,
   onStateChange,
   controlsClassName = "absolute right-[4vw] bottom-[18%] z-10",
+  loaderClassName = "absolute top-2 right-2 z-10",
 }: {
   title: TitleCard;
   loop?: boolean;
@@ -46,12 +48,15 @@ export function PreviewVideo({
   delayMs?: number;
   onStateChange?: (state: PreviewState) => void;
   controlsClassName?: string;
+  /** Where the small loader sits while the preview warms up: a corner, never the centre. */
+  loaderClassName?: string;
 }) {
   const { user } = useAuth();
   const ref = useRef<HTMLVideoElement>(null);
   const startAt = useRef(0);
   const [state, setStateRaw] = useState<PreviewState>("idle");
   const [muted, setMuted] = useState(true);
+  const [warming, setWarming] = useState(false);
   const onState = useRef(onStateChange);
   onState.current = onStateChange;
   const setState = (next: PreviewState) => {
@@ -84,6 +89,7 @@ export function PreviewVideo({
       void getPlayback(title.slug, { preview: true }).then(async (info) => {
         if (!info || cancelled) return;
         startAt.current = info.start_at;
+        setWarming(true);
         const start = () => {
           video.currentTime = info.start_at;
           if (canPlay()) void video.play().catch(() => undefined);
@@ -96,7 +102,7 @@ export function PreviewVideo({
           if (video.canPlayType("application/vnd.apple.mpegurl")) {
             video.src = info.master_url;
             video.addEventListener("loadedmetadata", start, { once: true });
-          }
+          } else setWarming(false);
           return;
         }
         hls = new HlsCtor({
@@ -114,6 +120,7 @@ export function PreviewVideo({
     }, delayMs);
     return () => {
       cancelled = true;
+      setWarming(false);
       clearTimeout(timer);
       observer.disconnect();
       document.removeEventListener("visibilitychange", resume);
@@ -137,10 +144,17 @@ export function PreviewVideo({
         loop={loop}
         preload="none"
         aria-hidden
-        onPlaying={() => setState("playing")}
+        onPlaying={() => {
+          setWarming(false);
+          setState("playing");
+        }}
         onEnded={() => setState("ended")}
+        onError={() => setWarming(false)}
         className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${state === "playing" ? "opacity-100" : "opacity-0"} ${className ?? ""}`}
       />
+      <div className={loaderClassName}>
+        <LoaderPresence active={warming && state === "idle"} size="sm" decorative />
+      </div>
       <AnimatePresence>
         {showMute && state !== "idle" && (
           <m.div

@@ -1,13 +1,12 @@
 "use client";
 
-import { cn } from "@netfly/ui";
+import { cn, LazyLogoLoader } from "@netfly/ui";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AnimatePresence, m } from "framer-motion";
 import { Pencil, Plus } from "lucide-react";
 import { useState } from "react";
 import { useProfiles, type Profile } from "../providers/profile";
 import { Button } from "../ui/button";
-import { Spinner } from "../ui/spinner";
 import { Avatar } from "./avatar";
 import { ProfileEditor } from "./profile-editor";
 import { Pressable } from "../ui/pressable";
@@ -33,8 +32,8 @@ export function ProfileGate({ children }: { children: React.ReactNode }) {
 
 function GateLoading() {
   return (
-    <div className="bg-bg fixed inset-0 z-[110] grid place-items-center">
-      <Spinner className="size-8 text-white/70" label="Loading profiles" />
+    <div className="bg-bg fixed inset-0 z-[110] grid place-items-center" aria-busy>
+      <LazyLogoLoader size="lg" label="Loading profiles" />
     </div>
   );
 }

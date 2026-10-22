@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@netfly/ui";
+import { cn, LazyLogoLoader } from "@netfly/ui";
 import { AnimatePresence, m } from "framer-motion";
 import { Check, Info, Play, Plus } from "lucide-react";
 import Link from "next/link";
@@ -153,6 +153,7 @@ function HeroSlide({
             delayMs={TRAILER_DELAY_MS}
             onStateChange={onPreview}
             controlsClassName="absolute right-[calc(max(4vw,16px)+88px)] bottom-[22%] z-20 translate-y-[3px]"
+            loaderClassName="absolute right-[calc(max(4vw,16px)+100px)] bottom-[calc(22%+9px)] z-20"
           />
         )}
       </div>
@@ -351,12 +352,16 @@ function MyListLabelled({ title }: { title: TitleCard }) {
 function HeroSkeleton() {
   return (
     <div
-      aria-hidden
+      aria-busy
       className="relative h-[78svh] min-h-[460px] overflow-hidden md:h-[88svh] md:max-h-[980px]"
     >
-      <div className="skeleton absolute inset-0 opacity-40" />
+      <div aria-hidden className="skeleton absolute inset-0 opacity-40" />
       <div className="from-bg absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t to-transparent" />
-      <div className="absolute bottom-[22%] left-[max(4vw,16px)] space-y-4">
+      {/* The page's first skeleton carries the one loader; the rows below keep plain shimmer. */}
+      <div className="absolute inset-0 grid place-items-center pb-[12%]">
+        <LazyLogoLoader size="md" />
+      </div>
+      <div aria-hidden className="absolute bottom-[22%] left-[max(4vw,16px)] space-y-4">
         <div className="skeleton h-20 w-[min(480px,70vw)] rounded-lg" />
         <div className="skeleton h-4 w-[min(420px,70vw)] rounded" />
         <div className="skeleton h-4 w-[min(360px,60vw)] rounded" />

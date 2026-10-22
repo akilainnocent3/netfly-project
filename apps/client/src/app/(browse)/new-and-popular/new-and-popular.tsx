@@ -81,7 +81,7 @@ export function NewAndPopular() {
           />
         </div>
       ) : (
-        <RowSkeleton />
+        <RowSkeleton loader />
       )}
     </div>
   );

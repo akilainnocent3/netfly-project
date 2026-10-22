@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useConfig } from "../providers/config";
 
 export const BRAND = {
-  logo: "/brand/netfly-logo.v1.svg",
-  logoOnLight: "/brand/netfly-logo-on-light.v1.svg",
-  mark: "/brand/netfly-mark.v1.svg",
+  logo: "/brand/netfly-logo.v2.svg",
+  logoOnLight: "/brand/netfly-logo-on-light.v2.svg",
+  mark: "/brand/netfly-mark.v2.svg",
 } as const;
 
 /**

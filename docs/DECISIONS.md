@@ -218,6 +218,40 @@ Ambiguities in the build brief, the option chosen, and why.
     resumes it (Play → the player with the intro; the others run, toast and restore scroll). A URL-only
     intent needs a click, so a crafted link can't act for a signed-in viewer.
 
+## Loading UI
+
+51. **One brand loader, pure SVG + CSS; skeletons where there is a layout to hold.** `LogoMark` /
+    `LogoLoader` (`@netfly/ui`) are the only loading UI in both apps (no spinners). The mark is traced
+    from the reference artwork (`scripts/brand/trace_logo.py` → `logo-geometry.json`, 99.93 % IoU via
+    `verify-logo.mjs`); the app icons and wordmark files are generated from the same geometry
+    (`brand-icons.mjs`). All motion is CSS keyframes (`logo-loader.css`), so it animates in server
+    HTML before hydration. Client components render `LazyLogoLoader` (the geometry is a separate
+    chunk: server HTML keeps animating while it loads, and interaction-only loaders fetch it within
+    their delay); only server components render `LogoLoader` directly. First-load JS therefore grows by
+    0.1 kB on `/` and 0.5–0.9 kB on app pages (the delay/min-duration timeline). The rules:
+    * **Skeleton vs loader.** Rows, grids, the hero and the title view keep their skeletons (they reserve
+      the layout: CLS stays 0), with one `md` loader over the *first* skeleton block of a page, never one
+      per card. Content areas with no layout to predict (search pending, notifications, episodes) get an
+      `md` loader; route transitions (`loading.tsx` for category and watch pages) an `lg` loader in the
+      content area below the header. Public SEO pages (`/title`, `/genre`) have none: a loading
+      boundary streams the response, so the status is 200 before `notFound()` runs and no-JS crawlers
+      never see the content swapped in (the title modal opens client-side anyway). There is no group-level
+      `(browse)/loading.tsx`: the home feed is server-rendered with its own skeletons, and a group
+      fallback streamed a loader before it that cost `/browse` 2–3 Lighthouse points. The `@modal` slot
+      has an empty `loading.tsx`, otherwise every navigation waited on it and no route fallback showed;
+      the player `lg` before the first frame and `md` when rebuffering (after 250 ms); preview / hero
+      trailer warm-up an `sm` loader in the mute-button corner; saving buttons and fields `sm`.
+    * **Boot.** App open never blocks on auth (server-rendered pages, decision 50; the intro splash is the
+      app-open screen, decision 49), so a full-screen `lg` loader appears only where something does
+      block: the profile gate while profiles load, and the player.
+    * **No flashes.** A loader appears after `delay` (200 ms default, a CSS `animation-delay`), so fast
+      loads show nothing; once shown it stays at least `minDuration` (400 ms) and fades out over 150 ms.
+      The minimum only needs JS where the state toggles on the client (`LoaderPresence` /
+      `LoaderTimeline`); server fallbacks use `LogoLoader` alone.
+    * **Accessibility.** `role="status"` + `aria-live="polite"` with a hidden label ("Loading…" by
+      default); `decorative` (aria-hidden) inside a container that already has `aria-busy`. Reduced
+      motion: no travelling light, draw-on or scaling; only a 2 s opacity pulse (0.6 ↔ 1).
+
 ## Resilience
 
 32. **Errors are contained where they happen:** each home row and the hero have their own error boundary

@@ -1,10 +1,10 @@
 "use client";
 
 import { unwrap } from "@netfly/api-client";
-import { cn } from "@netfly/ui";
+import { cn, LazyLogoLoader } from "@netfly/ui";
 import * as Tabs from "@radix-ui/react-tabs";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, CircleAlert, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, CircleAlert, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { DetailsTab } from "@/components/catalog/editor/details-tab";
@@ -219,7 +219,7 @@ function SaveIndicator({ state }: { state: SaveState }) {
     <span className="text-muted flex items-center gap-1.5 text-[12.5px]" aria-live="polite">
       {state === "saving" || state === "dirty" ? (
         <>
-          <Loader2 className="size-3.5 animate-spin" /> Saving…
+          <LazyLogoLoader size="sm" decorative delay={0} className="[--nf-size:14px]" /> Saving…
         </>
       ) : state === "saved" ? (
         <>

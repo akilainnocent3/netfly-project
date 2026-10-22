@@ -1,10 +1,9 @@
 "use client";
 
-import { cn } from "@netfly/ui";
+import { cn, LazyLogoLoader } from "@netfly/ui";
 import { Check } from "lucide-react";
-import { Spinner } from "./spinner";
 
-/** Labelled on/off switch row. While `saving`, it is disabled and shows a spinner in the thumb. */
+/** Labelled on/off switch row. While `saving`, it is disabled and shows the brand loader in the thumb. */
 export function SwitchRow({
   label,
   description,
@@ -47,7 +46,7 @@ export function SwitchRow({
           )}
         >
           {saving ? (
-            <Spinner className="size-3" />
+            <LazyLogoLoader size="sm" decorative delay={0} className="[--nf-size:12px]" />
           ) : (
             checked && <Check className="size-3" strokeWidth={3} />
           )}

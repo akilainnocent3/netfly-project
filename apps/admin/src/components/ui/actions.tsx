@@ -1,9 +1,9 @@
 "use client";
 
 import { ApiError } from "@netfly/api-client";
-import { cn } from "@netfly/ui";
+import { cn, LazyLogoLoader } from "@netfly/ui";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Loader2 } from "lucide-react";
+
 import { createContext, forwardRef, useCallback, useContext, useRef, useState } from "react";
 import { useToast } from "../providers/toast";
 import { Button } from "./primitives";
@@ -39,7 +39,11 @@ export const IconButton = forwardRef<
       )}
       {...props}
     >
-      {loading ? <Loader2 className="size-3.5 animate-spin" /> : children}
+      {loading ? (
+        <LazyLogoLoader size="sm" decorative delay={0} className="text-current [--nf-size:14px]" />
+      ) : (
+        children
+      )}
     </button>
   );
 });

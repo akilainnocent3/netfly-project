@@ -1,6 +1,6 @@
 "use client";
 
-import { cn, formatDuration } from "@netfly/ui";
+import { cn, formatDuration, LoaderPresence } from "@netfly/ui";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { AnimatePresence, m } from "framer-motion";
 import {
@@ -105,6 +105,8 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
   const [muted, setMuted] = useState(false);
   const [rate, setRate] = useState(1);
   const [waiting, setWaiting] = useState(true);
+  // Whether a frame has played yet: before it, buffering is the (large) initial load.
+  const [started, setStarted] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [controls, setControls] = useState(true);
   const [scrubbing, setScrubbing] = useState(false);
@@ -609,6 +611,7 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
             waitingSince.current = null;
           }
           setWaiting(false);
+          setStarted(true);
         }}
         onWaiting={() => {
           setWaiting(true);
@@ -660,23 +663,16 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
         }}
       />
 
-      {/* Buffering */}
-      <AnimatePresence>
-        {waiting && !fatal && !preroll && (
-          <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ delay: 0.25 }}
-            className="pointer-events-none absolute inset-0 grid place-items-center"
-          >
-            <div
-              className="border-t-accent size-16 animate-spin rounded-full border-[3px] border-white/20"
-              aria-label="Loading"
-            />
-          </m.div>
-        )}
-      </AnimatePresence>
+      {/* Buffering: large over the blurred backdrop before the first frame, medium when
+          rebuffering mid-playback (it covers less of the picture). Shows after 250 ms. */}
+      <div className="pointer-events-none absolute inset-0 grid place-items-center">
+        <LoaderPresence
+          active={waiting && !fatal && !preroll}
+          delay={250}
+          size={started ? "md" : "lg"}
+          label="Buffering"
+        />
+      </div>
 
       {/* Double-tap seek ripple */}
       <AnimatePresence>

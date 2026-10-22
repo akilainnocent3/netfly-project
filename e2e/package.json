@@ -7,9 +7,13 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.10.2",
     "@playwright/test": "1.56.0",
     "@types/node": "22.18.8",
-    "typescript": "5.9.3",
-    "@axe-core/playwright": "4.10.2"
+    "@types/react": "19.2.0",
+    "@types/react-dom": "19.2.0",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "typescript": "5.9.3"
   }
 }

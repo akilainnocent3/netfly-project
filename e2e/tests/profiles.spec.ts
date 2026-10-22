@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, setConfig, signUp, test } from "./helpers";
+import { expect, loaderShown, setConfig, signUp, test } from "./helpers";
 
 // Profiles are behind a global flag: this file turns it on and always turns it back off.
 test.describe.configure({ mode: "serial" });
@@ -53,4 +53,26 @@ test("profile gate: create, choose, switch, kids filter", async ({ page }) => {
   await page.goto("/browse");
   await expect(page.getByTestId("profile-gate")).toBeHidden();
   await expect(page.getByRole("button", { name: /watching as Little/ })).toBeVisible();
+});
+
+test("boot: a full-screen brand loader while profiles load", async ({ page }) => {
+  await signUp(page);
+  await waitForGate(page);
+  // Hold the profile list so the boot screen stays up.
+  await page.route("**/api/v1/profiles", async (route) => {
+    await new Promise((r) => setTimeout(r, 3000));
+    await route.fallback();
+  });
+  for (const viewport of [
+    { width: 360, height: 740 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/browse");
+    const boot = page.locator("[aria-busy] .nf-loader[data-size=lg]:has(svg)");
+    await loaderShown(boot);
+    await expect(boot).toHaveAttribute("role", "status");
+    await page.screenshot({ path: `../docs/screenshots/loader-boot-${viewport.width}.png` });
+    await expect(page.getByTestId("profile-gate")).toBeVisible();
+  }
 });

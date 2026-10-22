@@ -29,6 +29,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     "--accent": vars["--accent"],
     "--accent-rgb": vars["--accent-rgb"],
     "--accent-fg": vars["--accent-fg"],
+    // The brand mark keeps the viewer brand colour, not the studio accent.
+    "--nf-mark": themeVariables(config)["--accent"],
   } as React.CSSProperties;
   return (
     <html lang="en" className={inter.variable} style={style} suppressHydrationWarning>

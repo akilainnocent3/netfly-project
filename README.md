@@ -94,6 +94,10 @@ pnpm e2e        # includes axe checks, SEO contract, signup → plan → verify 
                 # (global setup turns test mode on; global teardown turns it off again)
 NETFLY_E2E_CHANNEL=chrome pnpm e2e   # also runs the video specs (Playwright's Chromium has no H.264)
 
+# Brand mark: geometry is traced from the artwork; icons + wordmark files are generated from it
+python scripts/brand/trace_logo.py && node scripts/brand/verify-logo.mjs   # only if the artwork changes
+node scripts/brand/brand-icons.mjs                                        # favicons, PWA icons, wordmark
+
 # Optional local S3 for media (moto): pip install "moto[server]" && moto_server -p 5005,
 # then set storage.s3.endpoint_url=http://localhost:5005 (+ bucket/keys) and run seed_demo --reset
 ```
