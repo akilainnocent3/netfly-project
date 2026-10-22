@@ -6,8 +6,10 @@ on the next request instead of after a TTL.
 
 from django.core.cache import cache
 from django.db.models import Count, Max, Q
-from drf_spectacular.utils import extend_schema
+from django.http import HttpResponse
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -140,3 +142,95 @@ class SitemapView(APIView):
             }
 
         return _public(Response(_cached("sitemap", build, 900)))
+
+
+CATALOG_PAGE_SIZE = 60
+
+
+class CatalogEntrySerializer(serializers.Serializer):
+    slug = serializers.CharField()
+    title = serializers.CharField()
+    type = serializers.CharField()
+    year = serializers.IntegerField(allow_null=True)
+    letter = serializers.CharField()
+
+
+class CatalogLetterSerializer(serializers.Serializer):
+    letter = serializers.CharField()
+    page = serializers.IntegerField()
+
+
+class CatalogSerializer(serializers.Serializer):
+    count = serializers.IntegerField()
+    page = serializers.IntegerField()
+    pages = serializers.IntegerField()
+    page_size = serializers.IntegerField()
+    letters = CatalogLetterSerializer(many=True)
+    results = CatalogEntrySerializer(many=True)
+
+
+def _letter(title: str) -> str:
+    first = title.strip()[:1].upper()
+    return first if "A" <= first <= "Z" else "#"
+
+
+class CatalogView(APIView):
+    """Every published title A–Z, paginated: the crawlable catalogue behind /titles."""
+
+    authentication_classes: list = []
+    throttle_classes = [throttle("security.rate_public")]
+
+    @extend_schema(
+        parameters=[OpenApiParameter("page", int, required=False)],
+        responses=CatalogSerializer,
+        operation_id="public_catalog",
+    )
+    def get(self, request):
+        def build():
+            rows = Title.objects.published().values("slug", "title", "type", "year")
+            # "#" (digits, symbols) first, then A–Z, case-insensitively.
+            entries = sorted(
+                ({**r, "letter": _letter(r["title"])} for r in rows),
+                key=lambda e: (e["letter"] != "#", e["title"].casefold(), e["slug"]),
+            )
+            return entries
+
+        entries = _cached("catalog", build, 900)
+        pages = max(1, -(-len(entries) // CATALOG_PAGE_SIZE))
+        try:
+            page = int(request.query_params.get("page", 1))
+        except ValueError:
+            page = 1
+        if not 1 <= page <= pages:
+            raise NotFound("No such page.")
+        letters: list[dict] = []
+        for i, entry in enumerate(entries):
+            if not letters or letters[-1]["letter"] != entry["letter"]:
+                letters.append({"letter": entry["letter"], "page": i // CATALOG_PAGE_SIZE + 1})
+        start = (page - 1) * CATALOG_PAGE_SIZE
+        return _public(
+            Response(
+                {
+                    "count": len(entries),
+                    "page": page,
+                    "pages": pages,
+                    "page_size": CATALOG_PAGE_SIZE,
+                    "letters": letters,
+                    "results": entries[start : start + CATALOG_PAGE_SIZE],
+                }
+            )
+        )
+
+
+class IndexNowKeyView(APIView):
+    """The IndexNow key file (`/<key>.txt` on the site, rewritten here); 404 unless configured."""
+
+    authentication_classes: list = []
+    throttle_classes = [throttle("security.rate_public")]
+
+    @extend_schema(responses={(200, "text/plain"): str}, operation_id="public_indexnow_key")
+    def get(self, request, key: str):
+        configured = config.get_str("seo.indexnow_key")
+        if not configured or key != configured:
+            raise NotFound()
+        return HttpResponse(configured, content_type="text/plain; charset=utf-8")

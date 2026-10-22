@@ -58,7 +58,12 @@ export async function PublicShell({
               </ul>
             </nav>
           ) : null}
-          <p className="text-meta mt-10">
+          <p className="text-meta mt-8">
+            <Link href="/titles" className="font-semibold text-white hover:underline">
+              All titles A–Z
+            </Link>
+          </p>
+          <p className="text-meta mt-6">
             <span>{footer}</span>
             <span className="mx-2" aria-hidden>
               ·

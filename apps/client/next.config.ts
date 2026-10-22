@@ -9,6 +9,9 @@ const config: NextConfig = {
   poweredByHeader: false,
   // The dev-tools badge floats bottom-left, over the phone tab bar (and e2e taps on it).
   devIndicators: false,
+  // Metadata always goes in <head> (no streaming after the body starts), for every client: some
+  // crawlers and audit tools that aren't on Next's bot list only read the head.
+  htmlLimitedBots: /.*/,
   output: "standalone",
   // Trace from the monorepo root so workspace packages land in the standalone bundle.
   outputFileTracingRoot: path.join(__dirname, "../../"),
@@ -37,7 +40,14 @@ const config: NextConfig = {
     ];
   },
   async rewrites() {
-    return [{ source: "/api/:path*", destination: `${api}/api/:path*` }];
+    return [
+      { source: "/api/:path*", destination: `${api}/api/:path*` },
+      // IndexNow key file (`seo.indexnow_key`): the API answers 404 unless it's the configured key.
+      {
+        source: "/:key([A-Za-z0-9-]{8,128}).txt",
+        destination: `${api}/api/v1/public/indexnow/:key`,
+      },
+    ];
   },
 };
 

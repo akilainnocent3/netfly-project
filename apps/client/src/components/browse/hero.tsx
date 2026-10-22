@@ -4,7 +4,7 @@ import { cn, LazyLogoLoader } from "@netfly/ui";
 import { AnimatePresence, m } from "framer-motion";
 import { Check, Info, Play, Plus } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useBillboard, useInList, useMode, useMyListToggle, usePendingFor } from "@/lib/queries";
 import type { BillboardItem, TitleCard } from "@/lib/types";
 import { useMedia } from "@/lib/use-media";
@@ -19,12 +19,17 @@ import { prefetchPlayback, PreviewVideo, type PreviewState } from "./preview-vid
 
 const TRAILER_DELAY_MS = 2000;
 
+/** The billboard title is the page's h1, unless the page has its own (Series, Films, a title page). */
+const HeadingLevel = createContext<"h1" | "h2">("h1");
+
 export function Hero({
   initial,
   kind,
+  headingLevel = "h1",
 }: {
   initial?: { mode: string; items: BillboardItem[] };
   kind?: "movie" | "series";
+  headingLevel?: "h1" | "h2";
 }) {
   const config = useConfig();
   const mode = useMode();
@@ -58,47 +63,49 @@ export function Hero({
   if (!item) return <div className="h-[calc(var(--header-h)+24px)]" />;
 
   return (
-    <section
-      aria-roledescription="carousel"
-      aria-label="Featured"
-      className="relative w-full overflow-hidden md:h-[88svh] md:max-h-[980px] md:min-h-[460px]"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <AnimatePresence initial={false} mode="sync">
-        <m.div
-          key={`${mode}-${item.title.id}`}
-          initial={first ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0, position: "absolute" }}
-          transition={{ duration: 0.8 }}
-          className="inset-0 md:absolute"
-        >
-          {/* Both layouts render (CSS picks one) so the server-rendered LCP image never swaps. */}
-          <div className="hidden md:block">
-            <HeroSlide
-              item={item}
-              priority={index === 0}
-              trailers={desktop && config.bool("features.hero_trailers", true)}
-              animate={!first}
-              preview={preview}
-              onPreview={setPreview}
-            />
-          </div>
-          <div className="md:hidden">
-            <PosterHero item={item} priority={index === 0} />
-          </div>
-        </m.div>
-      </AnimatePresence>
-      <PageDots
-        className="absolute right-[max(4vw,16px)] bottom-[15%] z-20 hidden md:flex"
-        label="Featured titles"
-        count={items.length}
-        active={index}
-        labels={items.map((it) => it.title.title)}
-        onSelect={setIndex}
-      />
-    </section>
+    <HeadingLevel.Provider value={headingLevel}>
+      <section
+        aria-roledescription="carousel"
+        aria-label="Featured"
+        className="relative w-full overflow-hidden md:h-[88svh] md:max-h-[980px] md:min-h-[460px]"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <AnimatePresence initial={false} mode="sync">
+          <m.div
+            key={`${mode}-${item.title.id}`}
+            initial={first ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, position: "absolute" }}
+            transition={{ duration: 0.8 }}
+            className="inset-0 md:absolute"
+          >
+            {/* Both layouts render (CSS picks one) so the server-rendered LCP image never swaps. */}
+            <div className="hidden md:block">
+              <HeroSlide
+                item={item}
+                priority={index === 0}
+                trailers={desktop && config.bool("features.hero_trailers", true)}
+                animate={!first}
+                preview={preview}
+                onPreview={setPreview}
+              />
+            </div>
+            <div className="md:hidden">
+              <PosterHero item={item} priority={index === 0} />
+            </div>
+          </m.div>
+        </AnimatePresence>
+        <PageDots
+          className="absolute right-[max(4vw,16px)] bottom-[15%] z-20 hidden md:flex"
+          label="Featured titles"
+          count={items.length}
+          active={index}
+          labels={items.map((it) => it.title.title)}
+          onSelect={setIndex}
+        />
+      </section>
+    </HeadingLevel.Provider>
   );
 }
 
@@ -127,6 +134,7 @@ function HeroSlide({
   preview: PreviewState;
   onPreview: (s: PreviewState) => void;
 }) {
+  const Heading = useContext(HeadingLevel);
   const title = item.title;
   const synopsis = item.tagline || title.short_synopsis;
   const playing = preview === "playing";
@@ -182,7 +190,7 @@ function HeroSlide({
             style={{ transformOrigin: "left bottom" }}
           >
             {title.logo ? (
-              <h1 className="relative mb-5 h-[clamp(70px,12vw,170px)] w-[min(560px,80vw)]">
+              <Heading className="relative mb-5 h-[clamp(70px,12vw,170px)] w-[min(560px,80vw)]">
                 <NetflyImage
                   image={title.logo}
                   alt={title.title}
@@ -190,11 +198,11 @@ function HeroSlide({
                   priority={priority}
                   className="object-contain object-left-bottom drop-shadow-[0_4px_24px_rgb(0_0_0/0.6)]"
                 />
-              </h1>
+              </Heading>
             ) : (
-              <h1 className="text-shadow text-display mb-4 leading-[0.9] font-black tracking-[-0.03em] uppercase">
+              <Heading className="text-shadow text-display mb-4 leading-[0.9] font-black tracking-[-0.03em] uppercase">
                 {title.title}
-              </h1>
+              </Heading>
             )}
           </m.div>
           <Top10Line title={title} />
@@ -243,7 +251,7 @@ function HeroSlide({
             </Button>
             <Button asChild variant="secondary" size="lg" icon={<Info />}>
               <Link href={titleHref(title)} scroll={false}>
-                More Info
+                More Info<span className="sr-only"> about {title.title}</span>
               </Link>
             </Button>
           </div>
@@ -263,6 +271,7 @@ function HeroSlide({
 
 /** Phones: a centred 2:3 poster card over the blurred artwork (Netflix mobile layout). */
 function PosterHero({ item, priority }: { item: BillboardItem; priority: boolean }) {
+  const Heading = useContext(HeadingLevel);
   const title = item.title;
   return (
     <div className="relative px-[max(6vw,16px)] pt-[calc(var(--header-h)+env(safe-area-inset-top)+56px)] pb-8">
@@ -296,7 +305,9 @@ function PosterHero({ item, priority }: { item: BillboardItem; priority: boolean
               />
             </div>
           ) : (
-            <h1 className="text-h1 mb-2 leading-none font-black uppercase">{title.title}</h1>
+            <Heading className="text-h1 mb-2 leading-none font-black uppercase">
+              {title.title}
+            </Heading>
           )}
           {title.top10_rank ? (
             <p className="text-meta mb-2 flex items-center justify-center gap-1.5 font-bold">

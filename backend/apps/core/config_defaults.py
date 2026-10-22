@@ -214,8 +214,46 @@ KEYS: list[Key] = [
         "seo.default_description",
         "string",
         "",
-        "Search and social description of the landing page. Empty uses the tagline.",
+        "Search and social description of the landing page (and of titles without a synopsis). "
+        "Empty uses the tagline.",
         public=True,
+    ),
+    Key(
+        "seo.alternate_name",
+        "string",
+        "",
+        "Another name for the site in search results (WebSite alternateName), e.g. an "
+        "abbreviation. Empty uses the site's domain.",
+        public=True,
+    ),
+    Key(
+        "seo.google_site_verification",
+        "string",
+        "",
+        "Google Search Console verification: the content value of its HTML tag "
+        '(<meta name="google-site-verification" content="…">).',
+        public=True,
+        label="Google Search Console token",
+        validation={"regex": r"^[A-Za-z0-9_-]{0,100}$"},
+    ),
+    Key(
+        "seo.bing_site_verification",
+        "string",
+        "",
+        "Bing Webmaster Tools verification: the content value of its msvalidate.01 HTML tag.",
+        public=True,
+        label="Bing Webmaster Tools token",
+        validation={"regex": r"^[A-Za-z0-9_-]{0,100}$"},
+    ),
+    Key(
+        "seo.indexnow_key",
+        "string",
+        "",
+        "IndexNow key (8–128 letters, digits or dashes). When set, the key file is served at "
+        "/<key>.txt and publishing or unpublishing a title notifies Bing, Yandex and others "
+        "(at most once a minute). Google ignores IndexNow. Empty turns it off.",
+        label="IndexNow key",
+        validation={"regex": r"^$|^[A-Za-z0-9-]{8,128}$"},
     ),
     # ---- features -----------------------------------------------------------
     Key(

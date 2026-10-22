@@ -6465,6 +6465,73 @@
                 }
             }
         },
+        "/api/v1/public/catalog": {
+            "get": {
+                "operationId": "public_catalog",
+                "description": "Every published title A–Z, paginated: the crawlable catalogue behind /titles.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "page",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "public"
+                ],
+                "security": [
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Catalog"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/public/indexnow/{key}": {
+            "get": {
+                "operationId": "public_indexnow_key",
+                "description": "The IndexNow key file (`/<key>.txt` on the site, rewritten here); 404 unless configured.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "key",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "public"
+                ],
+                "security": [
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/public/landing": {
             "get": {
                 "operationId": "public_landing",
@@ -7723,6 +7790,86 @@
                         "type": "boolean"
                     }
                 }
+            },
+            "Catalog": {
+                "type": "object",
+                "properties": {
+                    "count": {
+                        "type": "integer"
+                    },
+                    "page": {
+                        "type": "integer"
+                    },
+                    "pages": {
+                        "type": "integer"
+                    },
+                    "page_size": {
+                        "type": "integer"
+                    },
+                    "letters": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CatalogLetter"
+                        }
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CatalogEntry"
+                        }
+                    }
+                },
+                "required": [
+                    "count",
+                    "letters",
+                    "page",
+                    "page_size",
+                    "pages",
+                    "results"
+                ]
+            },
+            "CatalogEntry": {
+                "type": "object",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "letter": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "letter",
+                    "slug",
+                    "title",
+                    "type",
+                    "year"
+                ]
+            },
+            "CatalogLetter": {
+                "type": "object",
+                "properties": {
+                    "letter": {
+                        "type": "string"
+                    },
+                    "page": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "letter",
+                    "page"
+                ]
             },
             "CdnTestRequestRequest": {
                 "type": "object",

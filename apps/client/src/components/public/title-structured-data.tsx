@@ -1,12 +1,22 @@
 import type { Schemas } from "@netfly/api-client";
-import { imageUrl, JsonLd } from "@/lib/seo";
+import { clip, imageUrl, JsonLd } from "@/lib/seo";
 import type { TitlePage } from "@/lib/types";
 
-/** Search/social description: the short synopsis, else the synopsis cut at a word boundary. */
-export function describeTitle(t: TitlePage["title"]): string {
-  const text = (t.short_synopsis || t.synopsis || "").trim();
-  if (text.length <= 160) return text;
-  return `${text.slice(0, 157).replace(/\s+\S*$/, "")}…`;
+/**
+ * Search/social description (~155 characters, cut at a word boundary): the synopsis, else
+ * `seo.default_description`. A short one is followed by the facts people search for.
+ */
+export function describeTitle(t: TitlePage["title"], fallback = ""): string {
+  const text = (t.synopsis || t.short_synopsis || fallback).replace(/\s+/g, " ").trim();
+  const facts = [
+    t.year ? String(t.year) : "",
+    t.genres_full.map((g) => g.name).join(", "),
+    t.cast?.length ? `Starring ${t.cast.slice(0, 2).join(", ")}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  if (text.length >= 90 || !facts) return clip(text || t.title, 155);
+  return clip(`${text ? `${text.replace(/\.?$/, ".")} ` : `${t.title}: `}${facts}.`, 155);
 }
 
 /**
@@ -37,30 +47,36 @@ export function TitleStructuredData({
     ...(t.original_title && t.original_title !== t.title
       ? { alternateName: t.original_title }
       : {}),
-    description: t.synopsis || t.short_synopsis,
+    description: t.synopsis || t.short_synopsis || undefined,
     image: imageUrl(site, t.poster?.key ?? t.backdrop?.key, 960),
     genre: t.genres_full.map((g) => g.name),
-    ...(t.year ? { datePublished: String(t.year) } : {}),
+    ...(t.year ? { dateCreated: String(t.year), datePublished: String(t.year) } : {}),
     ...(t.maturity_rating ? { contentRating: t.maturity_rating } : {}),
+    // No aggregateRating: viewers rate with thumbs, not star reviews (Google's review rules).
     ...(t.language ? { inLanguage: t.language } : {}),
     ...(t.cast?.length ? { actor: people(t.cast) } : {}),
     ...(t.directors?.length ? { director: people(t.directors) } : {}),
     ...(series
       ? {
-          numberOfSeasons: t.season_count ?? undefined,
-          ...(episodes?.results.length
+          numberOfSeasons: t.season_count ?? (t.seasons.length || undefined),
+          // Every season the page lists; the first one with its episodes.
+          ...(t.seasons.length
             ? {
-                containsSeason: {
+                containsSeason: t.seasons.map((season) => ({
                   "@type": "TVSeason",
-                  seasonNumber: episodes.season.number,
-                  numberOfEpisodes: episodes.season.episode_count,
-                  episode: episodes.results.map((e) => ({
-                    "@type": "TVEpisode",
-                    episodeNumber: e.number,
-                    name: e.name,
-                    ...(e.synopsis ? { description: e.synopsis } : {}),
-                  })),
-                },
+                  seasonNumber: season.number,
+                  numberOfEpisodes: season.episode_count,
+                  ...(episodes?.season.number === season.number && episodes.results.length
+                    ? {
+                        episode: episodes.results.map((e) => ({
+                          "@type": "TVEpisode",
+                          episodeNumber: e.number,
+                          name: e.name,
+                          ...(e.synopsis ? { description: e.synopsis } : {}),
+                        })),
+                      }
+                    : {}),
+                })),
               }
             : {}),
         }

@@ -13,11 +13,14 @@ export function HomeFeed({
   initialBillboard,
   kind,
   heading,
+  backdrop = false,
 }: {
   initialBillboard?: { mode: string; items: BillboardItem[] };
   kind?: "movie" | "series";
   /** Series / Films pages: a page title over the hero, like Netflix's category pages. */
   heading?: string;
+  /** Behind a title page's modal: that page's h1 is the title, not the billboard. */
+  backdrop?: boolean;
 }) {
   const mode = useMode();
   const home = useHome(kind);
@@ -47,7 +50,11 @@ export function HomeFeed({
         </h1>
       )}
       <ErrorBoundary fallback={() => <div className="h-[56vh] md:h-[80vh]" />}>
-        <Hero initial={initialBillboard} kind={kind} />
+        <Hero
+          initial={initialBillboard}
+          kind={kind}
+          headingLevel={heading || backdrop ? "h2" : "h1"}
+        />
       </ErrorBoundary>
       <div className="relative z-10 -mt-[11vh] space-y-[clamp(18px,2.4vw,40px)] md:-mt-[13vh]">
         {home.isPending &&

@@ -21,6 +21,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const tagline = typeof config["branding.tagline"] === "string" ? config["branding.tagline"] : "";
   const favicon = config["branding.favicon_url"];
   const index = indexingEnabled(config);
+  const token = (key: string) =>
+    typeof config[key] === "string" && config[key] ? (config[key] as string) : undefined;
+  const bing = token("seo.bing_site_verification");
   return {
     metadataBase: new URL(await siteUrl(config)),
     title: { default: name, template: `%s · ${name}` },
@@ -40,6 +43,11 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     manifest: "/manifest.webmanifest",
     robots: { index, follow: index },
+    // Search Console / Bing Webmaster Tools ownership tokens (Studio → Settings).
+    verification: {
+      google: token("seo.google_site_verification"),
+      ...(bing ? { other: { "msvalidate.01": bing } } : {}),
+    },
     openGraph: { siteName: name, type: "website", locale: "en" },
     twitter: { card: "summary_large_image" },
     formatDetection: { telephone: false },

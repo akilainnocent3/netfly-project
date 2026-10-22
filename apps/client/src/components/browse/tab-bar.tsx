@@ -17,6 +17,12 @@ const TABS = [
   { href: "/account", label: "Profile", icon: UserRound, also: [] },
 ];
 
+// Set by the bar itself (server-rendered, so no layout shift), not by `:root:has([data-tabbar])`:
+// a :has() on the root that depends on the whole subtree is re-checked on DOM changes.
+const TABBAR_SIZE =
+  ":root{--tabbar-h:calc(64px + env(safe-area-inset-bottom))}" +
+  "@media (width>=64rem){:root{--tabbar-h:0px}}";
+
 /** Typing into a field on a phone: the on-screen keyboard is (almost certainly) up. */
 function editableFocused(): boolean {
   const el = document.activeElement as HTMLElement | null;
@@ -110,6 +116,7 @@ export function TabBar({ inModal = false }: { inModal?: boolean }) {
       data-tabbar={inModal ? "modal" : ""}
       className="tabbar bg-bg/92 fixed inset-x-0 bottom-0 z-50 border-t border-white/8 backdrop-blur-xl lg:hidden"
     >
+      {inModal ? null : <style>{TABBAR_SIZE}</style>}
       <ul className={cn("grid h-16", tabs.length === 5 ? "grid-cols-5" : "grid-cols-4")}>
         {tabs.map(({ href, label, icon: Icon, also }) => {
           const current = !inModal && [href, ...also].some((h) => pathname.startsWith(h));

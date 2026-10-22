@@ -112,17 +112,10 @@ body {
   font-variant-numeric: tabular-nums;
 }
 /* Phone navigation (below md, where the sidebar is hidden): --tabbar-h is the bottom tab bar's
-   height (shell/mobile-nav.tsx); pages end with `pb-tabbar`, floating panels sit above it. */
+   height (shell/mobile-nav.tsx renders that rule); pages end with `pb-tabbar`, floating panels sit
+   above it. */
 :root {
   --tabbar-h: 0px;
-}
-:root:has([data-tabbar]) {
-  --tabbar-h: calc(64px + env(safe-area-inset-bottom));
-}
-@media (width >= 48rem) {
-  :root:has([data-tabbar]) {
-    --tabbar-h: 0px;
-  }
 }
 @utility pb-tabbar {
   padding-bottom: calc(var(--tabbar-h) + 1.5rem);

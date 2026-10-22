@@ -253,9 +253,9 @@ function TitleContent({
 
       {more_like_this.length > 0 && (
         <section aria-labelledby="more-heading" className="px-[5%] pt-10 pb-14">
-          <h3 id="more-heading" className="text-h3 mb-5 font-bold">
+          <h2 id="more-heading" className="text-h3 mb-5 font-bold">
             More Like This
-          </h3>
+          </h2>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {more_like_this.map((t) => (
               <li key={t.id} className="bg-elevated overflow-hidden rounded-lg">
@@ -330,9 +330,9 @@ function About({ title }: { title: TitlePage["title"] }) {
     list && list.length > 0 ? <Meta label={label} value={list.join(", ")} /> : null;
   return (
     <section aria-labelledby="about-heading" className="px-[5%] pb-14">
-      <h3 id="about-heading" className="text-h3 mb-4 font-normal">
+      <h2 id="about-heading" className="text-h3 mb-4 font-normal">
         About <strong className="font-bold">{title.title}</strong>
-      </h3>
+      </h2>
       <dl className="text-meta space-y-2">
         {people(title.type === "series" ? "Creators" : "Director", title.directors)}
         {people("Cast", title.cast)}

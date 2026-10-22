@@ -5,7 +5,7 @@ import { PosterWall } from "@/components/auth/poster-wall";
 import { PublicShell } from "@/components/public/public-shell";
 import { Button } from "@/components/ui/button";
 import { getPublicConfig } from "@/lib/server-config";
-import { imageUrl, JsonLd, publicLanding, siteName, siteUrl } from "@/lib/seo";
+import { clip, imageUrl, JsonLd, publicLanding, siteName, siteUrl } from "@/lib/seo";
 
 const str = (v: unknown, fallback = "") => (typeof v === "string" && v ? v : fallback);
 
@@ -18,9 +18,15 @@ async function copy() {
     headline: str(config["branding.signup_headline"], "Unlimited movies and series."),
     subtext: str(config["branding.signup_subtext"], "Pick a username and start watching."),
     tagline: str(config["branding.tagline"]),
+    // ~150 characters for search results: the configured text, else one built from the tagline.
     description: str(
       config["seo.default_description"],
-      str(config["branding.tagline"], `Watch films and series on ${name}.`),
+      clip(
+        `${str(config["branding.tagline"], `${name}: films and series`).replace(/\.?$/, ".")} ` +
+          `Watch films and series in original and translated versions on ${name}, on your phone, ` +
+          "laptop or TV.",
+        155,
+      ),
     ),
   };
 }
@@ -89,7 +95,9 @@ export default async function Landing() {
       {
         "@type": "WebSite",
         "@id": `${site}/#website`,
+        // Google takes the site name shown in results from here.
         name,
+        alternateName: str(config["seo.alternate_name"], new URL(site).hostname),
         url: `${site}/`,
         description,
         publisher: { "@id": `${site}/#organization` },
@@ -190,6 +198,14 @@ export default async function Landing() {
               </li>
             ))}
           </ul>
+          <p className="text-body mt-6">
+            <Link
+              href="/titles"
+              className="font-semibold text-white underline-offset-4 hover:underline"
+            >
+              Every film and series, A–Z
+            </Link>
+          </p>
         </section>
       ) : null}
 

@@ -2100,6 +2100,40 @@ export interface paths {
         patch: operations["profiles_update"];
         trace?: never;
     };
+    "/api/v1/public/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every published title A–Z, paginated: the crawlable catalogue behind /titles. */
+        get: operations["public_catalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/indexnow/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The IndexNow key file (`/<key>.txt` on the site, rewritten here); 404 unless configured. */
+        get: operations["public_indexnow_key"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/public/landing": {
         parameters: {
             query?: never;
@@ -2484,6 +2518,25 @@ export interface components {
             episode_id?: number;
             rank?: number;
             other_mode?: boolean;
+        };
+        Catalog: {
+            count: number;
+            page: number;
+            pages: number;
+            page_size: number;
+            letters: components["schemas"]["CatalogLetter"][];
+            results: components["schemas"]["CatalogEntry"][];
+        };
+        CatalogEntry: {
+            slug: string;
+            title: string;
+            type: string;
+            year: number | null;
+            letter: string;
+        };
+        CatalogLetter: {
+            letter: string;
+            page: number;
         };
         CdnTestRequestRequest: {
             domain?: string;
@@ -7993,6 +8046,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Profile"];
+                };
+            };
+        };
+    };
+    public_catalog: {
+        parameters: {
+            query?: {
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Catalog"];
+                };
+            };
+        };
+    };
+    public_indexnow_key: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
                 };
             };
         };

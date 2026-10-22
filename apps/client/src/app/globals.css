@@ -152,19 +152,12 @@ html[data-intro] body::before {
   }
 }
 
-/* Phone tab bar (below lg). --tabbar-h is its height wherever one is on the page (also inside the
-   title modal), 0 otherwise, on desktop and while the on-screen keyboard is up (tab-bar.tsx sets
-   <html data-keyboard>). Pages end with `pb-tabbar`; floating UI adds it to its bottom offset. */
+/* Phone tab bar (below lg). --tabbar-h is its height wherever one is on the page (the tab bar
+   renders the rule itself, see tab-bar.tsx), 0 otherwise, on desktop and while the on-screen
+   keyboard is up (tab-bar.tsx sets <html data-keyboard>). Pages end with `pb-tabbar`; floating UI
+   adds it to its bottom offset. */
 :root {
   --tabbar-h: 0px;
-}
-:root:has([data-tabbar]) {
-  --tabbar-h: calc(64px + env(safe-area-inset-bottom));
-}
-@media (width >= 64rem) {
-  :root:has([data-tabbar]) {
-    --tabbar-h: 0px;
-  }
 }
 :root[data-keyboard] {
   --tabbar-h: 0px;

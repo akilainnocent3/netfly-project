@@ -35,6 +35,13 @@ export async function middleware(request: NextRequest) {
     url.pathname = pathname.replace(/^\/genre\//, "/categories/");
     return NextResponse.redirect(url);
   }
+  // The A–Z catalogue is a crawl path; signed-in viewers browse the app's categories instead.
+  if (signedIn && pathname === "/titles") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/categories";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
   const signupStep = /^\/signup(\/(name|username|password))?$/.test(pathname);
   if (signedIn && (pathname === "/login" || signupStep || pathname === "/")) {
     // Already signed in: go where the visitor was headed (validated), else home.

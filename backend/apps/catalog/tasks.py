@@ -59,3 +59,11 @@ def enforce_licenses() -> dict:
         warned.append(title.pk)
     Title.objects.filter(pk__in=warned).update(license_warning_sent_at=now)
     return {"expired": expired_ids, "warned": warned}
+
+
+@shared_task
+def send_indexnow() -> dict | None:
+    """Send the queued IndexNow batch (see indexnow.py)."""
+    from . import indexnow
+
+    return indexnow.send()

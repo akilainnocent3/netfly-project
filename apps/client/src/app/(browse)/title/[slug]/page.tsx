@@ -4,7 +4,15 @@ import { HomeFeed } from "@/components/browse/home-feed";
 import { describeTitle, TitleStructuredData } from "@/components/public/title-structured-data";
 import { TitleModal } from "@/components/title/title-modal";
 import { getPublicConfig } from "@/lib/server-config";
-import { imageUrl, isSignedIn, publicEpisodes, publicTitle, siteUrl } from "@/lib/seo";
+import {
+  imageUrl,
+  isSignedIn,
+  publicEpisodes,
+  publicTitle,
+  siteName,
+  siteUrl,
+  titleTag,
+} from "@/lib/seo";
 import { serverMode } from "@/lib/server-mode";
 
 export async function generateMetadata({
@@ -18,11 +26,12 @@ export async function generateMetadata({
   const t = page.title;
   const site = await siteUrl(config);
   const url = `${site}/title/${t.slug}`;
-  const description = describeTitle(t);
+  const fallback = config["seo.default_description"];
+  const description = describeTitle(t, typeof fallback === "string" ? fallback : "");
   const image = imageUrl(site, t.backdrop?.key, 1280);
   const heading = `Watch ${t.title}${t.year ? ` (${t.year})` : ""}`;
   return {
-    title: heading,
+    title: { absolute: titleTag(t, siteName(config)) },
     description,
     alternates: { canonical: url },
     openGraph: {
@@ -58,7 +67,7 @@ export default async function TitlePage({ params }: { params: Promise<{ slug: st
   return (
     <>
       <TitleStructuredData page={page} episodes={episodes} site={site} />
-      <HomeFeed />
+      <HomeFeed backdrop />
       <TitleModal
         slug={slug}
         fallbackHref="/browse"

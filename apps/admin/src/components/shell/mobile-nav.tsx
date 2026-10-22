@@ -17,6 +17,11 @@ const PRIMARY: NavItem[] = [
   { href: "/users", label: "Users", icon: Users },
 ];
 
+// Rendered by the bar (server-side, no layout shift) rather than a `:root:has()` rule.
+const TABBAR_SIZE =
+  ":root{--tabbar-h:calc(64px + env(safe-area-inset-bottom))}" +
+  "@media (width>=48rem){:root{--tabbar-h:0px}}";
+
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
 }
@@ -48,6 +53,7 @@ export function MobileNav() {
         className="border-line bg-panel/95 fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
+        <style>{TABBAR_SIZE}</style>
         <ul className="grid h-16 grid-cols-5">
           {PRIMARY.map((item) => {
             const active = isActive(pathname, item.href);

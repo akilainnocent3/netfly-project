@@ -32,8 +32,13 @@ test("a public title page is crawlable without signing in", async ({ page }) => 
   const types = (await jsonLd(page)).map((n) => n["@type"]);
   expect(types).toEqual(expect.arrayContaining(["Movie", "BreadcrumbList"]));
   // One design: the same title view as the app, server-rendered. Play is a real link (the
-  // player needs an account: middleware sends crawlers / no-JS visitors to sign in).
-  await expect(page.getByRole("link", { name: /^Play/ }).first()).toHaveAttribute("href", "/watch/neon-tide");
+  // player needs an account: middleware sends crawlers / no-JS visitors to sign in) — once the
+  // title has a playable video; until then (no S3 configured) it says Coming soon.
+  const res2 = await page.request.get("/api/v1/titles/neon-tide");
+  const { viewer } = (await res2.json()) as { viewer: { play: unknown } | null };
+  if (viewer?.play)
+    await expect(page.getByRole("link", { name: /^Play/ }).first()).toHaveAttribute("href", "/watch/neon-tide");
+  else await expect(page.getByRole("button", { name: "Coming soon" })).toBeDisabled();
   expect(await page.locator('a[href^="/title/"]').count()).toBeGreaterThan(0);
 });
 
@@ -80,4 +85,90 @@ test("signed-in viewers get the app, not the public pages", async ({ page }) => 
   await expect(page.getByRole("dialog")).toBeVisible();
   const res = await page.request.get("/browse");
   expect(res.headers()["x-robots-tag"]).toBe("noindex, nofollow");
+  await page.goto("/titles");
+  await expect(page).toHaveURL(/\/categories$/);
+});
+
+const GOOGLEBOT =
+  "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
+
+/** Title paths listed in the sitemap. */
+async function sitemapTitles(request: import("@playwright/test").APIRequestContext) {
+  const xml = await (await request.get("/sitemap.xml")).text();
+  return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)]
+    .map((m) => new URL(m[1]!).pathname)
+    .filter((p) => p.startsWith("/title/"));
+}
+
+test.describe("as Googlebot (no cookies, no JavaScript)", () => {
+  test.use({ userAgent: GOOGLEBOT, javaScriptEnabled: false, storageState: { cookies: [], origins: [] } });
+
+  test("every title in the sitemap is a complete, indexable page", async ({ page, request }) => {
+    const titles = await sitemapTitles(request);
+    expect(titles.length).toBeGreaterThan(0);
+    for (const path of titles) {
+      const res = await page.goto(path);
+      expect(res?.status(), path).toBe(200);
+      expect(new URL(page.url()).pathname, `${path} must not redirect`).toBe(path);
+      expect(res?.headers()["x-robots-tag"] ?? "", path).not.toMatch(/noindex/);
+      await expect(page.locator('meta[name="robots"][content*="noindex"]')).toHaveCount(0);
+      const h1 = page.locator("h1");
+      await expect(h1, `${path}: exactly one <h1>`).toHaveCount(1);
+      const name = (await h1.textContent())!.trim();
+      expect(await page.title(), path).toContain(name);
+      expect(await page.locator('link[rel="canonical"]').getAttribute("href"), path).toMatch(
+        new RegExp(`^https?://[^/?#]+${path}$`),
+      );
+      const nodes = await jsonLd(page);
+      const item = nodes.find((n) => n["@type"] === "Movie" || n["@type"] === "TVSeries");
+      expect(item?.name, `${path}: Movie/TVSeries JSON-LD`).toBe(name);
+      for (const prop of ["description", "genre", "dateCreated", "director", "actor"])
+        expect(item?.[prop], `${path}: JSON-LD ${prop}`).toBeTruthy();
+      // The JSON-LD carries the page's CSP nonce (allowed by the policy), so nothing blocks it.
+      const csp = res?.headers()["content-security-policy"] ?? "";
+      const nonce = await page.locator('script[type="application/ld+json"]').first().getAttribute("nonce");
+      if (nonce) expect(csp).toContain(`'nonce-${nonce}'`);
+    }
+  });
+
+  test("robots.txt lets crawlers fetch the public pages and icons", async ({ request }) => {
+    const robots = await (await request.get("/robots.txt")).text();
+    const disallowed = [...robots.matchAll(/^Disallow:\s*(\S+)/gim)].map((m) => m[1]!);
+    for (const path of ["/title/neon-tide", "/genre/drama", "/titles", "/favicon.ico", "/icon.svg", "/apple-icon.png", "/manifest.webmanifest"])
+      expect(disallowed.filter((d) => path.startsWith(d)), path).toEqual([]);
+  });
+
+  test("icons and the manifest are served with the right types", async ({ request }) => {
+    for (const [path, type] of [
+      ["/favicon.ico", /image\/(x-icon|vnd\.microsoft\.icon)/],
+      ["/icon.svg", /image\/svg\+xml/],
+      ["/apple-icon.png", /image\/png/],
+      ["/manifest.webmanifest", /application\/manifest\+json/],
+    ] as const) {
+      const res = await request.get(path, { maxRedirects: 0 });
+      expect(res.status(), path).toBe(200);
+      expect(res.headers()["content-type"], path).toMatch(type);
+    }
+  });
+
+  test("drafts are neither in the sitemap nor reachable", async ({ request }) => {
+    // seed_demo's Coming Soon titles are scheduled drafts.
+    expect(await sitemapTitles(request)).not.toContain("/title/glass-orchard");
+    const res = await request.get("/title/glass-orchard", { maxRedirects: 0 });
+    expect(res.status()).toBe(404);
+  });
+
+  test("the A–Z catalogue links to every title in the sitemap", async ({ page, request }) => {
+    const titles = await sitemapTitles(request);
+    const res = await page.goto("/titles");
+    expect(res?.status()).toBe(200);
+    await expect(page.locator("h1")).toHaveCount(1);
+    expect((await jsonLd(page)).map((n) => n["@type"])).toContain("ItemList");
+    const linked = new Set(
+      await page.locator('a[href^="/title/"]').evaluateAll((as) => as.map((a) => a.getAttribute("href"))),
+    );
+    for (const path of titles) expect(linked.has(path), path).toBe(true);
+    await page.goto("/");
+    await expect(page.locator('a[href="/titles"]').first()).toBeAttached();
+  });
 });

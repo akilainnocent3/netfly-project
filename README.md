@@ -93,6 +93,8 @@ pnpm install && pnpm typecheck && pnpm lint && pnpm build
 pnpm e2e        # includes axe checks, SEO contract, signup → plan → verify → pay journeys, search
                 # (global setup turns test mode on; global teardown turns it off again)
 NETFLY_E2E_CHANNEL=chrome pnpm e2e   # also runs the video specs (Playwright's Chromium has no H.264)
+pnpm seo:audit  # crawl from sitemap.xml as Googlebot (no JS): titles, canonicals, JSON-LD, A–Z
+                # crawl depth, plus a small "the rain" search simulation (see docs/SEO.md)
 
 # Brand mark: geometry is traced from the artwork; icons + wordmark files are generated from it
 python scripts/brand/trace_logo.py && node scripts/brand/verify-logo.mjs   # only if the artwork changes
@@ -102,7 +104,8 @@ node scripts/brand/brand-icons.mjs                                        # favi
 # then set storage.s3.endpoint_url=http://localhost:5005 (+ bucket/keys) and run seed_demo --reset
 ```
 
-See `docs/DEPLOY.md` for production and `docs/DECISIONS.md` for design decisions.
+See `docs/DEPLOY.md` for production, `docs/SEO.md` for getting indexed by search engines and
+`docs/DECISIONS.md` for design decisions.
 
 ## Screenshots
 

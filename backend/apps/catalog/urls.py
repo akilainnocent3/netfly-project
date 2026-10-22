@@ -11,6 +11,8 @@ urlpatterns = [
     ),
     path("public/landing", seo.LandingView.as_view(), name="public-landing"),
     path("public/sitemap", seo.SitemapView.as_view(), name="public-sitemap"),
+    path("public/catalog", seo.CatalogView.as_view(), name="public-catalog"),
+    path("public/indexnow/<str:key>", seo.IndexNowKeyView.as_view(), name="public-indexnow-key"),
     path("catalog/poster-wall", views.PosterWallView.as_view(), name="poster-wall"),
     path("titles/<slug:slug>", views.TitlePageView.as_view(), name="title-detail"),
     path(

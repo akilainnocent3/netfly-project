@@ -32,6 +32,38 @@ export async function siteUrl(config: PublicConfig): Promise<string> {
   return `${proto}://${host}`;
 }
 
+/** Trim text to `max` characters at a word boundary (with an ellipsis when cut). */
+export function clip(text: string, max = 155): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  return `${clean
+    .slice(0, max - 1)
+    .replace(/\s+\S*$/, "")
+    .replace(/[\s,;:.–—-]+$/, "")}…`;
+}
+
+/**
+ * A title page's <title>: "Watch {Title} ({Year}) | {Type} | {Site}", at most `max` characters.
+ * When it's too long the least useful parts go first: the type, then the year, then "Watch";
+ * a name that still doesn't fit is clipped.
+ */
+export function titleTag(
+  t: { title: string; year?: number | null; type: string },
+  site: string,
+  max = 60,
+): string {
+  const type = t.type === "series" ? "TV Series" : "Movie";
+  const year = t.year ? ` (${t.year})` : "";
+  const candidates = [
+    `Watch ${t.title}${year} | ${type} | ${site}`,
+    `Watch ${t.title}${year} | ${site}`,
+    `Watch ${t.title} | ${site}`,
+    `${t.title} | ${site}`,
+  ];
+  const fit = candidates.find((c) => c.length <= max);
+  return fit ?? `${clip(t.title, max - site.length - 3)} | ${site}`;
+}
+
 /** Absolute URL of a pre-rendered image (the API redirects to the CDN; crawlers follow it). */
 export function imageUrl(site: string, key: string | undefined | null, width = 1280) {
   return key ? `${site}/api/v1/img/${key}/w${width}` : undefined;
@@ -60,7 +92,11 @@ async function get<T>(path: string, revalidate = 60): Promise<T | null> {
 }
 
 export const publicLanding = () => get<Schemas["Landing"]>("/api/v1/public/landing");
-export const publicSitemap = () => get<Schemas["Sitemap"]>("/api/v1/public/sitemap", 600);
+// Not cached here: the API caches both under the catalog version, so a title published a moment
+// ago is already in the sitemap and the A–Z list.
+export const publicSitemap = () => get<Schemas["Sitemap"]>("/api/v1/public/sitemap", 0);
+export const publicCatalog = (page = 1) =>
+  get<Schemas["Catalog"]>(`/api/v1/public/catalog?page=${page}`, 0);
 export const publicTitle = (slug: string, mode?: string) =>
   get<TitlePage>(
     `/api/v1/titles/${encodeURIComponent(slug)}${mode ? `?translation=${encodeURIComponent(mode)}` : ""}`,
@@ -69,5 +105,23 @@ export const publicEpisodes = (slug: string, season: number) =>
   get<Schemas["EpisodePage"]>(
     `/api/v1/titles/${encodeURIComponent(slug)}/seasons/${season}/episodes?limit=50`,
   );
-export const publicGenre = (slug: string) =>
-  get<Schemas["HomePage"]>(`/api/v1/genres/${encodeURIComponent(slug)}/titles?sort=suggested`);
+/**
+ * A genre's titles in both translation modes (the API serves one mode per request, and "all" is a
+ * feature flag): the sitemap lists a genre when it has any published title, so its public page
+ * must show them all.
+ */
+export async function publicGenre(slug: string): Promise<Schemas["HomePage"] | null> {
+  const path = `/api/v1/genres/${encodeURIComponent(slug)}/titles?sort=suggested&translation=`;
+  const pages = await Promise.all(
+    ["translated", "not_translated"].map((mode) => get<Schemas["HomePage"]>(path + mode)),
+  );
+  const base = pages.find((p) => p?.rows[0]) ?? pages.find(Boolean);
+  if (!base) return null;
+  const row = base.rows[0];
+  if (!row) return base;
+  const seen = new Set<number>();
+  const items = pages
+    .flatMap((p) => p?.rows[0]?.items ?? [])
+    .filter((t) => !seen.has(t.id) && seen.add(t.id));
+  return { ...base, rows: [{ ...row, items }] };
+}

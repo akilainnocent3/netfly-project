@@ -138,7 +138,25 @@ SERIES = [
         "cellauto",
         [["Admission", "Code Silver", "Discharge"]],
     ),
+    (
+        "The Rain",
+        ["Sci-Fi", "Drama"],
+        "translated",
+        "DJ Kanda",
+        "TV-MA",
+        2018,
+        "After a storm that never ends, a ferry pilot and her brother cross a drowned coastline to "
+        "find the one town where the rain has stopped.",
+        ((56, 189, 248), (15, 23, 42)),
+        "gradients",
+        [["First Light", "High Water", "The Ferry"], ["Undertow", "Dry Land"]],
+    ),
 ]
+
+# Titles with their own credits (the rest share the demo cast).
+CREDITS = {
+    "The Rain": (["Mira Solberg", "Jonas Ekdahl", "Ama Mensah"], ["Kari Lund"]),
+}
 
 RELATED = [
     ("Neon Tide", "Static Bloom", 5),
@@ -344,7 +362,11 @@ class Command(BaseCommand):
             self.stdout.write(f"Removed {deleted} demo rows.")
         if Title.objects.filter(slug="neon-tide").exists():
             self._coming_soon()
-            self.stdout.write("Demo catalog already present — Coming Soon titles ensured.")
+            added = self._add_missing()
+            self.stdout.write(
+                "Demo catalog already present — Coming Soon titles ensured"
+                + (f", added {', '.join(added)}." if added else ".")
+            )
             return
         media = not opts["no_media"] and storage.is_configured()
         if not media:
@@ -468,6 +490,45 @@ class Command(BaseCommand):
             )
         )
 
+    def _add_missing(self) -> list[str]:
+        """Demo titles added to this file after a database was seeded (no media, published)."""
+        from django.utils.text import slugify
+
+        self.duration = 60
+        genres = {
+            name: Genre.objects.get_or_create(
+                slug=name.lower().replace(" ", "-"), defaults={"name": name, "order": i}
+            )[0]
+            for i, name in enumerate(GENRES)
+        }
+        added = []
+        entries = [(m, "movie", None) for m in MOVIES] + [(m[:9], "series", m[9]) for m in SERIES]
+        for n, (
+            (name, gs, tr, translator, rating, year, synopsis, colors, _),
+            kind,
+            seasons,
+        ) in enumerate(entries):
+            if Title.objects.filter(slug=slugify(name)).exists():
+                continue
+            title = self._title(
+                name, kind, gs, tr, translator, rating, year, synopsis, colors, genres, n, False
+            )
+            for s_no, episodes in enumerate(seasons or [], start=1):
+                season = Season.objects.create(title=title, number=s_no, name=f"Season {s_no}")
+                for e_no, ep_name in enumerate(episodes, start=1):
+                    Episode.objects.create(
+                        season=season,
+                        number=e_no,
+                        name=ep_name,
+                        runtime_minutes=1,
+                        synopsis=f"{name}, season {s_no}: {ep_name.lower()}.",
+                    )
+            title.status = Title.Status.PUBLISHED
+            title.published_at = timezone.now()
+            title.save(update_fields=["status", "published_at", "updated_at"])
+            added.append(name)
+        return added
+
     def _coming_soon(self) -> None:
         """Two scheduled drafts for New & Popular → Coming Soon (kept a few days ahead)."""
         drama = Genre.objects.filter(slug="drama").first()
@@ -512,8 +573,16 @@ class Command(BaseCommand):
             translation_status=tr,
             translator_name=translator,
             rights_holder="NETFLY Studios (demo)",
-            cast=["Amani Okoro", "Lena Varga", "Tomasz Reyes", "Nia Castell"][n % 2 : n % 2 + 3],
-            directors=["Ines Mbeki" if n % 2 else "Joon Halvorsen"],
+            cast=(
+                CREDITS[name][0]
+                if name in CREDITS
+                else ["Amani Okoro", "Lena Varga", "Tomasz Reyes", "Nia Castell"][n % 2 : n % 2 + 3]
+            ),
+            directors=(
+                CREDITS[name][1]
+                if name in CREDITS
+                else ["Ines Mbeki" if n % 2 else "Joon Halvorsen"]
+            ),
             is_featured=n in (0, 6),
             # Media titles wait in 'processing' and go live when their first video is ready.
             status=Title.Status.PROCESSING if media else Title.Status.DRAFT,

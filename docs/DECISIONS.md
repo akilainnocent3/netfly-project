@@ -125,6 +125,28 @@ Ambiguities in the build brief, the option chosen, and why.
     `history.replaceState`, not `router.replace` (a soft navigation re-ran the interceptor and mounted a
     second title modal on deep links).
 
+53. **`/titles` is the crawlable A–Z catalogue.** A server-rendered, plain-link list of every published
+    title (`/api/v1/public/catalog`, 60 per page, cached under the catalog version) with real `<a>`
+    pagination, a letter index, its own metadata and `ItemList` JSON-LD. It is linked from the landing
+    page and the public footer, listed in the sitemap (every page), and signed-in viewers are redirected to
+    `/categories` (like `/genre`). Every title is therefore two clicks from the home page, not only in the
+    sitemap. Title pages: `<title>` "Watch {Title} ({Year}) | {Type} | {Site}" ≤ 60 characters (dropping
+    the type, then the year, then "Watch"), the synopsis clipped to ~155 characters as the description
+    (else `seo.default_description`), exactly one `<h1>` (the home feed behind the modal demotes its
+    billboard heading), and Movie / TVSeries JSON-LD with `dateCreated`, cast, director, genres —
+    never `aggregateRating`, because thumbs are not star reviews. Metadata is never streamed
+    (`htmlLimitedBots: /.*/`), so every client finds it in `<head>`. Public genre pages merge both
+    translation modes (the sitemap lists a genre when it has any published title), and the sitemap /
+    catalogue fetches aren't cached in Next: the API already caches them under the catalog version, so
+    a title published a moment ago is listed at once.
+54. **Search-engine verification and IndexNow are DB config.** `seo.google_site_verification` and
+    `seo.bing_site_verification` (public) render through `metadata.verification`; `seo.alternate_name`
+    feeds the `WebSite` JSON-LD. `seo.indexnow_key` (not public) turns on IndexNow: the key file is
+    `/<key>.txt` (a rewrite to an API view that 404s for any other key), and a Title status signal queues
+    titles that become or stop being public; one Celery request goes out at most once a minute and is
+    audit-logged (`seo.indexnow`). Google ignores IndexNow and reads the sitemap's `lastmod`
+    (`updated_at`). The owner's checklist is `docs/SEO.md`.
+
 ## Plans & viewing-time limits
 
 34. **Plans differ only in viewing time.** A `billing.Plan` has a price, a period and daily / weekly /
@@ -256,8 +278,9 @@ Ambiguities in the build brief, the option chosen, and why.
 
 52. **The phone tab bar is always one tap away; everything else stacks around it.** Below `lg` (Studio:
     below `md`) the bottom tab bar is `fixed` and its height is `--tabbar-h`
-    (`calc(64px + env(safe-area-inset-bottom))`, set on `:root` only while a `[data-tabbar]` exists, `0`
-    on desktop and while the on-screen keyboard is up). The rules:
+    (`calc(64px + env(safe-area-inset-bottom))`, set on `:root` by a `<style>` the bar renders — so only
+    while a bar exists, server-side, and without a `:root:has()` rule that Chrome re-checks on every DOM
+    change — `0` on desktop and while the on-screen keyboard is up). The rules:
     * **Stacking.** The title modal (z 80/81) stops at `bottom: var(--tabbar-h)` and renders its own copy of
       the tab bar inside the dialog, so it is focusable and tappable there (a modal dialog makes the rest
       of the page inert); tapping a tab navigates and the `@modal` catch-all clears the modal; Escape and
