@@ -328,11 +328,11 @@ function IntentResumer() {
     [queryClient],
   );
 
-  // One-shot messages carried across a full page load (welcome, plan changes…).
+  // One-shot messages carried out of the auth flow (welcome, plan changes…), on arrival.
   useEffect(() => {
     const message = takeFlash();
     if (message) toast({ message, tone: "success" }, 4000);
-  }, [toast]);
+  }, [toast, pathname]);
 
   useEffect(() => {
     if (status !== "authenticated") return;

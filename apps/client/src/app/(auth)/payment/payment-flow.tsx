@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
 import { NetworkChip, PhoneField, phoneForApi } from "@/components/verify/phone-field";
-import { goAfterAuth } from "@/lib/after-auth";
+import { useGoAfterAuth } from "@/lib/after-auth";
 import { api } from "@/lib/api";
 import { readCheckout, stepHref } from "@/lib/checkout";
 import { setFlash } from "@/lib/flash";
@@ -39,6 +39,7 @@ type Stage =
  * member came for.
  */
 export function PaymentFlow() {
+  const goAfterAuth = useGoAfterAuth();
   const params = useSearchParams();
   const ctx = readCheckout(params);
   const router = useRouter();

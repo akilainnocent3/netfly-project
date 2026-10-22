@@ -12,7 +12,7 @@ class ImageAsset(models.Model):
         BACKDROP = "backdrop"  # 16:9
         LOGO = "logo"  # transparent title art
         THUMBNAIL = "thumbnail"  # 16:9 episode stills
-        ARTWORK = "artwork"  # category tiles (16:9)
+        ARTWORK = "artwork"  # category tiles (13
 
     class Status(models.TextChoices):
         PROCESSING = "processing"

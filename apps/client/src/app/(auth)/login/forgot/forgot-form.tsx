@@ -10,7 +10,7 @@ import { useConfig } from "@/components/providers/config";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { CodeInput } from "@/components/verify/code-input";
-import { goAfterAuth } from "@/lib/after-auth";
+import { useGoAfterAuth } from "@/lib/after-auth";
 import { api } from "@/lib/api";
 import { formatShortCountdown } from "@/lib/usage-format";
 import { setFlash } from "@/lib/flash";
@@ -24,6 +24,7 @@ const RESEND_SECONDS = 60;
  * same whether or not an account matched, so nobody can probe who has an account.
  */
 export function ForgotForm() {
+  const goAfterAuth = useGoAfterAuth();
   const config = useConfig();
   const next = safeNext(useSearchParams().get("next"));
   const { signIn } = useAuth();

@@ -7,7 +7,7 @@ import { ChevronDown, Search, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Logo } from "../brand/logo";
 import { useAuth } from "../providers/auth";
 import { Button, IconButton } from "../ui/button";
@@ -45,9 +45,15 @@ export function navFor(signedIn: boolean) {
   return signedIn ? NAV : NAV.filter((item) => item.href !== "/my-list");
 }
 
+const noopSubscribe = () => () => {};
+
 export function Header() {
   const pathname = usePathname();
-  const { status } = useAuth();
+  // The header hydrates late (inside a Suspense boundary), often after the session refresh has
+  // settled: render what the server saw ("loading") until hydration is done, then the real status.
+  const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
+  const auth = useAuth();
+  const status = hydrated ? auth.status : "loading";
   const nav = navFor(status !== "anonymous");
   const [solid, setSolid] = useState(false);
   useEffect(() => {

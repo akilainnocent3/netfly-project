@@ -88,8 +88,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={fontVariables} style={style} suppressHydrationWarning>
       <head>
+        {/* Browsers hide nonce values from the DOM after parsing, so the client always sees "". */}
         <script
           nonce={requestHeaders.get("x-nonce") ?? undefined}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: introBoot }}
         />
       </head>

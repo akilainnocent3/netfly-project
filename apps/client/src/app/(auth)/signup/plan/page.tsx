@@ -9,7 +9,7 @@ import { PlanPicker, priceLabel } from "@/components/billing/plan-picker";
 import { useConfig } from "@/components/providers/config";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { goAfterAuth } from "@/lib/after-auth";
+import { useGoAfterAuth } from "@/lib/after-auth";
 import { api } from "@/lib/api";
 import { setFlash } from "@/lib/flash";
 import { useMembership, usePlans } from "@/lib/queries";
@@ -21,6 +21,7 @@ import { safeNext } from "@/lib/safe-next";
  * Also opened from Account → Change plan (`?from=account`).
  */
 export default function PlanPage() {
+  const goAfterAuth = useGoAfterAuth();
   const params = useSearchParams();
   const fromAccount = params.get("from") === "account";
   const next = safeNext(params.get("next"), fromAccount ? "/account/membership" : "/browse");

@@ -9,7 +9,7 @@ import { useAuth } from "@/components/providers/auth";
 import { useConfig } from "@/components/providers/config";
 import { Button } from "@/components/ui/button";
 import { LightField } from "@/components/ui/light-field";
-import { goAfterAuth } from "@/lib/after-auth";
+import { useGoAfterAuth } from "@/lib/after-auth";
 import { api } from "@/lib/api";
 import { safeNext } from "@/lib/safe-next";
 import { clearSignupDraft, useSignupDraft } from "../draft";
@@ -17,6 +17,7 @@ import { clearSignupDraft, useSignupDraft } from "../draft";
 const BAR = ["bg-[#e50914]", "bg-[#e87c03]", "bg-[#d9a400]", "bg-[#5aa02c]", "bg-[#2f9e44]"];
 
 export default function SignupPasswordStep() {
+  const goAfterAuth = useGoAfterAuth();
   const router = useRouter();
   const config = useConfig();
   const draft = useSignupDraft();

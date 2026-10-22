@@ -1,4 +1,4 @@
-/** One-shot messages that survive a full page load (e.g. "Welcome to NETFLY" after signup). */
+/** One-shot messages shown on the next page (e.g. "Welcome to NETFLY" after signup). */
 const KEY = "netfly-flash";
 
 export function setFlash(message: string): void {

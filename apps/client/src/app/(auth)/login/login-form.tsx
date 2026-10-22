@@ -10,7 +10,7 @@ import { useAuth } from "@/components/providers/auth";
 import { useConfig } from "@/components/providers/config";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
-import { goAfterAuth } from "@/lib/after-auth";
+import { useGoAfterAuth } from "@/lib/after-auth";
 import { api } from "@/lib/api";
 import { safeNext } from "@/lib/safe-next";
 
@@ -19,6 +19,7 @@ import { safeNext } from "@/lib/safe-next";
  * Submits only on the button or Enter — never on its own.
  */
 export function LoginForm() {
+  const goAfterAuth = useGoAfterAuth();
   const config = useConfig();
   const rawNext = useSearchParams().get("next");
   const next = safeNext(rawNext);
