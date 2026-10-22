@@ -51,7 +51,7 @@ function SearchScreen() {
   const stale = results.isPlaceholderData;
 
   return (
-    <div className="page-fade px-[max(4vw,16px)] pt-[calc(var(--header-h)+env(safe-area-inset-top)+24px)] pb-28 lg:pb-16">
+    <div className="page-fade pb-tabbar px-[max(4vw,16px)] pt-[calc(var(--header-h)+env(safe-area-inset-top)+24px)]">
       {!desktop ? <MobileSearchInput /> : null}
       {!query ? (
         desktop ? (
@@ -167,7 +167,7 @@ function MobileSearchInput() {
         enterKeyHint="search"
         placeholder="Search shows, movies…"
         aria-label="Search"
-        className="text-body min-w-0 flex-1 bg-transparent text-white outline-none placeholder:text-[#b3b3b3] focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
+        className="text-body min-w-0 flex-1 self-stretch bg-transparent text-white outline-none placeholder:text-[#b3b3b3] focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
       />
       {value ? (
         <IconButton variant="ghost" size="sm" label="Clear search" onClick={() => setValue("")}>

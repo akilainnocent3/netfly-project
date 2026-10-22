@@ -29,7 +29,7 @@ export function NewAndPopular() {
   const data = useNewAndPopular();
 
   return (
-    <div className="page-fade px-[max(4vw,16px)] pt-[calc(var(--header-h)+env(safe-area-inset-top)+20px)] pb-28 lg:pb-16">
+    <div className="page-fade pb-tabbar px-[max(4vw,16px)] pt-[calc(var(--header-h)+env(safe-area-inset-top)+20px)]">
       <h1 className="text-h1 mb-5 font-bold">New &amp; Popular</h1>
       <div
         role="tablist"

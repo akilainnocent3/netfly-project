@@ -55,6 +55,7 @@ import { EpisodeDrawer } from "./episode-drawer";
 import { IntroPreroll } from "./intro-preroll";
 import { EndScreen, NextEpisodeCard, StillWatching } from "./overlays";
 import { Scrubber } from "./scrubber";
+import { canGoBack } from "../ui/back-button";
 
 const QUALITY_KEY = "netfly-quality";
 const AUTOPLAY_COUNT_KEY = "netfly-autoplay-chain";
@@ -721,10 +722,14 @@ export function Player({ info, autoplayed }: { info: PlaybackInfo; autoplayed: b
         <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/80 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
         <div
-          className="absolute top-0 right-0 left-0 flex items-center gap-4 px-[3vw] pt-[max(env(safe-area-inset-top),20px)]"
+          className="absolute top-0 right-0 left-0 flex items-center gap-4 pt-[max(env(safe-area-inset-top),20px)] pr-[max(3vw,env(safe-area-inset-right))] pl-[max(3vw,env(safe-area-inset-left))]"
           onPointerUp={(e) => e.stopPropagation()}
         >
-          <PlayerButton label="Back" onClick={() => router.push(exitHref)}>
+          {/* Back to wherever the viewer came from (else the title); 44 px, inside the safe area. */}
+          <PlayerButton
+            label="Back"
+            onClick={() => (canGoBack() ? router.back() : router.push(exitHref))}
+          >
             <ArrowLeft />
           </PlayerButton>
           {/* Phones keep the title up here; desktop centres it in the control bar. */}

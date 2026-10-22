@@ -33,7 +33,10 @@ export function Logo({
     <Link
       href={href}
       aria-label={`${name} home`}
-      className={cn("inline-flex shrink-0 items-center", className)}
+      className={cn(
+        "inline-flex shrink-0 items-center pointer-coarse:min-h-11 pointer-coarse:min-w-11",
+        className,
+      )}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

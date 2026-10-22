@@ -147,7 +147,7 @@ export default function TranscodingPage() {
                     <div className="w-56">
                       {active ? (
                         <>
-                          <div className="text-muted mb-1 flex justify-between text-[11.5px]">
+                          <div className="text-muted mb-1 flex justify-between text-[12px]">
                             <span className="truncate">{job.stage || "Waiting for a worker"}</span>
                             <span className="tabular">{Math.round(job.progress ?? 0)}%</span>
                           </div>
@@ -201,7 +201,7 @@ export default function TranscodingPage() {
                       {job.log && (
                         <div className="md:col-span-3">
                           <p className="text-muted mb-1">FFmpeg log (tail)</p>
-                          <pre className="bg-panel ring-line max-h-64 overflow-auto rounded-md p-2 font-mono text-[11px] leading-relaxed ring-1">
+                          <pre className="bg-panel ring-line max-h-64 overflow-auto rounded-md p-2 font-mono text-[12px] leading-relaxed ring-1">
                             {job.log}
                           </pre>
                         </div>

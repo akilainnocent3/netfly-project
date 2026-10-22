@@ -22,7 +22,7 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
       className="border-line bg-panel sticky top-0 hidden h-dvh shrink-0 flex-col border-r md:flex"
     >
       <div className="flex h-12 items-center gap-2 px-3.5">
-        <span className="bg-accent text-accent-fg grid size-6 shrink-0 place-items-center rounded-md text-[11px] font-black">
+        <span className="bg-accent text-accent-fg grid size-6 shrink-0 place-items-center rounded-md text-[12px] font-black">
           {name.slice(0, 1)}
         </span>
         {!collapsed && (
@@ -38,7 +38,7 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
           return (
             <div key={group.section}>
               {!collapsed && (
-                <p className="text-subtle px-2 pb-1 text-[11px] font-medium tracking-wider uppercase">
+                <p className="text-subtle px-2 pb-1 text-[12px] font-medium tracking-wider uppercase">
                   {group.section}
                 </p>
               )}

@@ -13,6 +13,7 @@ import {
 } from "@/lib/queries";
 import type { TitleCard } from "@/lib/types";
 import { IconButton } from "../ui/button";
+import { tabBarInset } from "./tab-bar";
 
 const ITEM =
   "text-meta flex h-10 cursor-pointer items-center gap-3 rounded px-3 text-white/90 outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-white/10";
@@ -63,6 +64,7 @@ export function ContinueMenu({
         <DropdownMenu.Content
           align="end"
           sideOffset={6}
+          collisionPadding={{ bottom: tabBarInset() + 8, top: 8 }}
           onClick={(e) => e.stopPropagation()}
           className="z-[90] w-56 rounded-md border border-white/10 bg-[#232323] p-1.5 shadow-2xl"
         >

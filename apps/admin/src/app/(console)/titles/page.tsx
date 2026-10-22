@@ -246,21 +246,23 @@ function TitlesTable() {
       </div>
 
       <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="relative overflow-x-auto">
           <table className="w-full min-w-[860px] text-left">
             <thead className="border-line bg-raised/50 text-muted border-b text-[12px]">
               <tr>
                 <th className="w-10 px-3 py-2">
                   {writable && (
-                    <input
-                      type="checkbox"
-                      aria-label="Select all"
-                      checked={allSelected}
-                      onChange={() =>
-                        setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)))
-                      }
-                      className="accent-[var(--accent)]"
-                    />
+                    <label className="-m-2 grid size-8 place-items-center pointer-coarse:size-11">
+                      <input
+                        type="checkbox"
+                        aria-label="Select all"
+                        checked={allSelected}
+                        onChange={() =>
+                          setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.id)))
+                        }
+                        className="accent-[var(--accent)]"
+                      />
+                    </label>
                   )}
                 </th>
                 <th className="px-2 py-2 font-medium">Title</th>
@@ -297,20 +299,22 @@ function TitlesTable() {
                 >
                   <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
                     {writable && (
-                      <input
-                        type="checkbox"
-                        aria-label={`Select ${row.title}`}
-                        checked={selected.has(row.id)}
-                        onChange={() =>
-                          setSelected((s) => {
-                            const next = new Set(s);
-                            if (next.has(row.id)) next.delete(row.id);
-                            else next.add(row.id);
-                            return next;
-                          })
-                        }
-                        className="accent-[var(--accent)]"
-                      />
+                      <label className="-m-2 grid size-8 place-items-center pointer-coarse:size-11">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${row.title}`}
+                          checked={selected.has(row.id)}
+                          onChange={() =>
+                            setSelected((s) => {
+                              const next = new Set(s);
+                              if (next.has(row.id)) next.delete(row.id);
+                              else next.add(row.id);
+                              return next;
+                            })
+                          }
+                          className="accent-[var(--accent)]"
+                        />
+                      </label>
                     )}
                   </td>
                   <td className="px-2 py-2">

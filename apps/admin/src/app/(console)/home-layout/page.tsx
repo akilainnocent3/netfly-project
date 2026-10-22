@@ -717,7 +717,7 @@ function LivePreview() {
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
           <div className="absolute bottom-4 left-4">
-            <p className="text-[11px] tracking-widest text-white/60 uppercase">Billboard</p>
+            <p className="text-[12px] tracking-widest text-white/60 uppercase">Billboard</p>
             <p className="text-[18px] font-black uppercase">
               {hero?.title_detail.title ?? "Auto-featured"}
             </p>

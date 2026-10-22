@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/components/providers/auth";
 import { UploadDock } from "@/components/catalog/upload-dock";
 import { CommandPalette } from "@/components/shell/command-palette";
+import { MobileNav } from "@/components/shell/mobile-nav";
 import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
 import { Skeleton } from "@/components/ui/primitives";
@@ -50,10 +51,13 @@ export default function ConsoleLayout({ children }: { children: React.ReactNode 
       <Sidebar collapsed={collapsed} onToggle={toggle} />
       <div className="min-w-0 flex-1">
         <Topbar onOpenPalette={() => setPalette(true)} />
-        <main className="mx-auto w-full max-w-[1400px] px-4 py-6 md:px-6">{children}</main>
+        <main className="pb-tabbar mx-auto w-full max-w-[1400px] px-4 pt-6 md:px-6">
+          {children}
+        </main>
       </div>
       <CommandPalette open={palette} onOpenChange={setPalette} />
       <UploadDock />
+      <MobileNav />
     </div>
   );
 }

@@ -260,7 +260,8 @@ test("Studio: Settings has the usage, email, SMS, payments and test-mode groups"
     await expect(page.getByText(check, { exact: false }).first()).toBeVisible();
     if (group === "Payments (Snippe)") {
       await page.getByRole("button", { name: "Show webhook URL" }).click();
-      await expect(page.getByText(/\/api\/v1\/payments\/webhook\/snippe/)).toBeVisible();
+      // The URL itself (the key's description mentions the same path as an example).
+      await expect(page.locator("code", { hasText: /\/api\/v1\/payments\/webhook\/snippe/ })).toBeVisible();
     }
     await page.screenshot({ path: `../docs/screenshots/${file}.png`, fullPage: true });
   }

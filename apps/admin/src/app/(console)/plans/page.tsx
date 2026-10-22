@@ -116,103 +116,111 @@ export default function PlansPage() {
         }
       />
       <Card className="overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="border-line bg-raised/50 text-muted border-b text-[12px]">
-            <tr>
-              <th className="w-16 px-3 py-2 font-medium">
-                <span className="sr-only">Order</span>
-              </th>
-              <th className="px-2 py-2 font-medium">Plan</th>
-              <th className="px-2 py-2 font-medium">Price</th>
-              <th className="px-2 py-2 font-medium">Day · Week · Month</th>
-              <th className="px-2 py-2 text-right font-medium">Members</th>
-              <th className="w-24 px-3 py-2">
-                <span className="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className={cn("divide-line divide-y", reorder.pending && "opacity-60")}>
-            {plans.isPending &&
-              [0, 1, 2, 3].map((i) => (
-                <tr key={i}>
-                  <td colSpan={6} className="px-4 py-2">
-                    <Skeleton className="h-9" />
+        {/* Phones: the table scrolls inside its card, not the page. */}
+        <div className="relative overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left">
+            <thead className="border-line bg-raised/50 text-muted border-b text-[12px]">
+              <tr>
+                <th className="w-16 px-3 py-2 font-medium">
+                  <span className="sr-only">Order</span>
+                </th>
+                <th className="px-2 py-2 font-medium">Plan</th>
+                <th className="px-2 py-2 font-medium">Price</th>
+                <th className="px-2 py-2 font-medium">Day · Week · Month</th>
+                <th className="px-2 py-2 text-right font-medium">Members</th>
+                <th className="w-24 px-3 py-2">
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className={cn("divide-line divide-y", reorder.pending && "opacity-60")}>
+              {plans.isPending &&
+                [0, 1, 2, 3].map((i) => (
+                  <tr key={i}>
+                    <td colSpan={6} className="px-4 py-2">
+                      <Skeleton className="h-9" />
+                    </td>
+                  </tr>
+                ))}
+              {list.map((plan, i) => (
+                <tr key={plan.id} data-testid={`plan-row-${plan.slug}`}>
+                  <td className="px-3 py-2.5">
+                    {writable && (
+                      <div className="flex gap-0.5">
+                        <IconButton
+                          size="sm"
+                          label={`Move ${plan.name} up`}
+                          disabled={i === 0 || reorder.pending}
+                          onClick={() => move(i, -1)}
+                        >
+                          <ArrowUp className="size-3.5" />
+                        </IconButton>
+                        <IconButton
+                          size="sm"
+                          label={`Move ${plan.name} down`}
+                          disabled={i === list.length - 1 || reorder.pending}
+                          onClick={() => move(i, 1)}
+                        >
+                          <ArrowDown className="size-3.5" />
+                        </IconButton>
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-2 py-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        aria-hidden
+                        className="size-7 shrink-0 rounded-md"
+                        style={{ background: planGradient(plan.order ?? i) }}
+                      />
+                      <div className="min-w-0">
+                        <p className="flex flex-wrap items-center gap-1.5 font-medium">
+                          {plan.name}
+                          {plan.is_default && <Badge tone="accent">default</Badge>}
+                          {plan.is_free && <Badge tone="green">free</Badge>}
+                          {plan.trial_eligible && <Badge tone="blue">trial</Badge>}
+                          {plan.highlight_label && <Badge>{plan.highlight_label}</Badge>}
+                          {!plan.is_active && <Badge tone="red">inactive</Badge>}
+                        </p>
+                        <p className="text-muted truncate text-[12px]">
+                          {plan.tagline || plan.slug}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="tabular px-2 py-2.5 text-[13px]">{priceLabel(plan)}</td>
+                  <td className="tabular text-muted px-2 py-2.5 text-[13px]">
+                    {short(plan.daily_limit_minutes)} · {short(plan.weekly_limit_minutes)} ·{" "}
+                    {short(plan.monthly_limit_minutes)}
+                  </td>
+                  <td className="tabular px-2 py-2.5 text-right text-[13px]">
+                    {plan.subscribers.toLocaleString()}
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex justify-end gap-0.5">
+                      <IconButton
+                        label={`Edit ${plan.name}`}
+                        onClick={() => setEditing({ ...plan })}
+                      >
+                        <Pencil className="size-3.5" />
+                      </IconButton>
+                      {writable && (
+                        <IconButton
+                          tone="danger"
+                          label={`Delete ${plan.name}`}
+                          disabled={plan.is_default || plan.subscribers > 0}
+                          onClick={() => remove(plan)}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </IconButton>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
-            {list.map((plan, i) => (
-              <tr key={plan.id} data-testid={`plan-row-${plan.slug}`}>
-                <td className="px-3 py-2.5">
-                  {writable && (
-                    <div className="flex gap-0.5">
-                      <IconButton
-                        size="sm"
-                        label={`Move ${plan.name} up`}
-                        disabled={i === 0 || reorder.pending}
-                        onClick={() => move(i, -1)}
-                      >
-                        <ArrowUp className="size-3.5" />
-                      </IconButton>
-                      <IconButton
-                        size="sm"
-                        label={`Move ${plan.name} down`}
-                        disabled={i === list.length - 1 || reorder.pending}
-                        onClick={() => move(i, 1)}
-                      >
-                        <ArrowDown className="size-3.5" />
-                      </IconButton>
-                    </div>
-                  )}
-                </td>
-                <td className="px-2 py-2.5">
-                  <div className="flex items-center gap-2.5">
-                    <span
-                      aria-hidden
-                      className="size-7 shrink-0 rounded-md"
-                      style={{ background: planGradient(plan.order ?? i) }}
-                    />
-                    <div className="min-w-0">
-                      <p className="flex flex-wrap items-center gap-1.5 font-medium">
-                        {plan.name}
-                        {plan.is_default && <Badge tone="accent">default</Badge>}
-                        {plan.is_free && <Badge tone="green">free</Badge>}
-                        {plan.trial_eligible && <Badge tone="blue">trial</Badge>}
-                        {plan.highlight_label && <Badge>{plan.highlight_label}</Badge>}
-                        {!plan.is_active && <Badge tone="red">inactive</Badge>}
-                      </p>
-                      <p className="text-muted truncate text-[12px]">{plan.tagline || plan.slug}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="tabular px-2 py-2.5 text-[13px]">{priceLabel(plan)}</td>
-                <td className="tabular text-muted px-2 py-2.5 text-[13px]">
-                  {short(plan.daily_limit_minutes)} · {short(plan.weekly_limit_minutes)} ·{" "}
-                  {short(plan.monthly_limit_minutes)}
-                </td>
-                <td className="tabular px-2 py-2.5 text-right text-[13px]">
-                  {plan.subscribers.toLocaleString()}
-                </td>
-                <td className="px-3 py-2.5">
-                  <div className="flex justify-end gap-0.5">
-                    <IconButton label={`Edit ${plan.name}`} onClick={() => setEditing({ ...plan })}>
-                      <Pencil className="size-3.5" />
-                    </IconButton>
-                    {writable && (
-                      <IconButton
-                        tone="danger"
-                        label={`Delete ${plan.name}`}
-                        disabled={plan.is_default || plan.subscribers > 0}
-                        onClick={() => remove(plan)}
-                      >
-                        <Trash2 className="size-3.5" />
-                      </IconButton>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
         {plans.data?.length === 0 && (
           <Empty icon={<CreditCard className="size-8" />} title="No plans yet" />
         )}
@@ -276,7 +284,7 @@ function LimitInput({
           />
         </div>
         <span className="text-muted text-[12px]">m</span>
-        <label className="text-muted ml-auto flex items-center gap-1.5 text-[12px] whitespace-nowrap">
+        <label className="text-muted ml-auto flex items-center gap-1.5 text-[12px] whitespace-nowrap pointer-coarse:min-h-11">
           <input
             type="checkbox"
             checked={unlimited}
@@ -579,7 +587,7 @@ function PlanPreview({ plan }: { plan: Draft }) {
     <div className="rounded-xl bg-white p-3 text-[#333] [color-scheme:light]">
       <div className="relative rounded-2xl border-2 border-[#e50914] bg-white shadow-[0_8px_24px_rgb(0_0_0/0.18)]">
         {plan.highlight_label ? (
-          <span className="absolute top-0 right-0 left-0 rounded-t-[14px] bg-[#e6e6e6] py-1 text-center text-[11px] font-bold">
+          <span className="absolute top-0 right-0 left-0 rounded-t-[14px] bg-[#e6e6e6] py-1 text-center text-[12px] font-bold">
             {plan.highlight_label}
           </span>
         ) : null}
@@ -612,7 +620,7 @@ function PlanPreview({ plan }: { plan: Draft }) {
             ))}
         </dl>
       </div>
-      <p className="mt-3 text-center text-[11.5px] text-[#737373]">
+      <p className="mt-3 text-center text-[12px] text-[#737373]">
         {plan.is_active === false
           ? "Inactive: hidden from the plan picker."
           : "Shown to viewers as above."}
@@ -624,7 +632,7 @@ function PlanPreview({ plan }: { plan: Draft }) {
 function PreviewRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="border-b border-[#e6e6e6] py-2 last:border-b-0">
-      <dt className="text-[11.5px] text-[#737373]">{label}</dt>
+      <dt className="text-[12px] text-[#737373]">{label}</dt>
       <dd className="font-semibold">{children}</dd>
     </div>
   );

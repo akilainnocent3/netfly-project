@@ -2,6 +2,15 @@
 /* Brand loader + mark (one stylesheet for both apps; utilities still override it). */
 @import "@netfly/ui/logo-loader.css" layer(components);
 
+/* A grid without a column template (phones, before a breakpoint's grid-cols-*) gets one
+   shrinkable column, not an `auto` track that grows to its widest unbreakable content and pushes
+   the page sideways. Any grid-cols-* utility still wins (utilities layer). */
+@layer base {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* Runtime brand tokens are set on <html> from DB config (see layout.tsx); the
    values in :root are the defaults (and the fallback when config is unreachable). */
 @theme inline {
@@ -40,7 +49,7 @@
   --text-body--line-height: 1.5;
   --text-meta: 0.8125rem;
   --text-meta--line-height: 1.35;
-  --text-caption: 0.6875rem;
+  --text-caption: 0.75rem;
   --text-caption--line-height: 1.3;
   --text-card: clamp(0.75rem, 1.05vw, 1.0625rem);
   --text-card--line-height: 1.15;
@@ -140,6 +149,44 @@ html[data-intro] body::before {
   to {
     opacity: 0;
     visibility: hidden;
+  }
+}
+
+/* Phone tab bar (below lg). --tabbar-h is its height wherever one is on the page (also inside the
+   title modal), 0 otherwise, on desktop and while the on-screen keyboard is up (tab-bar.tsx sets
+   <html data-keyboard>). Pages end with `pb-tabbar`; floating UI adds it to its bottom offset. */
+:root {
+  --tabbar-h: 0px;
+}
+:root:has([data-tabbar]) {
+  --tabbar-h: calc(64px + env(safe-area-inset-bottom));
+}
+@media (width >= 64rem) {
+  :root:has([data-tabbar]) {
+    --tabbar-h: 0px;
+  }
+}
+:root[data-keyboard] {
+  --tabbar-h: 0px;
+}
+.tabbar {
+  padding-bottom: env(safe-area-inset-bottom);
+  transition:
+    transform 150ms ease,
+    opacity 150ms ease,
+    visibility 150ms;
+}
+:root[data-keyboard] .tabbar {
+  transform: translateY(100%);
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Bottom padding that clears the tab bar on phones (3rem of air above it) and 4rem on desktop. */
+@utility pb-tabbar {
+  padding-bottom: calc(var(--tabbar-h) + 3rem);
+  @media (width >= 64rem) {
+    padding-bottom: 4rem;
   }
 }
 

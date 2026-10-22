@@ -10,8 +10,10 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Logo } from "../brand/logo";
 import { useAuth } from "../providers/auth";
+import { BackButton } from "../ui/back-button";
 import { Button, IconButton } from "../ui/button";
 import { TranslationSwitcher } from "./translation-switcher";
+import { tabBarInset } from "./tab-bar";
 
 // The account menu (Radix) isn't needed for first paint: load it after hydration.
 const ProfileMenu = dynamic(() => import("./profile-menu").then((m) => m.ProfileMenu), {
@@ -47,8 +49,20 @@ export function navFor(signedIn: boolean) {
 
 const noopSubscribe = () => () => {};
 
+/** Nested pages: on phones the header leads with a back chevron (the tab bar does top-level jumps). */
+function isSubPage(pathname: string, query: string | null): boolean {
+  return (
+    /^\/(categories|title)\/[^/]+/.test(pathname) ||
+    pathname === "/account" ||
+    pathname.startsWith("/account/") ||
+    (pathname === "/search" && !!query)
+  );
+}
+
 export function Header() {
   const pathname = usePathname();
+  const params = useSearchParams();
+  const sub = isSubPage(pathname, params.get("q"));
   // The header hydrates late (inside a Suspense boundary), often after the session refresh has
   // settled: render what the server saw ("loading") until hydration is done, then the real status.
   const hydrated = useSyncExternalStore(
@@ -76,7 +90,8 @@ export function Header() {
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="relative flex h-[var(--header-h)] items-center gap-4 px-[max(4vw,16px)] xl:gap-7">
-        <Logo />
+        {sub && <BackButton className="md:hidden" />}
+        <Logo className={sub ? "max-md:hidden" : undefined} />
         <nav aria-label="Primary" className="hidden items-center gap-5 xl:flex">
           {nav.map((item) => (
             <Link
@@ -126,21 +141,26 @@ function MobileChips({ pathname }: { pathname: string }) {
   return (
     <nav
       aria-label="Browse by type"
-      className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-2.5 md:hidden"
+      className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-1 md:hidden"
     >
       {CHIPS.map((chip) => (
+        // A 44 px tap target around the 36 px chip.
         <Link
           key={chip.href}
           href={chip.href}
           aria-current={isActive(pathname, chip.href) ? "page" : undefined}
-          className={cn(
-            "text-meta inline-flex h-9 shrink-0 items-center rounded-full border px-4 font-semibold",
-            isActive(pathname, chip.href)
-              ? "border-white bg-white text-black"
-              : "border-white/50 text-white",
-          )}
+          className="group inline-flex h-11 shrink-0 items-center"
         >
-          {chip.label}
+          <span
+            className={cn(
+              "text-meta inline-flex h-9 items-center rounded-full border px-4 font-semibold",
+              isActive(pathname, chip.href)
+                ? "border-white bg-white text-black"
+                : "border-white/50 text-white",
+            )}
+          >
+            {chip.label}
+          </span>
         </Link>
       ))}
     </nav>
@@ -171,6 +191,7 @@ function CompactNav({ pathname, nav }: { pathname: string; nav: typeof NAV }) {
         <DropdownMenu.Content
           align="center"
           sideOffset={14}
+          collisionPadding={{ bottom: tabBarInset() + 8, top: 8 }}
           className="z-[70] w-60 border-t-2 border-white bg-black/90 py-2 text-center shadow-2xl"
         >
           {nav.map((item) => (

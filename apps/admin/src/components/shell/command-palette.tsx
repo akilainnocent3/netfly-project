@@ -77,7 +77,7 @@ export function CommandPalette({
           <Command
             shouldFilter
             label="Command palette"
-            className="[&_[cmdk-group-heading]]:text-subtle [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:uppercase"
+            className="[&_[cmdk-group-heading]]:text-subtle [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[12px] [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:uppercase"
           >
             <div className="border-line flex items-center gap-2 border-b px-3.5">
               <Search className="text-subtle size-4" />
@@ -87,7 +87,7 @@ export function CommandPalette({
                 placeholder="Jump to a page or search titles…"
                 className="placeholder:text-subtle h-12 flex-1 bg-transparent text-[14px] outline-none"
               />
-              <kbd className="border-line text-subtle rounded border px-1.5 text-[11px]">esc</kbd>
+              <kbd className="border-line text-subtle rounded border px-1.5 text-[12px]">esc</kbd>
             </div>
             <Command.List className="max-h-[360px] overflow-y-auto p-1.5">
               <Command.Empty className="text-muted px-3 py-8 text-center text-[13px]">

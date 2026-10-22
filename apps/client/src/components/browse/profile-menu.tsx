@@ -9,6 +9,7 @@ import { useAuth } from "../providers/auth";
 import { useProfiles } from "../providers/profile";
 import { Button } from "../ui/button";
 import { Pressable } from "../ui/pressable";
+import { tabBarInset } from "./tab-bar";
 
 const ITEM =
   "text-meta flex h-10 cursor-pointer items-center gap-3 px-3 text-white/85 outline-none data-[highlighted]:underline";
@@ -46,7 +47,8 @@ export function ProfileMenu() {
         <DropdownMenu.Content
           align="end"
           sideOffset={12}
-          className="z-[70] w-60 border border-white/15 bg-black/92 py-2 shadow-2xl backdrop-blur"
+          collisionPadding={{ bottom: tabBarInset() + 8, top: 8 }}
+          className="z-[70] max-h-[var(--radix-dropdown-menu-content-available-height)] w-60 overflow-y-auto border border-white/15 bg-black/92 py-2 shadow-2xl backdrop-blur"
         >
           {p.enabled ? (
             <>

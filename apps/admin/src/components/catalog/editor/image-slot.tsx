@@ -136,7 +136,7 @@ export function ImageSlot({
     <div>
       <div className="mb-1.5 flex items-baseline justify-between">
         <span className="text-[12.5px] font-medium">{label}</span>
-        {hint && <span className="text-subtle text-[11.5px]">{hint}</span>}
+        {hint && <span className="text-subtle text-[12px]">{hint}</span>}
       </div>
       <div
         onDragOver={(e) => {
@@ -179,7 +179,7 @@ export function ImageSlot({
           </div>
         )}
         {current?.status === "failed" && (
-          <div className="absolute inset-x-0 bottom-0 bg-red-600/90 px-2 py-1 text-[11.5px] text-white">
+          <div className="absolute inset-x-0 bottom-0 bg-red-600/90 px-2 py-1 text-[12px] text-white">
             Processing failed: {current.error}
           </div>
         )}
@@ -274,7 +274,7 @@ function PlacementPreview({
             <div key={i} className="aspect-[2/3] w-11 rounded bg-white/10" />
           ),
         )}
-        <span className="ml-1 self-center text-[11px] text-white/50">Row card</span>
+        <span className="ml-1 self-center text-[12px] text-white/50">Row card</span>
       </div>
     );
   }
@@ -289,7 +289,7 @@ function PlacementPreview({
           <span className="h-4 w-12 rounded bg-white/30" />
         </div>
       </div>
-      <span className="absolute top-2 right-2 rounded bg-black/50 px-1.5 text-[10px] text-white/70">
+      <span className="absolute top-2 right-2 rounded bg-black/50 px-1.5 text-[12px] text-white/70">
         Hero
       </span>
     </CropPreview>

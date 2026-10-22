@@ -76,7 +76,7 @@ export function PrioritySegmented({
             onClick={() => !active && onChange(level.value)}
             className={cn(
               "tabular inline-flex items-center gap-1 rounded font-medium transition-colors disabled:cursor-not-allowed",
-              size === "sm" ? "h-6 px-2 text-[11.5px]" : "h-7 px-2.5 text-[12.5px]",
+              size === "sm" ? "h-6 px-2 text-[12px]" : "h-7 px-2.5 text-[12.5px]",
               active
                 ? level.value > 0
                   ? "bg-emerald-500/15 text-emerald-700 shadow-sm dark:text-emerald-300"

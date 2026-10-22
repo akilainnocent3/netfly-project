@@ -5,10 +5,12 @@ import { m } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import type { TitlePage } from "@/lib/types";
+import { TabBar } from "../browse/tab-bar";
 import { TitleView } from "./title-view";
 
 /**
  * Title detail as a modal over the current page. Closing returns to the exact scroll position.
+ * Below `lg` it stops above the tab bar (`--tabbar-h`); tapping a tab closes it and navigates.
  * `inline` (deep links): rendered in place instead of a portal, with server data, so the page's
  * HTML already contains the title (what crawlers and no-JS visitors read).
  */
@@ -39,13 +41,13 @@ export function TitleModal({
         <m.div
           initial={inline ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-[2px]"
+          className="fixed inset-x-0 top-0 bottom-[var(--tabbar-h)] z-[80] bg-black/70 backdrop-blur-[2px]"
         />
       </Dialog.Overlay>
       <Dialog.Content
         ref={scrollRef}
         aria-describedby={undefined}
-        className="fixed inset-0 z-[81] overflow-y-auto overscroll-contain outline-none md:py-8"
+        className="fixed inset-x-0 top-0 bottom-[var(--tabbar-h)] z-[81] overflow-y-auto overscroll-contain outline-none md:py-8"
         onOpenAutoFocus={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
       >
@@ -69,6 +71,9 @@ export function TitleModal({
             />
           </m.div>
         </div>
+        {/* Phones: the tab bar stays one tap away. It's part of the dialog (focusable, not made
+            inert by it) and sits exactly over the page's own bar, which the modal stops above. */}
+        <TabBar inModal />
       </Dialog.Content>
     </>
   );

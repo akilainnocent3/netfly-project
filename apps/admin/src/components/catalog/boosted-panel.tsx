@@ -87,7 +87,7 @@ export function BoostedPanel({ readOnly }: { readOnly: boolean }) {
                 </Link>
                 <PriorityBadge boost={t.boost ?? 0} effective={t.effective_boost} />
                 {t.boost_ends_at && (
-                  <span className="text-subtle ml-2 text-[11.5px]">
+                  <span className="text-subtle ml-2 text-[12px]">
                     until {new Date(t.boost_ends_at).toLocaleDateString()}
                   </span>
                 )}

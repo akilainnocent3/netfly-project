@@ -295,7 +295,7 @@ function Stat({
         <Icon className="size-3.5" />
         {label}
         {live && (
-          <span className="ml-auto flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
+          <span className="ml-auto flex items-center gap-1 text-[12px] text-emerald-600 dark:text-emerald-400">
             <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" /> live
           </span>
         )}
@@ -329,7 +329,7 @@ function ChartCard({
     <Card className="p-4">
       <div className="mb-2 flex items-baseline justify-between">
         <p className="font-medium">{title}</p>
-        {note && <span className="text-subtle text-[11.5px]">{note}</span>}
+        {note && <span className="text-subtle text-[12px]">{note}</span>}
       </div>
       {loading ? <Skeleton className="h-[180px]" /> : children}
     </Card>

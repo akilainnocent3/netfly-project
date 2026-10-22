@@ -37,7 +37,7 @@ export function UploadDock() {
   }, [list]);
 
   return (
-    <div className="fixed bottom-4 left-4 z-[120] w-[340px] space-y-2 md:right-4 md:bottom-16 md:left-auto">
+    <div className="fixed bottom-[calc(var(--tabbar-h)+1rem)] left-4 z-[120] w-[min(340px,calc(100vw-2rem))] space-y-2 md:right-4 md:bottom-16 md:left-auto">
       <AnimatePresence initial={false}>
         {list.map((item) => {
           const pct = item.size ? Math.round((item.loaded / item.size) * 100) : 0;
@@ -59,7 +59,7 @@ export function UploadDock() {
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[12.5px] font-medium">{item.filename}</p>
-                  <p className="text-muted truncate text-[11.5px]">
+                  <p className="text-muted truncate text-[12px]">
                     {item.target.label} ·{" "}
                     {item.state === "done"
                       ? "Uploaded — transcoding queued"

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Logo } from "@/components/brand/logo";
+import { BackButton } from "@/components/ui/back-button";
 import { Markdown } from "@/components/ui/markdown";
 import { getPublicConfig } from "@/lib/server-config";
 import { siteUrl } from "@/lib/seo";
@@ -32,11 +34,17 @@ export default async function LegalPage({ params }: { params: Promise<{ slug: st
   const page = await load(slug);
   if (!page) notFound();
   return (
-    <main className="mx-auto max-w-3xl px-6 py-20">
-      <p className="text-muted text-meta">
-        Updated {new Date(page.updated_at).toLocaleDateString()}
-      </p>
-      <Markdown source={page.body_markdown} />
-    </main>
+    <>
+      <header className="mx-auto flex max-w-3xl items-center gap-2 px-6 pt-[max(16px,env(safe-area-inset-top))]">
+        <BackButton className="md:hidden" fallback="/" />
+        <Logo href="/" />
+      </header>
+      <main className="mx-auto max-w-3xl px-6 pt-10 pb-20">
+        <p className="text-muted text-meta">
+          Updated {new Date(page.updated_at).toLocaleDateString()}
+        </p>
+        <Markdown source={page.body_markdown} />
+      </main>
+    </>
   );
 }

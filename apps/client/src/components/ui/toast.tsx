@@ -35,7 +35,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
       <div
         aria-live="polite"
-        className="pointer-events-none fixed inset-x-0 bottom-24 z-[100] flex flex-col items-center gap-2 px-4 md:bottom-8"
+        className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--tabbar-h)+2rem)] z-[100] flex flex-col items-center gap-2 px-4"
       >
         <AnimatePresence initial={false}>
           {toasts.map((toast) => (

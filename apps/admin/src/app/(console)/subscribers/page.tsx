@@ -138,68 +138,71 @@ export default function SubscribersPage() {
         </Select>
       </div>
       <Card className="overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="border-line bg-raised/50 text-muted border-b text-[12px]">
-            <tr>
-              <th className="px-4 py-2 font-medium">Member</th>
-              <th className="px-2 py-2 font-medium">Plan</th>
-              <th className="px-2 py-2 font-medium">Status</th>
-              <th className="hidden px-2 py-2 font-medium md:table-cell">Renews / ends</th>
-              <th className="hidden px-4 py-2 text-right font-medium lg:table-cell">Contact</th>
-            </tr>
-          </thead>
-          <tbody className={cn("divide-line divide-y", subs.isPlaceholderData && "opacity-60")}>
-            {subs.isPending &&
-              [0, 1, 2, 3, 4].map((i) => (
-                <tr key={i}>
-                  <td colSpan={5} className="px-4 py-2">
-                    <Skeleton className="h-8" />
+        {/* Phones: the table scrolls inside its card, not the page. */}
+        <div className="relative overflow-x-auto">
+          <table className="w-full min-w-[820px] text-left">
+            <thead className="border-line bg-raised/50 text-muted border-b text-[12px]">
+              <tr>
+                <th className="px-4 py-2 font-medium">Member</th>
+                <th className="px-2 py-2 font-medium">Plan</th>
+                <th className="px-2 py-2 font-medium">Status</th>
+                <th className="hidden px-2 py-2 font-medium md:table-cell">Renews / ends</th>
+                <th className="hidden px-4 py-2 text-right font-medium lg:table-cell">Contact</th>
+              </tr>
+            </thead>
+            <tbody className={cn("divide-line divide-y", subs.isPlaceholderData && "opacity-60")}>
+              {subs.isPending &&
+                [0, 1, 2, 3, 4].map((i) => (
+                  <tr key={i}>
+                    <td colSpan={5} className="px-4 py-2">
+                      <Skeleton className="h-8" />
+                    </td>
+                  </tr>
+                ))}
+              {subs.data?.results.map((s) => (
+                <tr
+                  key={s.id}
+                  onClick={() => setSelected(s.id)}
+                  className="hover:bg-hover cursor-pointer"
+                  data-testid={`subscriber-${s.username}`}
+                >
+                  <td className="px-4 py-2.5">
+                    <button
+                      type="button"
+                      className="text-left font-medium hover:underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelected(s.id);
+                      }}
+                    >
+                      {s.full_name}
+                    </button>
+                    <p className="text-muted text-[12px]">
+                      @{s.username}
+                      {s.is_staff ? " · staff (no limits)" : ""}
+                    </p>
+                  </td>
+                  <td className="px-2 py-2.5 text-[13px]">{s.plan ?? "—"}</td>
+                  <td className="px-2 py-2.5">
+                    <Badge tone={STATUS_TONE[s.status] ?? "neutral"}>
+                      {s.status.replace("_", " ")}
+                    </Badge>
+                  </td>
+                  <td className="tabular text-muted hidden px-2 py-2.5 text-[12.5px] md:table-cell">
+                    {s.status === "trialing"
+                      ? `trial ends ${date(s.trial_end)}`
+                      : date(s.current_period_end)}
+                  </td>
+                  <td className="text-muted hidden px-4 py-2.5 text-right text-[12px] lg:table-cell">
+                    {[s.email_verified && s.email, s.phone_verified && s.phone]
+                      .filter(Boolean)
+                      .join(" · ") || "—"}
                   </td>
                 </tr>
               ))}
-            {subs.data?.results.map((s) => (
-              <tr
-                key={s.id}
-                onClick={() => setSelected(s.id)}
-                className="hover:bg-hover cursor-pointer"
-                data-testid={`subscriber-${s.username}`}
-              >
-                <td className="px-4 py-2.5">
-                  <button
-                    type="button"
-                    className="text-left font-medium hover:underline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelected(s.id);
-                    }}
-                  >
-                    {s.full_name}
-                  </button>
-                  <p className="text-muted text-[12px]">
-                    @{s.username}
-                    {s.is_staff ? " · staff (no limits)" : ""}
-                  </p>
-                </td>
-                <td className="px-2 py-2.5 text-[13px]">{s.plan ?? "—"}</td>
-                <td className="px-2 py-2.5">
-                  <Badge tone={STATUS_TONE[s.status] ?? "neutral"}>
-                    {s.status.replace("_", " ")}
-                  </Badge>
-                </td>
-                <td className="tabular text-muted hidden px-2 py-2.5 text-[12.5px] md:table-cell">
-                  {s.status === "trialing"
-                    ? `trial ends ${date(s.trial_end)}`
-                    : date(s.current_period_end)}
-                </td>
-                <td className="text-muted hidden px-4 py-2.5 text-right text-[12px] lg:table-cell">
-                  {[s.email_verified && s.email, s.phone_verified && s.phone]
-                    .filter(Boolean)
-                    .join(" · ") || "—"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
         {subs.data?.results.length === 0 && (
           <Empty icon={<Users className="size-8" />} title="No members match" />
         )}

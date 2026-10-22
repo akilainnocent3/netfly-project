@@ -273,7 +273,7 @@ function AssetStatus({
                 {showLog ? "Hide" : "Show"} FFmpeg log
               </button>
               {showLog && (
-                <pre className="bg-raised mt-2 max-h-56 overflow-auto rounded p-2 font-mono text-[11px] leading-relaxed">
+                <pre className="bg-raised mt-2 max-h-56 overflow-auto rounded p-2 font-mono text-[12px] leading-relaxed">
                   {asset.log}
                 </pre>
               )}
@@ -574,7 +574,7 @@ function MarkerEditor({
           ] as const
         ).map(([key, label]) => (
           <div key={key} className="bg-raised/60 rounded-md p-2">
-            <p className="text-muted text-[11.5px]">{label}</p>
+            <p className="text-muted text-[12px]">{label}</p>
             <p className="tabular font-medium">
               {marks[key] !== null ? formatDuration(marks[key]!) : "—"}
             </p>
@@ -604,7 +604,7 @@ function MarkerEditor({
             {marks[key] !== null && video && (
               <button
                 type="button"
-                className="text-accent mt-1 text-[11.5px] hover:underline"
+                className="text-accent mt-1 text-[12px] hover:underline"
                 onClick={() => {
                   video.currentTime = marks[key]!;
                 }}

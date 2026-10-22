@@ -18,7 +18,7 @@ export function Topbar({ onOpenPalette }: { onOpenPalette: () => void }) {
       >
         <Search className="size-3.5" />
         <span className="flex-1 text-left">Search or jump to…</span>
-        <kbd className="border-line rounded border px-1 text-[11px]">⌘K</kbd>
+        <kbd className="border-line rounded border px-1 text-[12px]">⌘K</kbd>
       </button>
       <div className="ml-auto flex items-center gap-1">
         <button
@@ -34,7 +34,7 @@ export function Topbar({ onOpenPalette }: { onOpenPalette: () => void }) {
             className="hover:bg-hover flex h-8 items-center gap-2 rounded-md px-1.5"
             aria-label="Account menu"
           >
-            <span className="bg-accent/15 text-accent grid size-6 place-items-center rounded-full text-[11px] font-semibold">
+            <span className="bg-accent/15 text-accent grid size-6 place-items-center rounded-full text-[12px] font-semibold">
               {user?.full_name.slice(0, 1).toUpperCase()}
             </span>
             <span className="hidden text-[13px] sm:inline">{user?.full_name}</span>

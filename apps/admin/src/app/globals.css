@@ -2,6 +2,42 @@
 /* Brand loader + mark, shared with the viewer app. */
 @import "@netfly/ui/logo-loader.css" layer(components);
 
+/* A grid without a column template (phones, before a breakpoint's grid-cols-*) gets one
+   shrinkable column, not an `auto` track that grows to its widest unbreakable content and pushes
+   the page sideways. Any grid-cols-* utility still wins (utilities layer). */
+@layer base {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* Studio is dense for mouse use; on touch screens every control is at least 44 × 44 px
+     (min-size beats the fixed h-8 / size-8 heights). Inline text links keep their size. */
+  @media (pointer: coarse) {
+    :where(
+      button,
+      select,
+      input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"]),
+      [role="button"],
+      [role="tab"],
+      [role="radio"],
+      [role="switch"],
+      a[class*="flex"],
+      a[class*="grid"]
+    ) {
+      min-height: 44px;
+    }
+    :where(
+      button,
+      [role="button"],
+      [role="tab"],
+      [role="radio"],
+      a[class*="flex"],
+      a[class*="grid"]
+    ) {
+      min-width: 44px;
+    }
+  }
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
@@ -75,6 +111,23 @@ body {
 .tabular {
   font-variant-numeric: tabular-nums;
 }
+/* Phone navigation (below md, where the sidebar is hidden): --tabbar-h is the bottom tab bar's
+   height (shell/mobile-nav.tsx); pages end with `pb-tabbar`, floating panels sit above it. */
+:root {
+  --tabbar-h: 0px;
+}
+:root:has([data-tabbar]) {
+  --tabbar-h: calc(64px + env(safe-area-inset-bottom));
+}
+@media (width >= 48rem) {
+  :root:has([data-tabbar]) {
+    --tabbar-h: 0px;
+  }
+}
+@utility pb-tabbar {
+  padding-bottom: calc(var(--tabbar-h) + 1.5rem);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

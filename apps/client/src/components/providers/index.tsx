@@ -8,6 +8,7 @@ import { AuthGateProvider } from "../auth/auth-gate";
 import { AuthProvider } from "./auth";
 import { ConfigProvider } from "./config";
 import { ProfileProvider } from "./profile";
+import { useNavigationDepth } from "../ui/back-button";
 import { OfflineBanner } from "../ui/offline-banner";
 import { ToastProvider } from "../ui/toast";
 
@@ -33,6 +34,8 @@ export function Providers({
         },
       }),
   );
+  // Lets back buttons know whether history "back" stays in the app.
+  useNavigationDepth();
   return (
     <ConfigProvider value={config}>
       <QueryClientProvider client={queryClient}>

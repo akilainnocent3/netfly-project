@@ -55,55 +55,58 @@ export default function UsersPage() {
         />
       </div>
       <Card className="overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="border-line bg-raised/50 text-muted border-b text-[12px]">
-            <tr>
-              <th className="px-4 py-2 font-medium">User</th>
-              <th className="px-2 py-2 font-medium">Status</th>
-              <th className="px-2 py-2 font-medium">Activity</th>
-              <th className="px-4 py-2 text-right font-medium">Joined</th>
-            </tr>
-          </thead>
-          <tbody className={cn("divide-line divide-y", users.isPlaceholderData && "opacity-60")}>
-            {users.isPending &&
-              [0, 1, 2, 3, 4].map((i) => (
-                <tr key={i}>
-                  <td colSpan={4} className="px-4 py-2">
-                    <Skeleton className="h-8" />
+        {/* Phones: the table scrolls inside its card, not the page. */}
+        <div className="relative overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left">
+            <thead className="border-line bg-raised/50 text-muted border-b text-[12px]">
+              <tr>
+                <th className="px-4 py-2 font-medium">User</th>
+                <th className="px-2 py-2 font-medium">Status</th>
+                <th className="px-2 py-2 font-medium">Activity</th>
+                <th className="px-4 py-2 text-right font-medium">Joined</th>
+              </tr>
+            </thead>
+            <tbody className={cn("divide-line divide-y", users.isPlaceholderData && "opacity-60")}>
+              {users.isPending &&
+                [0, 1, 2, 3, 4].map((i) => (
+                  <tr key={i}>
+                    <td colSpan={4} className="px-4 py-2">
+                      <Skeleton className="h-8" />
+                    </td>
+                  </tr>
+                ))}
+              {users.data?.results.map((u) => (
+                <tr
+                  key={u.id}
+                  onClick={() => setSelected(u.id)}
+                  className="hover:bg-hover cursor-pointer"
+                >
+                  <td className="px-4 py-2.5">
+                    <p className="font-medium">{u.full_name}</p>
+                    <p className="text-muted text-[12px]">@{u.username}</p>
+                  </td>
+                  <td className="px-2 py-2.5">
+                    <div className="flex gap-1">
+                      {u.is_active ? (
+                        <Badge tone="green">active</Badge>
+                      ) : (
+                        <Badge tone="red">disabled</Badge>
+                      )}
+                      {u.is_staff && <Badge tone="accent">{u.role?.replace("_", " ")}</Badge>}
+                    </div>
+                  </td>
+                  <td className="text-muted px-2 py-2.5 text-[12.5px]">
+                    {u.watch_count} watched · {u.rating_count} rated
+                    {u.last_seen ? ` · seen ${new Date(u.last_seen).toLocaleDateString()}` : ""}
+                  </td>
+                  <td className="tabular text-muted px-4 py-2.5 text-right text-[12px]">
+                    {new Date(u.created_at).toLocaleDateString()}
                   </td>
                 </tr>
               ))}
-            {users.data?.results.map((u) => (
-              <tr
-                key={u.id}
-                onClick={() => setSelected(u.id)}
-                className="hover:bg-hover cursor-pointer"
-              >
-                <td className="px-4 py-2.5">
-                  <p className="font-medium">{u.full_name}</p>
-                  <p className="text-muted text-[12px]">@{u.username}</p>
-                </td>
-                <td className="px-2 py-2.5">
-                  <div className="flex gap-1">
-                    {u.is_active ? (
-                      <Badge tone="green">active</Badge>
-                    ) : (
-                      <Badge tone="red">disabled</Badge>
-                    )}
-                    {u.is_staff && <Badge tone="accent">{u.role?.replace("_", " ")}</Badge>}
-                  </div>
-                </td>
-                <td className="text-muted px-2 py-2.5 text-[12.5px]">
-                  {u.watch_count} watched · {u.rating_count} rated
-                  {u.last_seen ? ` · seen ${new Date(u.last_seen).toLocaleDateString()}` : ""}
-                </td>
-                <td className="tabular text-muted px-4 py-2.5 text-right text-[12px]">
-                  {new Date(u.created_at).toLocaleDateString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
         {users.data?.results.length === 0 && (
           <Empty icon={<Users className="size-8" />} title="No users found" />
         )}
@@ -263,7 +266,7 @@ function UserDrawer({ id, onClose }: { id: number | null; onClose: () => void })
                             style={{ width: `${(h.completed ? 1 : h.progress) * 100}%` }}
                           />
                         </div>
-                        <span className="text-subtle w-20 text-right text-[11.5px]">
+                        <span className="text-subtle w-20 text-right text-[12px]">
                           {new Date(h.updated_at).toLocaleDateString()}
                         </span>
                       </li>
@@ -292,7 +295,7 @@ function UserDrawer({ id, onClose }: { id: number | null; onClose: () => void })
                           />
                         )}
                         <span className="flex-1 truncate">{r.title}</span>
-                        <span className="text-subtle text-[11.5px]">
+                        <span className="text-subtle text-[12px]">
                           {r.value === 2 ? "Loves it" : r.value === 1 ? "Likes it" : "Not for them"}
                         </span>
                       </li>

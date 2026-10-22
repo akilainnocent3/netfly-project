@@ -99,7 +99,7 @@ export const PhoneField = forwardRef<
                 </option>
               ))}
             </select>
-            <span aria-hidden className="pointer-events-none absolute right-1.5 text-[10px]">
+            <span aria-hidden className="text-caption pointer-events-none absolute right-1.5">
               ▼
             </span>
           </label>

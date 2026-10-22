@@ -7,6 +7,8 @@ const api = process.env.NETFLY_API_URL ?? "http://localhost:8000";
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // The dev-tools badge floats bottom-left, over the phone tab bar (and e2e taps on it).
+  devIndicators: false,
   output: "standalone",
   // Trace from the monorepo root so workspace packages land in the standalone bundle.
   outputFileTracingRoot: path.join(__dirname, "../../"),

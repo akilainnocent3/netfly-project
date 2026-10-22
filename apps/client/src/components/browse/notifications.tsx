@@ -8,6 +8,7 @@ import { useAuth } from "../providers/auth";
 import { IconButton } from "../ui/button";
 import { NetflyImage } from "../ui/netfly-image";
 import { Skeleton, SkeletonArea } from "../ui/skeleton";
+import { tabBarInset } from "./tab-bar";
 
 function ago(iso: string): string {
   const minutes = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 60_000));
@@ -53,7 +54,8 @@ export function NotificationsBell() {
         <DropdownMenu.Content
           align="end"
           sideOffset={12}
-          className="z-[70] max-h-[min(70vh,560px)] w-[min(400px,calc(100vw-24px))] overflow-y-auto border-t-2 border-white bg-black/92 shadow-2xl backdrop-blur"
+          collisionPadding={{ bottom: tabBarInset() + 8, top: 8 }}
+          className="z-[70] max-h-[min(70dvh,560px,var(--radix-dropdown-menu-content-available-height))] w-[min(400px,calc(100vw-24px))] overflow-y-auto border-t-2 border-white bg-black/92 shadow-2xl backdrop-blur"
         >
           {list.isPending ? (
             <SkeletonArea className="p-4" label="Loading notifications">

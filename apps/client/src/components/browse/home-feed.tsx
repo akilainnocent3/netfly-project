@@ -40,7 +40,7 @@ export function HomeFeed({
 
   const rows = home.data?.pages.flatMap((p) => p.rows) ?? [];
   return (
-    <div className="page-fade pb-28 lg:pb-16">
+    <div className="page-fade pb-tabbar">
       {heading && (
         <h1 className="text-h1 absolute top-[calc(var(--header-h)+env(safe-area-inset-top)+8px)] left-[max(4vw,16px)] z-20 font-bold max-md:sr-only">
           {heading}

@@ -137,7 +137,7 @@ export default function AuditPage() {
                   </span>
                 </button>
                 {open === log.id && (
-                  <pre className="bg-raised mx-4 mb-3 max-h-64 overflow-auto rounded-md p-3 font-mono text-[11.5px]">
+                  <pre className="bg-raised mx-4 mb-3 max-h-64 overflow-auto rounded-md p-3 font-mono text-[12px]">
                     {JSON.stringify(log.changes, null, 2)}
                     {log.ip_address ? `\n\nfrom ${log.ip_address}` : ""}
                   </pre>

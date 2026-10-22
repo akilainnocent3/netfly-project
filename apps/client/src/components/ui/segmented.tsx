@@ -33,7 +33,8 @@ export function SegmentedControl<V extends string>({
       role="radiogroup"
       aria-label={label}
       className={cn(
-        "relative flex items-center rounded-full border border-white/12 bg-black/45 p-1 backdrop-blur-xl",
+        // Touch: the buttons take the full height (44 px targets); the pill keeps its look.
+        "relative flex items-center rounded-full border border-white/12 bg-black/45 p-1 backdrop-blur-xl pointer-coarse:py-0",
         className,
       )}
       onKeyDown={(e) => {
@@ -56,7 +57,7 @@ export function SegmentedControl<V extends string>({
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(option.value)}
             className={cn(
-              "relative z-10 rounded-full font-semibold whitespace-nowrap transition-colors duration-150 pointer-coarse:min-h-9",
+              "relative z-10 rounded-full font-semibold whitespace-nowrap transition-colors duration-150 pointer-coarse:min-h-11",
               size === "sm" ? "text-meta px-3 py-1.5" : "text-body px-4 py-1.5",
               active
                 ? tone === "accent"
@@ -69,7 +70,7 @@ export function SegmentedControl<V extends string>({
               <m.span
                 layoutId={`segment-${id}`}
                 className={cn(
-                  "absolute inset-0 -z-10 rounded-full",
+                  "absolute inset-0 -z-10 rounded-full pointer-coarse:inset-y-1",
                   tone === "accent" ? "bg-accent" : "bg-white",
                 )}
                 transition={{ type: "spring", stiffness: 500, damping: 38 }}

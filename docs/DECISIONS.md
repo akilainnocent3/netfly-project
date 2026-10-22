@@ -252,6 +252,31 @@ Ambiguities in the build brief, the option chosen, and why.
       default); `decorative` (aria-hidden) inside a container that already has `aria-busy`. Reduced
       motion: no travelling light, draw-on or scaling; only a 2 s opacity pulse (0.6 ↔ 1).
 
+## Phone navigation
+
+52. **The phone tab bar is always one tap away; everything else stacks around it.** Below `lg` (Studio:
+    below `md`) the bottom tab bar is `fixed` and its height is `--tabbar-h`
+    (`calc(64px + env(safe-area-inset-bottom))`, set on `:root` only while a `[data-tabbar]` exists, `0`
+    on desktop and while the on-screen keyboard is up). The rules:
+    * **Stacking.** The title modal (z 80/81) stops at `bottom: var(--tabbar-h)` and renders its own copy of
+      the tab bar inside the dialog, so it is focusable and tappable there (a modal dialog makes the rest
+      of the page inert); tapping a tab navigates and the `@modal` catch-all clears the modal; Escape and
+      history back still close it. Pages end with `pb-tabbar`; toasts, the upload dock and dropdowns
+      (Radix `collisionPadding`) keep `--tabbar-h` clear. No ancestor of a tab bar may get `transform`,
+      `filter`, `perspective`, `contain: paint` or `will-change: transform` (that re-parents `fixed`);
+      `mobile.spec.ts` checks the bar is at the viewport bottom after scrolling to the end of each page.
+    * **Keyboard.** While a field has focus on a touch screen and the viewport is ≥ 150 px shorter than
+      usual (visual viewport, or with `interactive-widget=resizes-content` the layout viewport against its
+      tallest height for this screen orientation) the bar slides away in 150 ms.
+    * **Back.** Nested phone pages (category, account, search with a query, legal) lead with a 44 px back
+      chevron: history back when it stays in the app (client navigations are counted in the root
+      providers, or a same-origin referrer), else the parent route. The player's back works the same way.
+    * **Sizes.** Touch targets ≥ 44 × 44 px (Studio enforces it with one `pointer: coarse` rule instead of
+      per-component sizes), no text under 12 px, and a grid without a column template gets
+      `minmax(0, 1fr)` (an `auto` track grew to its widest content and pushed pages sideways).
+      Studio tables scroll inside their card (`relative` scroller, so absolutely positioned `sr-only`
+      labels can't escape it). The Next dev-tools badge is off: it sat on top of the tab bar.
+
 ## Resilience
 
 32. **Errors are contained where they happen:** each home row and the hero have their own error boundary

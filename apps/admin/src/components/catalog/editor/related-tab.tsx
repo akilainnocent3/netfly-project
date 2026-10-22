@@ -150,7 +150,7 @@ export function RelatedTab({ titleId, readOnly }: { titleId: number; readOnly: b
                   <Thumb image={t.poster} className="w-7" />
                   <span className="min-w-0 flex-1 truncate">{t.title}</span>
                   {linked.has(t.id) ? (
-                    <span className="text-subtle text-[11.5px]">linked</span>
+                    <span className="text-subtle text-[12px]">linked</span>
                   ) : adding === t.id ? (
                     <LazyLogoLoader size="sm" label="Linking" className="[--nf-size:14px]" />
                   ) : (

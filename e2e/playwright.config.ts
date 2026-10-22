@@ -24,13 +24,17 @@ export default defineConfig({
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"], channel, viewport: { width: 1440, height: 900 } }, testIgnore: /(mobile|profiles|priority)\.spec\.ts/ },
+    // Phones and a tablet (all below lg, so the tab bar shows). Device profiles run in Chromium.
     { name: "mobile", use: { ...devices["Pixel 7"] }, testMatch: /mobile\.spec\.ts/ },
+    { name: "mobile-iphone13", use: { ...devices["iPhone 13"], browserName: "chromium" }, testMatch: /mobile\.spec\.ts/ },
+    { name: "mobile-ipadmini", use: { ...devices["iPad Mini"], browserName: "chromium" }, testMatch: /mobile\.spec\.ts/ },
+    { name: "mobile-320", use: { ...devices["Pixel 7"], viewport: { width: 320, height: 640 } }, testMatch: /mobile\.spec\.ts/ },
     // Profiles flips a global flag (every viewer then sees the gate): run it after everything else.
     {
       name: "profiles",
       use: { ...devices["Desktop Chrome"], channel, viewport: { width: 1440, height: 900 } },
       testMatch: /profiles\.spec\.ts/,
-      dependencies: ["desktop", "mobile"],
+      dependencies: ["desktop", "mobile", "mobile-iphone13", "mobile-ipadmini", "mobile-320"],
     },
     // Boosts a title for everyone: also isolated, after profiles.
     {

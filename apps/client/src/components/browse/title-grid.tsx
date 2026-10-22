@@ -87,7 +87,7 @@ export function PageShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="px-[max(4vw,16px)] pt-[calc(var(--header-h)+28px)] pb-28 lg:pb-16">
+    <div className="pb-tabbar px-[max(4vw,16px)] pt-[calc(var(--header-h)+28px)]">
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-h1 font-black tracking-tight">{title}</h1>

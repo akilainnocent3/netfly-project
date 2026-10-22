@@ -50,7 +50,7 @@ export default function SettingsPage() {
         title="Settings"
         description="Every value here lives in the database and takes effect within a second — no redeploy."
       />
-      <div className="grid gap-5 lg:grid-cols-[200px_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[200px_minmax(0,1fr)]">
         <nav aria-label="Settings sections" className="lg:sticky lg:top-16 lg:self-start">
           <ul className="flex gap-1 overflow-x-auto lg:flex-col">
             {groups.isPending
@@ -165,7 +165,7 @@ function EntryRow({ entry }: { entry: Entry }) {
           {saving && <LazyLogoLoader size="sm" label="Saving" className="[--nf-size:14px]" />}
         </div>
         <p className="text-muted mt-0.5 text-[12.5px]">{entry.description}</p>
-        <code className="text-subtle mt-1 block text-[11px]">{entry.key}</code>
+        <code className="text-subtle mt-1 block text-[12px]">{entry.key}</code>
       </div>
       <div>
         <fieldset disabled={saving} aria-busy={saving}>
@@ -252,7 +252,7 @@ function Editor({
             onChange={(e) => setDraft(e.target.value)}
             onBlur={blur}
             aria-label={`${prettyKey(entry)} color`}
-            className="border-line bg-panel h-8 w-10 cursor-pointer rounded border p-0.5"
+            className="border-line bg-panel h-8 w-10 cursor-pointer rounded border p-0.5 pointer-coarse:w-11"
           />
           <div className="w-32 shrink-0">
             <Input
@@ -371,30 +371,32 @@ function JsonEditor({
       {parseError ? (
         <p className="mt-1 text-[12px] text-red-500">{parseError}</p>
       ) : ladder ? (
-        <table className="mt-2 w-full text-[12px]">
-          <thead className="text-muted">
-            <tr>
-              <th className="py-1 text-left font-medium">Rung</th>
-              <th className="text-left font-medium">Height</th>
-              <th className="text-left font-medium">Target</th>
-              <th className="text-left font-medium">Cap</th>
-              <th className="text-left font-medium">Codec</th>
-            </tr>
-          </thead>
-          <tbody className="tabular">
-            {ladder.map((r) => (
-              <tr key={r.name} className="border-line border-t">
-                <td className="py-1">{r.name}</td>
-                <td>{r.height}p</td>
-                <td>{(r.video_kbps / 1000).toFixed(1)} Mbps</td>
-                <td>{r.max_kbps ? `${(r.max_kbps / 1000).toFixed(1)} Mbps` : "—"}</td>
-                <td>{r.codec}</td>
+        <div className="relative mt-2 overflow-x-auto">
+          <table className="w-full min-w-[520px] text-[12px]">
+            <thead className="text-muted">
+              <tr>
+                <th className="py-1 text-left font-medium">Rung</th>
+                <th className="text-left font-medium">Height</th>
+                <th className="text-left font-medium">Target</th>
+                <th className="text-left font-medium">Cap</th>
+                <th className="text-left font-medium">Codec</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="tabular">
+              {ladder.map((r) => (
+                <tr key={r.name} className="border-line border-t">
+                  <td className="py-1">{r.name}</td>
+                  <td>{r.height}p</td>
+                  <td>{(r.video_kbps / 1000).toFixed(1)} Mbps</td>
+                  <td>{r.max_kbps ? `${(r.max_kbps / 1000).toFixed(1)} Mbps` : "—"}</td>
+                  <td>{r.codec}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : null}
-      <p className="text-subtle mt-1 text-[11.5px]">
+      <p className="text-subtle mt-1 text-[12px]">
         Validated against the schema when you leave the field.
         {entryKey === "transcoding.ladder"
           ? " New uploads use the new ladder; rungs above a source's height are skipped."
@@ -505,7 +507,7 @@ function HistoryButton({ entry }: { entry: Entry }) {
                     <p className="text-muted">
                       {new Date(h.created_at).toLocaleString()} · {h.actor ?? "system"}
                     </p>
-                    <p className="mt-0.5 font-mono text-[11.5px] break-all">
+                    <p className="mt-0.5 font-mono text-[12px] break-all">
                       {describeChange(change)}
                     </p>
                   </li>
