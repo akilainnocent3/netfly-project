@@ -3,7 +3,7 @@
 import { unwrap } from "@netfly/api-client";
 import { cn, formatBytes, formatDuration, LazyLogoLoader } from "@netfly/ui";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, Cpu, RotateCcw } from "lucide-react";
+import { CircleCheck, ChevronDown, Cpu, RotateCcw, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/components/providers/auth";
 import { useAction } from "@/components/ui/actions";
@@ -65,13 +65,42 @@ export default function TranscodingPage() {
     { success: "Queued again" },
   );
 
+  const toolchain = useQuery({
+    queryKey: ["videos", "toolchain"],
+    queryFn: () => unwrap(api.GET("/api/v1/admin/videos/toolchain")),
+    refetchInterval: 60_000,
+  });
+
   const s = stats.data;
+  const tc = toolchain.data;
   return (
     <>
       <PageHeader
         title="Transcoding"
         description="Live queue on the dedicated transcode workers. Updates every few seconds."
       />
+      <Card className="mb-3 flex items-center gap-2.5 px-3 py-2.5 text-[13px]">
+        {tc ? (
+          <>
+            {tc.state === "ok" ? (
+              <CircleCheck className="size-4 shrink-0 text-emerald-500" />
+            ) : (
+              <TriangleAlert className="size-4 shrink-0 text-red-500" />
+            )}
+            <p className="min-w-0 flex-1">
+              <span className="font-medium">Transcoding worker: </span>
+              <span className={cn(tc.state === "ok" ? "text-muted" : "text-red-500")}>
+                {tc.message}
+              </span>
+            </p>
+            <Badge tone={tc.state === "ok" ? "green" : "red"}>
+              {tc.state === "ok" ? "ready" : tc.state === "missing" ? "ffmpeg missing" : "offline"}
+            </Badge>
+          </>
+        ) : (
+          <Skeleton className="h-5 w-64" />
+        )}
+      </Card>
       <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-5">
         {(["transcoding", "queued", "uploading", "failed", "ready"] as const).map((k) => (
           <Card key={k} className="p-3">

@@ -1,10 +1,55 @@
 import logging
 
 from celery import shared_task
+from celery.signals import worker_ready
+from celery.worker.control import control_command
 
 from .models import ImageAsset
 
 logger = logging.getLogger(__name__)
+
+TRANSCODE_QUEUE = "transcode"
+
+
+def _consumes_transcode(consumer) -> bool:
+    task_consumer = getattr(consumer, "task_consumer", None)
+    return any(q.name == TRANSCODE_QUEUE for q in getattr(task_consumer, "queues", []))
+
+
+@worker_ready.connect
+def check_toolchain_on_start(sender=None, **_kwargs) -> None:
+    """Shout at startup if this worker takes video jobs but can't run FFmpeg."""
+    if not _consumes_transcode(sender):
+        return  # default-queue workers never transcode
+    from .transcode import toolchain
+
+    status = toolchain()
+    if status["ok"]:
+        logger.info(
+            "Transcoding toolchain ready: ffmpeg %s, ffprobe %s",
+            status["ffmpeg_version"],
+            status["ffprobe_version"],
+        )
+    else:
+        logger.error("%s (%s)", status["message"], status.get("log", ""))
+
+
+@control_command()
+def netfly_toolchain(state) -> dict:
+    """Studio's toolchain status. A control command, not a task: the worker's main process
+    answers it even while its pool is busy encoding, and no result backend is needed."""
+    if not _consumes_transcode(state.consumer):
+        return {"transcode": False}
+    from .transcode import toolchain
+
+    status = toolchain()
+    return {
+        "transcode": True,
+        "ok": status["ok"],
+        "ffmpeg_version": status["ffmpeg_version"],
+        "ffprobe_version": status["ffprobe_version"],
+        "message": status["message"],
+    }
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=10)
@@ -44,6 +89,22 @@ def transcode_asset(self, asset_id: str) -> None:
     if asset is None or not asset.source_key:
         return
     max_retries = config.get_int("transcoding.max_retries", 3)
+
+    try:
+        # Before downloading anything: a missing FFmpeg is the operator's to fix, not a retry.
+        tc.require_toolchain()
+    except tc.MissingToolchain as exc:
+        logger.error("Transcode %s can't start: %s (%s)", asset_id, exc, exc.log)
+        VideoAsset.objects.filter(pk=asset_id).update(
+            status=VideoAsset.Status.FAILED,
+            stage="Failed",
+            error=str(exc)[:2000],
+            log=exc.log,
+            attempts=asset.attempts + 1,
+            finished_at=timezone.now(),
+            updated_at=timezone.now(),
+        )
+        return
 
     stage_max = VideoAsset._meta.get_field("stage").max_length
 
@@ -172,4 +233,4 @@ def queue_transcode(asset) -> None:
         queued_at=timezone.now(),
         error="",
     )
-    transcode_asset.apply_async(args=[str(asset.pk)], queue="transcode")
+    transcode_asset.apply_async(args=[str(asset.pk)], queue=TRANSCODE_QUEUE)

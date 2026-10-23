@@ -100,6 +100,13 @@ pnpm seo:audit  # crawl from sitemap.xml as Googlebot (no JS): titles, canonical
 python scripts/brand/trace_logo.py && node scripts/brand/verify-logo.mjs   # only if the artwork changes
 node scripts/brand/brand-icons.mjs                                        # favicons, PWA icons, wordmark
 
+# Transcoding needs FFmpeg (ffmpeg + ffprobe) wherever a worker consumes the `transcode` queue.
+# Easiest: docker compose up worker-transcode (the image ships it). For a host-run worker install it:
+#   Debian/Ubuntu: sudo apt-get install -y ffmpeg      macOS: brew install ffmpeg
+#   Windows:       winget install Gyan.FFmpeg          (then open a new terminal so PATH updates)
+# Not on PATH? Set Settings → Transcoding → ffmpeg path / ffprobe path. Studio → Transcoding shows
+# whether a worker is running and can find FFmpeg.
+
 # Optional local S3 for media (moto): pip install "moto[server]" && moto_server -p 5005,
 # then set storage.s3.endpoint_url=http://localhost:5005 (+ bucket/keys) and run seed_demo --reset
 ```

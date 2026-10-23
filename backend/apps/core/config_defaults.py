@@ -633,6 +633,20 @@ KEYS: list[Key] = [
         "FFmpeg threads (0 = auto).",
         validation={"min": 0, "max": 64},
     ),
+    Key(
+        "transcoding.ffmpeg_path",
+        "string",
+        "",
+        "Full path to ffmpeg on the transcoding worker. Empty = find it on PATH.",
+        label="ffmpeg path",
+    ),
+    Key(
+        "transcoding.ffprobe_path",
+        "string",
+        "",
+        "Full path to ffprobe on the transcoding worker. Empty = find it on PATH.",
+        label="ffprobe path",
+    ),
     # ---- storage ------------------------------------------------------------
     Key("storage.s3.bucket", "string", "", "S3 bucket for all media.", label="Bucket"),
     Key("storage.s3.region", "string", "us-east-1", "AWS region of the bucket.", label="Region"),
@@ -819,6 +833,13 @@ KEYS: list[Key] = [
         "string",
         "120/min",
         "Upload API calls per staff user.",
+        validation=RATE_RE,
+    ),
+    Key(
+        "security.rate_toolchain_check",
+        "string",
+        "12/min",
+        "Transcoding-toolchain status checks per staff user.",
         validation=RATE_RE,
     ),
     Key(

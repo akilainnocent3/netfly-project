@@ -49,6 +49,16 @@ Ambiguities in the build brief, the option chosen, and why.
     signed S3/CDN URL. This keeps buckets private (S3 Block Public Access stays on) and needs no
     build-time image domain configuration, because the domain is DB config.
 
+55. **A missing transcoding toolchain is a permanent, operator-facing error, checked before any download.**
+    `transcode_asset` runs `ffmpeg -version` / `ffprobe -version` (cached per worker process once they
+    work) before touching S3. If either can't run, the asset fails at once with "FFmpeg isn't installed
+    on the transcoding worker …" — no retries with backoff, no multi-GB download, and never "This file
+    isn't a readable video", which would blame the upload for a server fault. The raw OS error stays in
+    the job log. Paths come from `PATH` or `transcoding.ffmpeg_path` / `transcoding.ffprobe_path`, not
+    from a new environment variable. Studio asks workers through a Celery remote-control command rather
+    than a task: the worker's main process answers even while its single pool slot is encoding, and no
+    result backend is needed.
+
 ## Product & UX
 
 13. **Admin tables use page numbers; viewer feeds use cursors.** Staff need totals and page jumps; viewers get

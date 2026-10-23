@@ -38,6 +38,62 @@ class TranscodeError(RuntimeError):
         self.permanent = permanent
 
 
+class MissingToolchain(TranscodeError):
+    """FFmpeg/ffprobe can't be run on this worker. Permanent until an operator fixes the host."""
+
+    def __init__(self, name: str, log: str = ""):
+        setting = f"Settings → Transcoding → {name} path"
+        super().__init__(
+            f"FFmpeg isn't installed on the transcoding worker ({name} not found). "
+            f"Install FFmpeg on the worker, or set {setting}, then press Retry.",
+            log,
+            permanent=True,
+        )
+        self.tool = name
+
+
+def tool(name: str) -> str:
+    """Executable for `ffmpeg` / `ffprobe`: the configured path, else whatever PATH resolves."""
+    configured = config.get_str(f"transcoding.{name}_path").strip()
+    if configured:
+        return configured
+    return shutil.which(name) or name
+
+
+_toolchain_cache: dict[tuple[str, str], dict] = {}
+
+
+def toolchain() -> dict:
+    """Resolve and run `-version` for both tools.
+
+    A working toolchain is cached per process (keyed by the resolved paths). A broken one is
+    re-checked every time — it fails instantly — so installing FFmpeg needs no worker restart.
+    """
+    paths = (tool("ffmpeg"), tool("ffprobe"))
+    cached = _toolchain_cache.get(paths)
+    if cached is not None:
+        return cached
+    result: dict = {"ok": True, "ffmpeg_version": "", "ffprobe_version": "", "message": ""}
+    for name, path in zip(("ffmpeg", "ffprobe"), paths, strict=True):
+        try:
+            first = run([path, "-version"], timeout=15).splitlines()[0]
+            # "ffmpeg version 6.1.1-3ubuntu5 Copyright …" → "6.1.1-3ubuntu5"
+            result[f"{name}_version"] = first.split(" version ", 1)[-1].split(" ", 1)[0]
+        except (TranscodeError, subprocess.TimeoutExpired, IndexError) as exc:
+            missing = MissingToolchain(name, getattr(exc, "log", "") or str(exc))
+            result.update(ok=False, message=str(missing), missing=name, log=missing.log)
+            return result
+    _toolchain_cache.clear()
+    _toolchain_cache[paths] = result
+    return result
+
+
+def require_toolchain() -> None:
+    status = toolchain()
+    if not status["ok"]:
+        raise MissingToolchain(status["missing"], status.get("log", ""))
+
+
 @dataclass
 class Probe:
     duration: float
@@ -62,8 +118,16 @@ class Rung:
     codec: str
 
 
+def _missing(cmd: list[str], exc: OSError) -> MissingToolchain:
+    name = "ffprobe" if cmd[0] == tool("ffprobe") or Path(cmd[0]).name == "ffprobe" else "ffmpeg"
+    return MissingToolchain(name, f"{cmd[0]}: {exc}")
+
+
 def run(cmd: list[str], timeout: int | None = None) -> str:
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False)
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False)
+    except (FileNotFoundError, PermissionError) as exc:
+        raise _missing(cmd, exc) from exc
     if result.returncode != 0:
         raise TranscodeError(
             f"{Path(cmd[0]).name} exited with {result.returncode}", result.stderr[-6000:]
@@ -75,7 +139,7 @@ def probe(path: str) -> Probe:
     try:
         out = run(
             [
-                "ffprobe",
+                tool("ffprobe"),
                 "-v",
                 "error",
                 "-print_format",
@@ -86,6 +150,8 @@ def probe(path: str) -> Probe:
             ],
             timeout=120,
         )
+    except MissingToolchain:
+        raise  # the server is broken, not the file
     except TranscodeError as exc:
         raise TranscodeError("This file isn't a readable video.", exc.log, permanent=True) from exc
     data = json.loads(out)
@@ -180,7 +246,7 @@ def ffmpeg_command(src: str, out: Path, source: Probe, rungs: list[Rung]) -> lis
         for i, r in enumerate(rungs)
     )
     cmd = [
-        "ffmpeg",
+        tool("ffmpeg"),
         "-hide_banner",
         "-nostdin",
         "-y",
@@ -263,7 +329,10 @@ def ffmpeg_command(src: str, out: Path, source: Probe, rungs: list[Rung]) -> lis
 
 
 def encode(cmd: list[str], duration: float, on_progress: Callable[[float], None]) -> str:
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    try:
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    except (FileNotFoundError, PermissionError) as exc:
+        raise _missing(cmd, exc) from exc
     stderr_lines: list[str] = []
 
     def drain():
@@ -343,7 +412,7 @@ def sprites(src: str, out: Path, source: Probe) -> dict:
     out.mkdir(parents=True, exist_ok=True)
     run(
         [
-            "ffmpeg",
+            tool("ffmpeg"),
             "-hide_banner",
             "-nostdin",
             "-y",
@@ -374,7 +443,7 @@ def poster_frame(src: str, out: Path, source: Probe) -> str:
     at = max(0.0, min(source.duration * 0.1, source.duration - 0.5))
     run(
         [
-            "ffmpeg",
+            tool("ffmpeg"),
             "-hide_banner",
             "-nostdin",
             "-y",

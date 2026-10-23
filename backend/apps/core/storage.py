@@ -80,8 +80,10 @@ def _bucket_region(s: S3Settings) -> str | None:
             region = meta.get("HTTPHeaders", {}).get("x-amz-bucket-region")
         except ClientError as exc:
             # S3 reports the region even when HeadBucket itself is denied.
-            region = exc.response.get("ResponseMetadata", {}).get("HTTPHeaders", {}).get(
-                "x-amz-bucket-region"
+            region = (
+                exc.response.get("ResponseMetadata", {})
+                .get("HTTPHeaders", {})
+                .get("x-amz-bucket-region")
             )
         except BotoCoreError:
             return None  # transient: don't cache, try again next call

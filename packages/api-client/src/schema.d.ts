@@ -1380,6 +1380,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/videos/toolchain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Ask every worker on the `transcode` queue whether it can run FFmpeg. */
+        get: operations["admin_videos_toolchain_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -3703,6 +3720,13 @@ export interface components {
         StartRequest: {
             value: string;
         };
+        /**
+         * @description * `ok` - ok
+         *     * `missing` - missing
+         *     * `no_worker` - no_worker
+         * @enum {string}
+         */
+        StateEnum: "ok" | "missing" | "no_worker";
         StorageTestRequestRequest: {
             bucket?: string;
             region?: string;
@@ -4047,6 +4071,18 @@ export interface components {
          * @enum {string}
          */
         TitleTypeEnum: "movie" | "series";
+        Toolchain: {
+            state: components["schemas"]["StateEnum"];
+            message: string;
+            workers: components["schemas"]["ToolchainWorker"][];
+        };
+        ToolchainWorker: {
+            name: string;
+            ok: boolean;
+            ffmpeg_version: string;
+            ffprobe_version: string;
+            message: string;
+        };
         TopTitle: {
             id: number;
             title: string;
@@ -7014,6 +7050,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TranscodeStats"];
+                };
+            };
+        };
+    };
+    admin_videos_toolchain_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Toolchain"];
                 };
             };
         };

@@ -155,6 +155,23 @@ class SubtitleUploadSerializer(serializers.Serializer):
     is_forced = serializers.BooleanField(default=False)
 
 
+class ToolchainWorkerSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    ok = serializers.BooleanField()
+    ffmpeg_version = serializers.CharField(allow_blank=True)
+    ffprobe_version = serializers.CharField(allow_blank=True)
+    message = serializers.CharField(allow_blank=True)
+
+
+class ToolchainSerializer(serializers.Serializer):
+    state = serializers.ChoiceField(choices=["ok", "missing", "no_worker"])
+    message = serializers.CharField()
+    workers = ToolchainWorkerSerializer(many=True)
+
+
+TOOLCHAIN_REPLY_SECONDS = 3.0
+
+
 class VideoViewSet(
     AuditedMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
 ):
@@ -216,6 +233,45 @@ class VideoViewSet(
         return Response(
             {k: counts.get(k, 0) for k in ("queued", "transcoding", "failed", "ready", "uploading")}
         )
+
+    @extend_schema(responses=ToolchainSerializer)
+    @action(
+        detail=False,
+        methods=["get"],
+        throttle_classes=[throttle("security.rate_toolchain_check", per_user=True)],
+    )
+    def toolchain(self, request):
+        """Ask every worker on the `transcode` queue whether it can run FFmpeg."""
+        from netfly.celery import app
+
+        try:
+            replies = app.control.broadcast(
+                "netfly_toolchain", reply=True, timeout=TOOLCHAIN_REPLY_SECONDS
+            )
+        except Exception:  # noqa: BLE001 - broker unreachable reads the same as no worker
+            replies = []
+        workers = [
+            {
+                "name": name,
+                "ok": bool(r.get("ok")),
+                "ffmpeg_version": r.get("ffmpeg_version", ""),
+                "ffprobe_version": r.get("ffprobe_version", ""),
+                "message": r.get("message", ""),
+            }
+            for reply in replies or []
+            for name, r in reply.items()
+            if isinstance(r, dict) and r.get("transcode")
+        ]
+        if not workers:
+            state = "no_worker"
+            message = "No transcoding worker is running — uploaded videos will wait in the queue."
+        elif broken := [w for w in workers if not w["ok"]]:
+            state = "missing"
+            message = broken[0]["message"]
+        else:
+            state = "ok"
+            message = f"FFmpeg {workers[0]['ffmpeg_version']}"
+        return Response({"state": state, "message": message, "workers": workers})
 
     @extend_schema(request=None, responses=VideoJobSerializer)
     @action(detail=True, methods=["post"])

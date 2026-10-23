@@ -4761,6 +4761,32 @@
                 }
             }
         },
+        "/api/v1/admin/videos/toolchain": {
+            "get": {
+                "operationId": "admin_videos_toolchain_retrieve",
+                "description": "Ask every worker on the `transcode` queue whether it can run FFmpeg.",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Toolchain"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/auth/login": {
             "post": {
                 "operationId": "auth_login",
@@ -11959,6 +11985,15 @@
                     "value"
                 ]
             },
+            "StateEnum": {
+                "enum": [
+                    "ok",
+                    "missing",
+                    "no_worker"
+                ],
+                "type": "string",
+                "description": "* `ok` - ok\n* `missing` - missing\n* `no_worker` - no_worker"
+            },
             "StorageTestRequestRequest": {
                 "type": "object",
                 "properties": {
@@ -13362,6 +13397,55 @@
                 ],
                 "type": "string",
                 "description": "* `movie` - Movie\n* `series` - Series"
+            },
+            "Toolchain": {
+                "type": "object",
+                "properties": {
+                    "state": {
+                        "$ref": "#/components/schemas/StateEnum"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "workers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ToolchainWorker"
+                        }
+                    }
+                },
+                "required": [
+                    "message",
+                    "state",
+                    "workers"
+                ]
+            },
+            "ToolchainWorker": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "ok": {
+                        "type": "boolean"
+                    },
+                    "ffmpeg_version": {
+                        "type": "string"
+                    },
+                    "ffprobe_version": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "ffmpeg_version",
+                    "ffprobe_version",
+                    "message",
+                    "name",
+                    "ok"
+                ]
             },
             "TopTitle": {
                 "type": "object",

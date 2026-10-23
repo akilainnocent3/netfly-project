@@ -3,6 +3,8 @@ FROM python:3.12-slim AS base
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg libpq5 fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
+# A worker image without FFmpeg must fail here, not at upload time.
+RUN ffmpeg -version >/dev/null && ffprobe -version >/dev/null
 WORKDIR /app
 COPY requirements.txt .
 # Optional offline wheelhouse (backend/.wheels) for restricted networks; falls back to PyPI.

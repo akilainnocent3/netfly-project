@@ -74,6 +74,15 @@ even though every URL is signed.
   `-c 1` per worker process and scale *replicas* (one encode per vCPU-group). Each job needs ~3× the source
   size of local disk. `--max-tasks-per-child` keeps memory flat. Long jobs are `acks_late`, so a lost
   worker re-queues its job; failures retry with exponential backoff up to `transcoding.max_retries`.
+* **FFmpeg on transcode workers.** Every process that consumes `transcode` needs `ffmpeg` and `ffprobe`.
+  `backend/Dockerfile` installs them and the build fails without them. Anywhere else, install FFmpeg the
+  platform's way: `sudo apt-get install -y ffmpeg` on a VPS with a systemd/host-run worker; an apt
+  buildpack with an `Aptfile` containing `ffmpeg` on Heroku-style platforms; or point the worker service
+  at `backend/Dockerfile` (Render, Railway, Fly, ECS). Binaries outside `PATH`: set
+  `transcoding.ffmpeg_path` / `transcoding.ffprobe_path` in Settings → Transcoding. Workers log an
+  error at startup when FFmpeg is missing, jobs fail immediately with an operator-facing message (no
+  download, no retries), and Studio → Transcoding shows the worker status. After fixing, press *Retry*:
+  the S3 source is reused, no re-upload.
 * **default** queue (`worker`): image renders, event flushing, popularity refresh — light; 2–4 concurrency.
 * **beat**: exactly **one** instance. Besides catalog jobs it runs `run_renewals` (every 5 min: renewal
   reminders and pushes, trial conversions, retries, grace, downgrades), `reconcile_payments` (every 2 min:
