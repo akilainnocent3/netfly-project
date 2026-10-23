@@ -59,6 +59,29 @@ Ambiguities in the build brief, the option chosen, and why.
     than a task: the worker's main process answers even while its single pool slot is encoding, and no
     result backend is needed.
 
+56. **A generated trailer is an ordinary trailer asset, cut into its own high-quality source first.**
+    Studio → Video → Trailer → "Generate from video" (`POST /admin/titles/{id}/trailer/generate`)
+    creates a `VideoAsset(kind="trailer")` with `clip_of` / `clip_start` / `clip_end` /
+    `clip_options`. `generate_clip` (transcode queue) cuts the range into `sources/<id>/clip.mp4`
+    (libx264 CRF 16, source size/rate/aspect, default audio track or none, optional 0.5 s fades),
+    makes that the asset's `source_key`, and hands off to the normal pipeline in the same task:
+    one progress bar, cutting 0–20 %, the ladder 20–100 %. We don't pass `-ss`/`-t` into the ladder
+    encode instead: an intermediate file keeps the trailer self-contained, so Retry, sprites and the
+    poster need no range logic, and deleting or replacing the feature never breaks the trailer
+    (`clip_of` is `SET_NULL`). The extra near-lossless encode costs nothing visible.
+    * **Range seek, never a download.** FFmpeg reads the feature through a 3-hour presigned S3 URL
+      (`presign_get(cdn=False)`: the bucket itself, not the CDN) with `-ss` before `-i`, so it seeks
+      with HTTP range requests instead of fetching a multi-GB file; re-encoding makes the cut
+      frame-accurate (stream copy snaps to keyframes, seconds off). A source missing from S3 or a
+      range past its probed duration is permanent; network errors retry with the usual backoff.
+    * **Attach on ready.** `title.trailer` changes only when the new asset is ready (then the catalog
+      version is bumped and `trailer.attach` is audit-logged); until then viewers keep the previous
+      trailer or the feature slice. The previous asset is kept, as with a replaced upload. Studio
+      finds the in-flight job as `trailer_job` on the title. One generation per title at a time (409
+      `busy`); Retry re-cuts only when the cut never finished, otherwise it re-runs the transcode.
+    * **Settings, not env vars:** `trailer.min_seconds` (5), `trailer.max_seconds` (300) — public, so
+      Studio mirrors the server's checks — and `trailer.fade_seconds` (0.5).
+
 ## Product & UX
 
 13. **Admin tables use page numbers; viewer feeds use cursors.** Staff need totals and page jumps; viewers get

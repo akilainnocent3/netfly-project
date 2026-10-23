@@ -22,11 +22,18 @@ from apps.catalog.models import (
     Title,
 )
 from apps.core.audit import client_ip, record
+from apps.core.config import config
 from apps.core.exceptions import APIError
 from apps.core.throttling import throttle
 from apps.media import images
-from apps.media.models import ImageAsset
-from apps.media.serializers import AdminImageSerializer, ImageUploadSerializer
+from apps.media.models import ImageAsset, VideoAsset
+from apps.media.serializers import (
+    AdminImageSerializer,
+    AdminVideoSerializer,
+    ImageUploadSerializer,
+)
+from apps.media.tasks import queue_generate
+from apps.media.transcode import timecode
 from apps.recommendations.cache import bump_catalog_on_commit
 
 from . import serializers as s
@@ -197,6 +204,107 @@ class TitleViewSet(AuditedMixin, viewsets.ModelViewSet):
             ip=client_ip(request),
         )
         return Response({"updated": updated, "skipped": skipped})
+
+    @extend_schema(request=s.TrailerGenerateSerializer, responses={201: AdminVideoSerializer})
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="trailer/generate",
+        throttle_classes=[throttle("security.rate_upload", per_user=True)],
+    )
+    def generate_trailer(self, request, pk=None):
+        """Cut a range of the title's own video into a new trailer (attached once ready)."""
+        title = self.get_object()
+        data = s.TrailerGenerateSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        v = data.validated_data
+        if v["source"] == "feature":
+            if title.is_series:
+                raise APIError("Pick the episode to cut the trailer from.", "invalid_source")
+            source, label = title.video, "Feature"
+        else:
+            if not title.is_series:
+                raise APIError("A movie's trailer is cut from its feature.", "invalid_source")
+            episode = (
+                Episode.objects.select_related("season", "video")
+                .filter(pk=v["source"]["episode_id"], season__title=title)
+                .first()
+            )
+            if episode is None:
+                raise APIError("That episode isn't part of this title.", "invalid_source")
+            source, label = episode.video, f"S{episode.season.number}:E{episode.number}"
+        if source is None or not source.is_ready or not source.source_key:
+            raise APIError("Upload and finish processing the video first.", "source_not_ready")
+
+        start, end = round(v["start_seconds"], 3), round(v["end_seconds"], 3)
+        shortest = config.get_int("trailer.min_seconds", 5)
+        longest = config.get_int("trailer.max_seconds", 300)
+        if end <= start:
+            raise APIError("The end must be after the start.", "invalid_range")
+        if end > source.duration + 0.05:
+            raise APIError(
+                f"The video is only {timecode(source.duration)} long — end the trailer at or "
+                f"before {timecode(source.duration)}.",
+                "invalid_range",
+            )
+        if end - start < shortest:
+            raise APIError(
+                f"A trailer must be at least {timecode(shortest)} long "
+                f"({timecode(end - start)} selected).",
+                "invalid_range",
+            )
+        if end - start > longest:
+            raise APIError(
+                f"A trailer can be at most {timecode(longest)} long "
+                f"({timecode(end - start)} selected).",
+                "invalid_range",
+            )
+
+        options = {
+            "title_id": title.pk,
+            "source": v["source"],
+            "label": label,
+            "fade": v["fade"],
+            "audio": v["audio"],
+        }
+        with transaction.atomic():
+            Title.objects.select_for_update().filter(pk=title.pk).first()  # one generate at a time
+            if VideoAsset.objects.filter(
+                kind=VideoAsset.Kind.TRAILER,
+                clip_options__title_id=title.pk,
+                status__in=[VideoAsset.Status.QUEUED, VideoAsset.Status.TRANSCODING],
+            ).exists():
+                raise APIError("A trailer is already being generated for this title.", "busy", 409)
+            name = f"{title.title} — trailer {timecode(start)}–{timecode(end)}.mp4"
+            asset = VideoAsset.objects.create(
+                kind=VideoAsset.Kind.TRAILER,
+                status=VideoAsset.Status.QUEUED,
+                stage="Waiting for a worker",
+                original_filename=name[-255:],
+                clip_of=source,
+                clip_start=start,
+                clip_end=end,
+                clip_options=options,
+                created_by=request.user,
+            )
+            record(
+                request.user,
+                "trailer.generate",
+                title,
+                changes={
+                    "source_asset": str(source.pk),
+                    "source": label,
+                    "start": start,
+                    "end": end,
+                    "fade": v["fade"],
+                    "audio": v["audio"],
+                    "asset": str(asset.pk),
+                },
+                ip=client_ip(request),
+            )
+        queue_generate(asset)
+        asset.refresh_from_db()
+        return Response(AdminVideoSerializer(asset).data, status=status.HTTP_201_CREATED)
 
     @extend_schema(responses=s.SeasonAdminSerializer(many=True))
     @action(detail=True, methods=["get"], pagination_class=None)

@@ -10,6 +10,7 @@ import {
   Flag,
   Languages,
   RotateCcw,
+  Scissors,
   Trash2,
   Upload,
   UploadCloud,
@@ -20,12 +21,14 @@ import { Badge, Button, Card, Input, Label } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
 import type { AdminVideo, EpisodeAdmin, SeasonAdmin, TitleDetail } from "@/lib/types";
 import { IconButton, useAction, useConfirm } from "@/components/ui/actions";
+import { formatTimecode } from "@/lib/timecode";
 import { useUploads, type UploadTarget } from "@/stores/uploads";
 import type { EpisodeSlotProps } from "./seasons-tab";
+import { TrailerGenerator, type TrailerPrefill } from "./trailer-generator";
 
 const ACTIVE = ["uploading", "uploaded", "queued", "transcoding"];
 
-function useVideo(id: string | null | undefined, initial?: AdminVideo | null) {
+export function useVideo(id: string | null | undefined, initial?: AdminVideo | null) {
   return useQuery({
     queryKey: ["videos", id],
     enabled: !!id,
@@ -55,19 +58,7 @@ export function VideoTab({
           readOnly={readOnly}
         />
       )}
-      <VideoSlot
-        heading="Trailer"
-        description="Optional. Plays muted in the hero billboard and on hover previews."
-        video={title.trailer}
-        kind="trailer"
-        target={{
-          type: "title",
-          id: title.id,
-          field: "trailer_id",
-          label: `${title.title} trailer`,
-        }}
-        readOnly={readOnly}
-      />
+      <TrailerCard title={title} readOnly={readOnly} />
       {title.type === "series" && (
         <p className="text-muted text-[12.5px]">
           Episode videos are managed in <strong>Seasons &amp; episodes</strong> — open an episode,
@@ -86,6 +77,7 @@ function VideoSlot({
   target,
   readOnly,
   compact,
+  embedded,
 }: {
   heading: string;
   description?: string;
@@ -94,6 +86,8 @@ function VideoSlot({
   target: UploadTarget;
   readOnly: boolean;
   compact?: boolean;
+  /** Rendered inside another card (the Trailer card's Upload mode). */
+  embedded?: boolean;
 }) {
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -197,7 +191,7 @@ function VideoSlot({
     </>
   );
 
-  if (compact) return <div>{body}</div>;
+  if (compact || embedded) return <div>{body}</div>;
   return (
     <Card className="p-5">
       <div className="mb-3">
@@ -205,6 +199,205 @@ function VideoSlot({
         {description && <p className="text-muted text-[12.5px]">{description}</p>}
       </div>
       {body}
+    </Card>
+  );
+}
+
+type TrailerMode = "upload" | "generate";
+
+function rememberedMode(titleId: number): TrailerMode | null {
+  try {
+    const v = localStorage.getItem(`netfly.trailer-mode.${titleId}`);
+    return v === "upload" || v === "generate" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Trailer: upload one, or generate one from a range of the title's own video. */
+function TrailerCard({ title, readOnly }: { title: TitleDetail; readOnly: boolean }) {
+  const queryClient = useQueryClient();
+  const job = useVideo(title.trailer_job?.id, title.trailer_job);
+  const pending = job.data ?? title.trailer_job ?? null;
+  const generated = title.trailer?.clip_options ? title.trailer : null;
+  const [mode, setModeState] = useState<TrailerMode>(
+    () => rememberedMode(title.id) ?? (generated || pending ? "generate" : "upload"),
+  );
+  const setMode = (next: TrailerMode) => {
+    setModeState(next);
+    try {
+      localStorage.setItem(`netfly.trailer-mode.${title.id}`, next);
+    } catch {
+      /* private mode: the choice just isn't remembered */
+    }
+  };
+  // Regenerate (prefilled) or a first generate; null shows the current result.
+  const [editing, setEditing] = useState<TrailerPrefill | "new" | null>(null);
+  const statusHeading = useRef<HTMLParagraphElement>(null);
+  const retry = useAction(
+    async () => {
+      if (!pending) return;
+      const updated = await unwrap(
+        api.POST("/api/v1/admin/videos/{id}/retry", { params: { path: { id: pending.id } } }),
+      );
+      queryClient.setQueryData(["videos", pending.id], updated);
+    },
+    { success: "Trailer queued again" },
+  );
+
+  // Ready: the server has attached it as the trailer; refresh the title to show it.
+  const pendingStatus = pending?.status;
+  useEffect(() => {
+    if (pendingStatus === "ready")
+      void queryClient.invalidateQueries({ queryKey: ["title", title.id] });
+  }, [pendingStatus, queryClient, title.id]);
+
+  const prefillFrom = (asset: AdminVideo): TrailerPrefill | null =>
+    asset.clip_options && asset.clip_start != null && asset.clip_end != null
+      ? {
+          source: asset.clip_options.source,
+          start: asset.clip_start,
+          end: asset.clip_end,
+          fade: asset.clip_options.fade,
+          audio: asset.clip_options.audio,
+        }
+      : null;
+  const generating = pending && pending.status !== "ready";
+  const showForm = !readOnly && (editing !== null || (!generating && !generated));
+
+  return (
+    <Card className="p-5">
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-medium">Trailer</p>
+          <p className="text-muted text-[12.5px]">
+            Optional. Plays muted in the hero billboard and on hover previews.
+          </p>
+        </div>
+        <div
+          role="radiogroup"
+          aria-label="How to add the trailer"
+          className="border-line bg-raised inline-flex rounded-md border p-0.5"
+        >
+          {(
+            [
+              ["upload", "Upload"],
+              ["generate", "Generate from video"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={mode === value}
+              onClick={() => setMode(value)}
+              className={cn(
+                "h-7 rounded px-2.5 text-[12.5px] font-medium transition-colors",
+                mode === value ? "bg-panel shadow-sm" : "text-muted hover:text-fg",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {mode === "upload" ? (
+        <VideoSlot
+          embedded
+          heading="Trailer"
+          video={title.trailer}
+          kind="trailer"
+          target={{
+            type: "title",
+            id: title.id,
+            field: "trailer_id",
+            label: `${title.title} trailer`,
+          }}
+          readOnly={readOnly}
+        />
+      ) : (
+        <div className="space-y-4">
+          {generating && (
+            <div className="space-y-2">
+              <p
+                ref={statusHeading}
+                tabIndex={-1}
+                className="text-[12.5px] font-medium outline-none"
+              >
+                New trailer
+                {pending.clip_options && pending.clip_start != null && pending.clip_end != null
+                  ? ` · from ${pending.clip_options.label}, ${formatTimecode(pending.clip_start)}–${formatTimecode(pending.clip_end)}`
+                  : ""}
+              </p>
+              <AssetStatus
+                asset={pending}
+                retrying={retry.pending}
+                onRetry={readOnly ? undefined : () => void retry.run()}
+              />
+              {pending.status === "failed" && !readOnly && editing === null && (
+                <Button size="sm" onClick={() => setEditing(prefillFrom(pending) ?? "new")}>
+                  <Scissors className="size-3.5" /> Change range
+                </Button>
+              )}
+            </div>
+          )}
+          {title.trailer && (generating || !generated) && (
+            <div className="space-y-2">
+              <p className="text-muted text-[12.5px]">
+                Current trailer{generating ? " — stays live until the new one is ready" : ""}
+              </p>
+              <AssetStatus asset={title.trailer} />
+            </div>
+          )}
+          {generated && !generating && editing === null && (
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-[13px] font-medium">
+                  Generated from {generated.clip_options!.label}
+                  {generated.clip_start != null && generated.clip_end != null
+                    ? ` · ${formatTimecode(generated.clip_start)}–${formatTimecode(generated.clip_end)}`
+                    : ""}
+                </p>
+                {!readOnly && (
+                  <Button
+                    size="sm"
+                    className="ml-auto"
+                    onClick={() => setEditing(prefillFrom(generated) ?? "new")}
+                  >
+                    <Scissors className="size-3.5" /> Regenerate
+                  </Button>
+                )}
+              </div>
+              <AssetStatus asset={generated} />
+              {generated.status === "ready" && <PreviewPlayer videoId={generated.id} />}
+            </div>
+          )}
+          {showForm && (
+            <TrailerGenerator
+              key={
+                editing === null || editing === "new" ? "new" : `${editing.start}-${editing.end}`
+              }
+              title={title}
+              readOnly={readOnly}
+              prefill={editing === "new" ? null : editing}
+              onCancel={editing !== null ? () => setEditing(null) : undefined}
+              onStarted={(asset) => {
+                queryClient.setQueryData(["videos", asset.id], asset);
+                queryClient.setQueryData<TitleDetail>(["title", title.id], (t) =>
+                  t ? { ...t, trailer_job: asset } : t,
+                );
+                void queryClient.invalidateQueries({ queryKey: ["title", title.id] });
+                setEditing(null);
+                requestAnimationFrame(() => statusHeading.current?.focus());
+              }}
+            />
+          )}
+          {readOnly && !generating && !generated && (
+            <p className="text-muted text-[12.5px]">No generated trailer.</p>
+          )}
+        </div>
+      )}
     </Card>
   );
 }

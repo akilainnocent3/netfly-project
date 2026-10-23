@@ -19,7 +19,7 @@ from apps.core.throttling import throttle
 from apps.media import delivery, uploads
 from apps.media.models import SubtitleTrack, UploadSession, VideoAsset
 from apps.media.serializers import AdminVideoSerializer, SubtitleSerializer
-from apps.media.tasks import queue_transcode
+from apps.media.tasks import queue_generate, queue_transcode
 
 from .mixins import AdminPagination, AuditedMixin
 
@@ -279,10 +279,18 @@ class VideoViewSet(
         asset = self.get_object()
         if asset.status in (VideoAsset.Status.UPLOADING, VideoAsset.Status.TRANSCODING):
             raise APIError("This video is still being processed.", "busy", 409)
-        if not asset.source_key:
+        cut_again = not asset.source_key and bool(asset.clip_options)
+        if cut_again and asset.clip_of_id is None:
+            raise APIError(
+                "The video this trailer was cut from has been deleted — generate a new one.",
+                "missing_source",
+                409,
+            )
+        if not asset.source_key and not cut_again:
             raise APIError("The source file is missing.", "missing_source", 409)
         VideoAsset.objects.filter(pk=asset.pk).update(attempts=0)
-        queue_transcode(asset)
+        # A generated trailer whose cut never finished is cut again; otherwise only transcode.
+        (queue_generate if cut_again else queue_transcode)(asset)
         self._audit("retry", asset)
         asset.refresh_from_db()
         return Response(self.get_serializer(self._attach_usage([asset])[0]).data)

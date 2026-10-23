@@ -4012,6 +4012,58 @@
                 }
             }
         },
+        "/api/v1/admin/titles/{id}/trailer/generate": {
+            "post": {
+                "operationId": "admin_titles_trailer_generate_create",
+                "description": "Cut a range of the title's own video into a new trailer (attached once ready).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this title.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TrailerGenerateRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TrailerGenerateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminVideo"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/admin/titles/{id}/unpublish": {
             "post": {
                 "operationId": "admin_titles_unpublish_create",
@@ -7404,11 +7456,42 @@
                             "$ref": "#/components/schemas/Subtitle"
                         },
                         "readOnly": true
+                    },
+                    "clip_of": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "clip_start": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "clip_end": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "clip_options": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ClipOptions"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
                     }
                 },
                 "required": [
                     "attempts",
                     "audio_tracks",
+                    "clip_end",
+                    "clip_of",
+                    "clip_options",
+                    "clip_start",
                     "created_at",
                     "duration",
                     "error",
@@ -8078,6 +8161,57 @@
                 ],
                 "type": "string",
                 "description": "* `applied` - applied\n* `scheduled` - scheduled\n* `needs` - needs"
+            },
+            "ClipOptions": {
+                "type": "object",
+                "description": "How a generated trailer was cut (Studio shows it and prefills Regenerate from it).",
+                "properties": {
+                    "title_id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "source": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "feature"
+                                ]
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "episode_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "required": [
+                                    "episode_id"
+                                ]
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "label": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "fade": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "audio": {
+                        "type": "boolean",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "audio",
+                    "fade",
+                    "label",
+                    "source",
+                    "title_id"
+                ]
             },
             "CodeSent": {
                 "type": "object",
@@ -12596,6 +12730,15 @@
                         "format": "uuid",
                         "nullable": true
                     },
+                    "trailer_job": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/AdminVideo"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
                     "status": {
                         "allOf": [
                             {
@@ -12694,6 +12837,7 @@
                     "status",
                     "title",
                     "trailer",
+                    "trailer_job",
                     "translation_status",
                     "type",
                     "updated_at",
@@ -13468,6 +13612,55 @@
                     "plays",
                     "title",
                     "viewers"
+                ]
+            },
+            "TrailerGenerateRequest": {
+                "type": "object",
+                "properties": {
+                    "source": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "feature"
+                                ]
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "episode_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "required": [
+                                    "episode_id"
+                                ]
+                            }
+                        ]
+                    },
+                    "start_seconds": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0
+                    },
+                    "end_seconds": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0
+                    },
+                    "fade": {
+                        "type": "boolean",
+                        "default": true
+                    },
+                    "audio": {
+                        "type": "boolean",
+                        "default": true
+                    }
+                },
+                "required": [
+                    "end_seconds",
+                    "source",
+                    "start_seconds"
                 ]
             },
             "TranscodeStats": {
@@ -14261,6 +14454,33 @@
                         },
                         "readOnly": true
                     },
+                    "clip_of": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "clip_start": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "clip_end": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "clip_options": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ClipOptions"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
                     "usage": {
                         "type": "array",
                         "items": {
@@ -14272,6 +14492,10 @@
                 "required": [
                     "attempts",
                     "audio_tracks",
+                    "clip_end",
+                    "clip_of",
+                    "clip_options",
+                    "clip_start",
                     "created_at",
                     "duration",
                     "error",

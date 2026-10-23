@@ -148,14 +148,17 @@ def _public_base(s: S3Settings) -> str:
     return f"https://{s.bucket}.s3.{s.region}.amazonaws.com"
 
 
-def presign_get(key: str, ttl: int | None = None, *, s: S3Settings | None = None) -> str:
+def presign_get(
+    key: str, ttl: int | None = None, *, s: S3Settings | None = None, cdn: bool = True
+) -> str:
+    """`cdn=False` signs the bucket itself: for server-side readers (FFmpeg) of private sources."""
     s = s or s3_settings()
     if not s.bucket:
         return ""
     ttl = ttl or config.get_int("storage.signed_url_ttl_seconds", 21600)
     ttl = min(ttl, 604800)
     k = full_key(key, s)
-    if config.get_bool("storage.cdn.enabled") and config.get_str("storage.cdn.domain"):
+    if cdn and config.get_bool("storage.cdn.enabled") and config.get_str("storage.cdn.domain"):
         return cdn_signed_url(k, ttl)
     if not (s.access_key and s.secret_key):
         # Instance-role credentials: fall back to boto's presigner (not time-bucketed).
@@ -254,6 +257,17 @@ def upload_file(path: str, key: str, content_type: str, cache_control: str = LON
 def get_bytes(key: str) -> bytes:
     s = s3_settings()
     return client(s).get_object(Bucket=s.bucket, Key=full_key(key, s))["Body"].read()
+
+
+def object_size(key: str) -> int | None:
+    """Size of an object, or None when it doesn't exist. Other errors propagate (transient)."""
+    s = s3_settings()
+    try:
+        return client(s).head_object(Bucket=s.bucket, Key=full_key(key, s))["ContentLength"]
+    except ClientError as exc:
+        if exc.response.get("Error", {}).get("Code") in ("404", "NoSuchKey", "NotFound"):
+            return None
+        raise
 
 
 def download_file(key: str, path: str) -> None:

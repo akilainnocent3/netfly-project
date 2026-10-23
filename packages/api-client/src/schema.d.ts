@@ -1074,6 +1074,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/titles/{id}/trailer/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Cut a range of the title's own video into a new trailer (attached once ready). */
+        post: operations["admin_titles_trailer_generate_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/titles/{id}/unpublish": {
         parameters: {
             query?: never;
@@ -2404,6 +2421,13 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
             readonly subtitles: components["schemas"]["Subtitle"][];
+            /** Format: uuid */
+            readonly clip_of: string | null;
+            /** Format: double */
+            readonly clip_start: number | null;
+            /** Format: double */
+            readonly clip_end: number | null;
+            readonly clip_options: components["schemas"]["ClipOptions"] | null;
         };
         /**
          * @description * `client` - client
@@ -2613,6 +2637,16 @@ export interface components {
          * @enum {string}
          */
         ChoosePlanResultStatusEnum: "applied" | "scheduled" | "needs";
+        /** @description How a generated trailer was cut (Studio shows it and prefills Regenerate from it). */
+        ClipOptions: {
+            readonly title_id: number;
+            readonly source: "feature" | {
+                episode_id: number;
+            };
+            readonly label: string;
+            readonly fade: boolean;
+            readonly audio: boolean;
+        };
         CodeSent: {
             channel: components["schemas"]["ChannelEnum"];
             target: string;
@@ -3892,6 +3926,7 @@ export interface components {
             readonly trailer: components["schemas"]["AdminVideo"];
             /** Format: uuid */
             trailer_id?: string | null;
+            readonly trailer_job: components["schemas"]["AdminVideo"] | null;
             readonly status: components["schemas"]["TitleStatusEnum"];
             /** Format: date-time */
             publish_at?: string | null;
@@ -4088,6 +4123,19 @@ export interface components {
             title: string;
             plays: number;
             viewers: number;
+        };
+        TrailerGenerateRequest: {
+            source: "feature" | {
+                episode_id: number;
+            };
+            /** Format: double */
+            start_seconds: number;
+            /** Format: double */
+            end_seconds: number;
+            /** @default true */
+            fade: boolean;
+            /** @default true */
+            audio: boolean;
         };
         TranscodeStats: {
             queued: number;
@@ -4304,6 +4352,13 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
             readonly subtitles: components["schemas"]["Subtitle"][];
+            /** Format: uuid */
+            readonly clip_of: string | null;
+            /** Format: double */
+            readonly clip_start: number | null;
+            /** Format: double */
+            readonly clip_end: number | null;
+            readonly clip_options: components["schemas"]["ClipOptions"] | null;
             readonly usage: string[];
         };
         /**
@@ -6632,6 +6687,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SeasonAdmin"][];
+                };
+            };
+        };
+    };
+    admin_titles_trailer_generate_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this title. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrailerGenerateRequest"];
+                "multipart/form-data": components["schemas"]["TrailerGenerateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminVideo"];
                 };
             };
         };

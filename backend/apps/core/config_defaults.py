@@ -30,6 +30,7 @@ GROUPS: list[tuple[str, str, str]] = [
         "Simulated providers for staging and end-to-end tests. Never enable in production.",
     ),
     ("transcoding", "Transcoding", "FFmpeg encoding ladder and outputs."),
+    ("trailer", "Trailers", "Trailers Studio generates from a title's own video."),
     ("storage", "Storage & CDN", "Amazon S3 bucket, credentials and CDN delivery."),
     ("upload", "Uploads", "Upload limits and validation."),
     ("auth", "Authentication", "Sessions, passwords and login protection."),
@@ -646,6 +647,36 @@ KEYS: list[Key] = [
         "",
         "Full path to ffprobe on the transcoding worker. Empty = find it on PATH.",
         label="ffprobe path",
+    ),
+    # ---- trailer ------------------------------------------------------------
+    Key(
+        "trailer.min_seconds",
+        "int",
+        5,
+        "Shortest trailer Studio can generate from a title's video.",
+        label="Shortest generated trailer",
+        public=True,  # Studio mirrors the server's range checks
+        unit="s",
+        validation={"min": 1, "max": 600},
+    ),
+    Key(
+        "trailer.max_seconds",
+        "int",
+        300,
+        "Longest trailer Studio can generate from a title's video.",
+        label="Longest generated trailer",
+        public=True,  # Studio mirrors the server's range checks
+        unit="s",
+        validation={"min": 5, "max": 1800},
+    ),
+    Key(
+        "trailer.fade_seconds",
+        "float",
+        0.5,
+        "Fade from and to black (with a matching audio fade) at each end of a generated trailer.",
+        label="Fade length",
+        unit="s",
+        validation={"min": 0, "max": 3},
     ),
     # ---- storage ------------------------------------------------------------
     Key("storage.s3.bucket", "string", "", "S3 bucket for all media.", label="Bucket"),

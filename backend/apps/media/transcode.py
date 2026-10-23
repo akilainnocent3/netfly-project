@@ -135,7 +135,8 @@ def run(cmd: list[str], timeout: int | None = None) -> str:
     return result.stdout
 
 
-def probe(path: str) -> Probe:
+def probe(path: str, *, remote: bool = False) -> Probe:
+    """`remote`: `path` is a signed URL, so a read failure may be the network, not the file."""
     try:
         out = run(
             [
@@ -153,6 +154,8 @@ def probe(path: str) -> Probe:
     except MissingToolchain:
         raise  # the server is broken, not the file
     except TranscodeError as exc:
+        if remote:
+            raise TranscodeError("Couldn't read the source video from storage.", exc.log) from exc
         raise TranscodeError("This file isn't a readable video.", exc.log, permanent=True) from exc
     data = json.loads(out)
     video = next(
@@ -184,6 +187,7 @@ def probe(path: str) -> Probe:
             "language": (s.get("tags") or {}).get("language", "und"),
             "title": (s.get("tags") or {}).get("title", ""),
             "channels": int(s.get("channels") or 2),
+            "default": bool((s.get("disposition") or {}).get("default")),
         }
         for s in data.get("streams", [])
         if s.get("codec_type") == "audio"
@@ -363,6 +367,72 @@ def encode(cmd: list[str], duration: float, on_progress: Callable[[float], None]
     if process.returncode != 0:
         raise TranscodeError(f"FFmpeg failed (exit {process.returncode})", log)
     return log
+
+
+def timecode(seconds: float) -> str:
+    """7:00, or 1:07:00 past an hour (what Studio shows and accepts)."""
+    s = max(0, int(round(seconds)))
+    h, m, sec = s // 3600, s % 3600 // 60, s % 60
+    return f"{h}:{m:02d}:{sec:02d}" if h else f"{m}:{sec:02d}"
+
+
+def clip_command(
+    url: str,
+    out: Path,
+    source: Probe,
+    start: float,
+    length: float,
+    *,
+    fade: float = 0.0,
+    audio: bool = True,
+) -> list[str]:
+    """Cut [start, start+length) out of a (remote) source into a high-quality mezzanine MP4.
+
+    `-ss` before `-i` makes FFmpeg seek with HTTP range requests instead of reading from the
+    start; re-encoding (not stream copy) makes the cut frame-accurate instead of snapping to the
+    nearest keyframe. Resolution, frame rate and aspect ratio are the source's.
+    """
+    preset = config.get_str("transcoding.preset", "faster")
+    audio_kbps = config.get_int("transcoding.audio_bitrate_kbps", 160)
+    threads = config.get_int("transcoding.threads", 0)
+    track = next((a for a in source.audio if a.get("default")), None) or (
+        source.audio[0] if source.audio else None
+    )
+    cmd = [
+        tool("ffmpeg"),
+        "-hide_banner",
+        "-nostdin",
+        "-y",
+        "-ss",
+        f"{start:.3f}",
+        "-i",
+        url,
+        "-t",
+        f"{length:.3f}",
+        "-map",
+        "0:v:0",
+        "-c:v",
+        "libx264",
+        "-crf",
+        "16",
+        "-preset",
+        preset,
+        "-pix_fmt",
+        "yuv420p",
+    ]
+    if threads:
+        cmd += ["-threads", str(threads)]
+    if fade > 0:
+        out_at = max(0.0, length - fade)
+        cmd += ["-vf", f"fade=t=in:st=0:d={fade:g},fade=t=out:st={out_at:.3f}:d={fade:g}"]
+    if audio and track is not None:
+        cmd += ["-map", f"0:{track['index']}", "-c:a", "aac", "-b:a", f"{audio_kbps}k"]
+        if fade > 0:
+            cmd += ["-af", f"afade=t=in:st=0:d={fade:g},afade=t=out:st={out_at:.3f}:d={fade:g}"]
+    else:
+        cmd += ["-an"]
+    cmd += ["-sn", "-dn", "-movflags", "+faststart", "-progress", "pipe:1", str(out)]
+    return cmd
 
 
 def parse_master(master: Path, rungs: list[Rung]) -> tuple[list[dict], list[dict]]:

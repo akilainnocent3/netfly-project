@@ -82,6 +82,36 @@ def on_video_ready(asset: VideoAsset) -> None:
             publish(title)
 
 
+def attach_generated_trailer(asset: VideoAsset) -> None:
+    """A generated trailer becomes the title's trailer only once it's ready.
+
+    Until then viewers keep the previous trailer (or the feature slice). The previous trailer
+    asset is kept, as with a replaced upload.
+    """
+    from apps.core.audit import record
+    from apps.recommendations.cache import bump_catalog_on_commit
+
+    with transaction.atomic():
+        title = (
+            Title.objects.select_for_update().filter(pk=asset.clip_options.get("title_id")).first()
+        )
+        if title is None or title.trailer_id == asset.pk:
+            return
+        previous = title.trailer_id
+        title.trailer = asset
+        title.save(update_fields=["trailer", "updated_at"])
+        record(
+            asset.created_by,
+            "trailer.attach",
+            title,
+            changes={
+                "trailer": {"old": str(previous) if previous else None, "new": str(asset.pk)},
+                "range": [asset.clip_start, asset.clip_end],
+            },
+        )
+        bump_catalog_on_commit()
+
+
 @transaction.atomic
 def link_related(title: Title, related: Title, weight: int, two_way: bool = True) -> RelatedTitle:
     link, _ = RelatedTitle.objects.update_or_create(

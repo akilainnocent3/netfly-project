@@ -104,8 +104,48 @@ class AudioTrackSerializer(serializers.Serializer):
     default = serializers.BooleanField(required=False)
 
 
+@extend_schema_field(
+    {
+        "oneOf": [
+            {"type": "string", "enum": ["feature"]},
+            {
+                "type": "object",
+                "properties": {"episode_id": {"type": "integer"}},
+                "required": ["episode_id"],
+            },
+        ]
+    }
+)
+class TrailerSourceField(serializers.Field):
+    """`"feature"` for a movie, or `{"episode_id": n}` for one of a series' episodes."""
+
+    def to_internal_value(self, data):
+        if data == "feature":
+            return data
+        if isinstance(data, dict):
+            try:
+                return {"episode_id": int(data["episode_id"])}
+            except (KeyError, TypeError, ValueError):
+                pass
+        raise serializers.ValidationError('Use "feature" or {"episode_id": <id>}.')
+
+    def to_representation(self, value):
+        return value
+
+
+class ClipOptionsSerializer(serializers.Serializer):
+    """How a generated trailer was cut (Studio shows it and prefills Regenerate from it)."""
+
+    title_id = serializers.IntegerField(read_only=True)
+    source = TrailerSourceField(read_only=True)
+    label = serializers.CharField(read_only=True)
+    fade = serializers.BooleanField(read_only=True)
+    audio = serializers.BooleanField(read_only=True)
+
+
 class AdminVideoSerializer(serializers.ModelSerializer):
     subtitles = SubtitleSerializer(many=True, read_only=True)
+    clip_options = serializers.SerializerMethodField()
     renditions = RenditionSerializer(many=True, read_only=True)
     audio_tracks = AudioTrackSerializer(many=True, read_only=True)
 
@@ -135,5 +175,13 @@ class AdminVideoSerializer(serializers.ModelSerializer):
             "finished_at",
             "created_at",
             "subtitles",
+            "clip_of",
+            "clip_start",
+            "clip_end",
+            "clip_options",
         ]
         read_only_fields = fields
+
+    @extend_schema_field(ClipOptionsSerializer(allow_null=True))
+    def get_clip_options(self, obj):
+        return ClipOptionsSerializer(obj.clip_options).data if obj.clip_options else None

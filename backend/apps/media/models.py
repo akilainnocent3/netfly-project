@@ -98,6 +98,14 @@ class VideoAsset(models.Model):
     error = models.TextField(blank=True)
     log = models.TextField(blank=True)
     ladder_snapshot = models.JSONField(default=list, blank=True)
+    # A trailer cut by NETFLY from another asset (Studio → "Generate from video"); seconds into it.
+    clip_of = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    clip_start = models.FloatField(null=True, blank=True)
+    clip_end = models.FloatField(null=True, blank=True)
+    # {title_id, source: "feature" | {episode_id}, label, fade, audio}
+    clip_options = models.JSONField(default=dict, blank=True)
     queued_at = models.DateTimeField(null=True, blank=True)
     started_at = models.DateTimeField(null=True, blank=True)
     finished_at = models.DateTimeField(null=True, blank=True)

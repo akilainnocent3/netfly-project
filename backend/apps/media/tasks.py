@@ -74,9 +74,90 @@ def render_image(self, asset_id: str) -> None:
         raise self.retry(exc=exc) from exc
 
 
+# A generated trailer's progress bar: cutting fills 0–20 %, the normal pipeline 20–100 %.
+CUT_SHARE = 20.0
+
+
+def _updater(asset_id: str, base: float = 0.0, span: float = 100.0):
+    """Write job fields; `progress` is given 0–100 and lands in base…base+span."""
+    from django.utils import timezone
+
+    from .models import VideoAsset
+
+    stage_max = VideoAsset._meta.get_field("stage").max_length
+
+    def update(**fields):
+        fields.setdefault("updated_at", timezone.now())
+        if "stage" in fields and len(fields["stage"]) > stage_max:
+            # A long ladder ("Encoding 6 renditions (2160p, 1080p-high, …)") must never fail a job.
+            fields["stage"] = fields["stage"][: stage_max - 1] + "…"
+        if "progress" in fields:
+            fields["progress"] = round(base + span * fields["progress"] / 100, 1)
+        VideoAsset.objects.filter(pk=asset_id).update(**fields)
+
+    return update
+
+
+def _toolchain_or_fail(asset) -> bool:
+    """Before downloading anything: a missing FFmpeg is the operator's to fix, not a retry."""
+    from django.utils import timezone
+
+    from . import transcode as tc
+    from .models import VideoAsset
+
+    try:
+        tc.require_toolchain()
+    except tc.MissingToolchain as exc:
+        logger.error("Video job %s can't start: %s (%s)", asset.pk, exc, exc.log)
+        VideoAsset.objects.filter(pk=asset.pk).update(
+            status=VideoAsset.Status.FAILED,
+            stage="Failed",
+            error=str(exc)[:2000],
+            log=exc.log,
+            attempts=asset.attempts + 1,
+            finished_at=timezone.now(),
+            updated_at=timezone.now(),
+        )
+        return False
+    return True
+
+
+def _retry_or_fail(task, asset_id: str, exc: Exception, update) -> None:
+    """Transient errors retry with backoff (raises Retry); permanent ones fail the job."""
+    from django.utils import timezone
+
+    from apps.core import storage
+    from apps.core.config import config
+
+    from .models import VideoAsset
+
+    log_text = getattr(exc, "log", "") or ""
+    permanent = isinstance(exc, storage.StorageNotConfigured) or getattr(exc, "permanent", False)
+    logger.warning("Video job %s failed (attempt %s): %s", asset_id, task.request.retries + 1, exc)
+    if not permanent and task.request.retries < config.get_int("transcoding.max_retries", 3):
+        update(
+            status=VideoAsset.Status.QUEUED,
+            stage="Retrying shortly",
+            error=str(exc)[:2000],
+            log=log_text,
+        )
+        raise task.retry(exc=exc, countdown=min(600, 30 * 2**task.request.retries)) from exc
+    update(
+        status=VideoAsset.Status.FAILED,
+        stage="Failed",
+        error=str(exc)[:2000],
+        log=log_text,
+        finished_at=timezone.now(),
+    )
+
+
 @shared_task(bind=True, acks_late=True, reject_on_worker_lost=True, max_retries=10)
 def transcode_asset(self, asset_id: str) -> None:
     """Transcode one VideoAsset into an HLS ladder. Runs on the dedicated `transcode` queue."""
+    _transcode(self, asset_id)
+
+
+def _transcode(task, asset_id: str, base: float = 0.0, span: float = 100.0) -> None:
     from django.utils import timezone
 
     from apps.core import storage
@@ -88,40 +169,18 @@ def transcode_asset(self, asset_id: str) -> None:
     asset = VideoAsset.objects.filter(pk=asset_id).first()
     if asset is None or not asset.source_key:
         return
-    max_retries = config.get_int("transcoding.max_retries", 3)
-
-    try:
-        # Before downloading anything: a missing FFmpeg is the operator's to fix, not a retry.
-        tc.require_toolchain()
-    except tc.MissingToolchain as exc:
-        logger.error("Transcode %s can't start: %s (%s)", asset_id, exc, exc.log)
-        VideoAsset.objects.filter(pk=asset_id).update(
-            status=VideoAsset.Status.FAILED,
-            stage="Failed",
-            error=str(exc)[:2000],
-            log=exc.log,
-            attempts=asset.attempts + 1,
-            finished_at=timezone.now(),
-            updated_at=timezone.now(),
-        )
+    if not _toolchain_or_fail(asset):
         return
+    update = _updater(asset_id, base, span)
 
-    stage_max = VideoAsset._meta.get_field("stage").max_length
-
-    def update(**fields):
-        fields.setdefault("updated_at", timezone.now())
-        if "stage" in fields and len(fields["stage"]) > stage_max:
-            # A long ladder ("Encoding 6 renditions (2160p, 1080p-high, …)") must never fail a job.
-            fields["stage"] = fields["stage"][: stage_max - 1] + "…"
-        VideoAsset.objects.filter(pk=asset_id).update(**fields)
-
+    fields = {"started_at": timezone.now()} if not base else {}
     update(
         status=VideoAsset.Status.TRANSCODING,
         stage="Downloading source",
         progress=1,
-        started_at=timezone.now(),
-        attempts=asset.attempts + 1,
+        attempts=asset.attempts + (0 if base else 1),
         error="",
+        **fields,
     )
     try:
         with tc.Workspace() as work:
@@ -177,34 +236,96 @@ def transcode_asset(self, asset_id: str) -> None:
                 except Exception:  # noqa: BLE001 - old renditions are best-effort cleanup
                     logger.warning("Couldn't delete previous renditions at %s", previous)
     except Exception as exc:  # noqa: BLE001
-        log_text = getattr(exc, "log", "") or ""
-        permanent = isinstance(exc, storage.StorageNotConfigured) or getattr(
-            exc, "permanent", False
-        )
-        logger.warning(
-            "Transcode %s failed (attempt %s): %s", asset_id, self.request.retries + 1, exc
-        )
-        if not permanent and self.request.retries < max_retries:
-            update(
-                status=VideoAsset.Status.QUEUED,
-                stage="Retrying shortly",
-                error=str(exc)[:2000],
-                log=log_text,
-            )
-            raise self.retry(exc=exc, countdown=min(600, 30 * 2**self.request.retries)) from exc
-        update(
-            status=VideoAsset.Status.FAILED,
-            stage="Failed",
-            error=str(exc)[:2000],
-            log=log_text,
-            finished_at=timezone.now(),
-        )
+        _retry_or_fail(task, asset_id, exc, update)
         return
 
-    from apps.catalog.services import on_video_ready
+    from apps.catalog.services import attach_generated_trailer, on_video_ready
 
-    on_video_ready(VideoAsset.objects.get(pk=asset_id))
+    ready = VideoAsset.objects.get(pk=asset_id)
+    on_video_ready(ready)
+    if ready.clip_options.get("title_id"):
+        attach_generated_trailer(ready)
     _fill_runtime(asset_id)
+
+
+@shared_task(bind=True, acks_late=True, reject_on_worker_lost=True, max_retries=10)
+def generate_clip(self, asset_id: str) -> None:
+    """Cut a trailer out of another asset's original upload, then transcode it like an upload.
+
+    The cut becomes this asset's own source (`sources/<id>/clip.mp4`), so Retry, sprites and the
+    poster need no range logic and the trailer outlives the video it came from (decision 56).
+    """
+    from django.utils import timezone
+
+    from apps.core import storage
+    from apps.core.config import config
+
+    from . import transcode as tc
+    from .models import VideoAsset
+
+    asset = VideoAsset.objects.select_related("clip_of").filter(pk=asset_id).first()
+    if asset is None:
+        return
+    if asset.source_key:  # cut on an earlier attempt; only the pipeline needs to run again
+        _transcode(self, asset_id, CUT_SHARE, 100 - CUT_SHARE)
+        return
+    if not _toolchain_or_fail(asset):
+        return
+    update = _updater(asset_id, 0, CUT_SHARE)
+    start, end = asset.clip_start or 0.0, asset.clip_end or 0.0
+    span = f"{tc.timecode(start)}–{tc.timecode(end)}"
+    update(
+        status=VideoAsset.Status.TRANSCODING,
+        stage=f"Cutting {span}",
+        progress=0,
+        started_at=timezone.now(),
+        attempts=asset.attempts + 1,
+        error="",
+    )
+    options = asset.clip_options or {}
+    try:
+        source = asset.clip_of
+        if source is None or not source.source_key:
+            raise tc.TranscodeError(
+                "The video this trailer is cut from has been deleted.", permanent=True
+            )
+        if storage.object_size(source.source_key) is None:
+            raise tc.TranscodeError(
+                "The original upload of the source video is gone from storage.", permanent=True
+            )
+        url = storage.presign_get(source.source_key, 3 * 3600, cdn=False)
+        probed = tc.probe(url, remote=True)
+        if end > probed.duration + 0.05:
+            raise tc.TranscodeError(
+                f"The range ends at {tc.timecode(end)} but the video is only "
+                f"{tc.timecode(probed.duration)} long.",
+                permanent=True,
+            )
+        length = end - start
+        fade = config.get_float("trailer.fade_seconds", 0.5) if options.get("fade", True) else 0
+        fade = min(fade, length / 2)
+        with tc.Workspace() as work:
+            out = work / "clip.mp4"
+            log = tc.encode(
+                tc.clip_command(
+                    url, out, probed, start, length, fade=fade, audio=options.get("audio", True)
+                ),
+                length,
+                lambda p: update(progress=round(100 * p, 1)),
+            )
+            update(stage="Uploading cut", progress=95)
+            key = storage.upload_file(str(out), f"sources/{asset_id}/clip.mp4", "video/mp4")
+            update(
+                source_key=key,
+                source_size=out.stat().st_size,
+                source_content_type="video/mp4",
+                progress=100,
+                log=log[-4000:],
+            )
+    except Exception as exc:  # noqa: BLE001
+        _retry_or_fail(self, asset_id, exc, update)
+        return
+    _transcode(self, asset_id, CUT_SHARE, 100 - CUT_SHARE)
 
 
 def _fill_runtime(asset_id: str) -> None:
@@ -234,3 +355,19 @@ def queue_transcode(asset) -> None:
         error="",
     )
     transcode_asset.apply_async(args=[str(asset.pk)], queue=TRANSCODE_QUEUE)
+
+
+def queue_generate(asset) -> None:
+    """(Re)start a generated trailer from the cut."""
+    from django.utils import timezone
+
+    from .models import VideoAsset
+
+    VideoAsset.objects.filter(pk=asset.pk).update(
+        status=VideoAsset.Status.QUEUED,
+        stage="Waiting for a worker",
+        progress=0,
+        queued_at=timezone.now(),
+        error="",
+    )
+    generate_clip.apply_async(args=[str(asset.pk)], queue=TRANSCODE_QUEUE)

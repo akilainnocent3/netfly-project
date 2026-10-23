@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.catalog.models import (
@@ -13,7 +14,7 @@ from apps.catalog.models import (
 )
 from apps.core.config import config
 from apps.media.models import ImageAsset, VideoAsset
-from apps.media.serializers import AdminImageSerializer, AdminVideoSerializer
+from apps.media.serializers import AdminImageSerializer, AdminVideoSerializer, TrailerSourceField
 
 
 class ImageIdField(serializers.PrimaryKeyRelatedField):
@@ -130,6 +131,7 @@ class TitleAdminSerializer(serializers.ModelSerializer):
     logo = AdminImageSerializer(read_only=True)
     video = AdminVideoSerializer(read_only=True)
     trailer = AdminVideoSerializer(read_only=True)
+    trailer_job = serializers.SerializerMethodField()
     publish_blockers = serializers.SerializerMethodField()
     is_billboard = serializers.SerializerMethodField()
     effective_boost = serializers.SerializerMethodField()
@@ -168,6 +170,7 @@ class TitleAdminSerializer(serializers.ModelSerializer):
             "video_id",
             "trailer",
             "trailer_id",
+            "trailer_job",
             "status",
             "publish_at",
             "published_at",
@@ -187,6 +190,18 @@ class TitleAdminSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["status", "published_at", "popularity", "created_at", "updated_at"]
         extra_kwargs = {"slug": {"required": False}}
+
+    @extend_schema_field(AdminVideoSerializer(allow_null=True))
+    def get_trailer_job(self, obj):
+        """The latest trailer being generated (or that failed) for this title, newer than the
+        attached one. It replaces `trailer` only once ready."""
+        jobs = VideoAsset.objects.filter(
+            kind=VideoAsset.Kind.TRAILER, clip_options__title_id=obj.pk
+        ).exclude(status=VideoAsset.Status.READY)
+        if obj.trailer_id:
+            jobs = jobs.exclude(pk=obj.trailer_id).filter(created_at__gt=obj.trailer.created_at)
+        job = jobs.prefetch_related("subtitles").order_by("-created_at").first()
+        return AdminVideoSerializer(job).data if job else None
 
     def get_publish_blockers(self, obj) -> list[str]:
         from apps.catalog.services import publish_blockers
@@ -481,3 +496,11 @@ class BillboardAdminSerializer(serializers.ModelSerializer):
             "is_active",
         ]
         read_only_fields = ["order"]
+
+
+class TrailerGenerateSerializer(serializers.Serializer):
+    source = TrailerSourceField()
+    start_seconds = serializers.FloatField(min_value=0)
+    end_seconds = serializers.FloatField(min_value=0)
+    fade = serializers.BooleanField(default=True)
+    audio = serializers.BooleanField(default=True)

@@ -40,7 +40,8 @@ docker compose exec backend python manage.py seed_demo --reset
   every playback.
 * **Studio** — plans, subscribers, billing tiles, catalog editor, uploads and transcoding monitor, home layout, settings, users, audit log, and a
   per-title **recommendation priority** (boost −2…+5 with an optional campaign window) that reaches every
-  viewer immediately.
+  viewer immediately. A title's trailer can be uploaded or **generated from its own video**: pick a range
+  (e.g. 7:00 → 9:00) on the preview and NETFLY cuts and transcodes it (decision 56).
 
 ## Configuration
 
