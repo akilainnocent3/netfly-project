@@ -20,33 +20,33 @@ async function getMediaOrigins(): Promise<string> {
   return mediaOrigins.value;
 }
 
+// Next's middleware adapter rejects a relative Location and builds request.url from the standalone
+// server's bind address (localhost:PORT), so resolve redirects against the public host nginx
+// forwards instead. The server only listens on 127.0.0.1, so these headers come from nginx.
+function redirectTo(request: NextRequest, pathWithQuery: string) {
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  const proto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const origin = host ? `${proto || "http"}://${host}` : request.url;
+  return NextResponse.redirect(new URL(pathWithQuery, origin));
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const signedIn = request.cookies.has("netfly_csrf_client");
   // Browsing is open to everyone; only account pages (and the player) need a session.
   if (!signedIn && matchesPath(pathname, PRIVATE_PATHS)) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = `?next=${encodeURIComponent(pathname + search)}`;
-    return NextResponse.redirect(url);
+    return redirectTo(request, `/login?next=${encodeURIComponent(pathname + search)}`);
   }
   if (signedIn && pathname.startsWith("/genre/")) {
-    const url = request.nextUrl.clone();
-    url.pathname = pathname.replace(/^\/genre\//, "/categories/");
-    return NextResponse.redirect(url);
+    return redirectTo(request, pathname.replace(/^\/genre\//, "/categories/") + search);
   }
   // The A–Z catalogue is a crawl path; signed-in viewers browse the app's categories instead.
-  if (signedIn && pathname === "/titles") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/categories";
-    url.search = "";
-    return NextResponse.redirect(url);
-  }
+  if (signedIn && pathname === "/titles") return redirectTo(request, "/categories");
   const signupStep = /^\/signup(\/(name|username|password))?$/.test(pathname);
   if (signedIn && (pathname === "/login" || signupStep || pathname === "/")) {
     // Already signed in: go where the visitor was headed (validated), else home.
     const target = safeNext(request.nextUrl.searchParams.get("next"));
-    return NextResponse.redirect(new URL(target, request.url));
+    return redirectTo(request, target);
   }
 
   const nonce = btoa(crypto.randomUUID());

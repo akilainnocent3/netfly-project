@@ -16,14 +16,22 @@ async function getMediaOrigins(): Promise<string> {
   return mediaOrigins.value;
 }
 
+// Next's middleware adapter rejects a relative Location and builds request.url from the standalone
+// server's bind address (localhost:PORT), so resolve redirects against the public host nginx
+// forwards instead. The server only listens on 127.0.0.1, so these headers come from nginx.
+function redirectTo(request: NextRequest, pathWithQuery: string) {
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  const proto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const origin = host ? `${proto || "http"}://${host}` : request.url;
+  return NextResponse.redirect(new URL(pathWithQuery, origin));
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const signedIn = request.cookies.has("netfly_csrf_admin");
   if (!signedIn && pathname !== "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = pathname === "/" ? "" : `?next=${encodeURIComponent(pathname + search)}`;
-    return NextResponse.redirect(url);
+    const query = pathname === "/" ? "" : `?next=${encodeURIComponent(pathname + search)}`;
+    return redirectTo(request, `/login${query}`);
   }
   const nonce = btoa(crypto.randomUUID());
   const media = await getMediaOrigins();

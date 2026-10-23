@@ -10,6 +10,9 @@ const config: NextConfig = {
   // The dev-tools badge floats bottom-left, over the phone tab bar (and e2e taps on it).
   devIndicators: false,
   output: "standalone",
+  // Set per deploy: static URLs get ?dpl=<id>, so CDN/browser caches (incl. cached 404s) never
+  // serve a previous deploy's response for an asset whose content hash didn't change.
+  deploymentId: process.env.NETFLY_DEPLOYMENT_ID || undefined,
   // Trace from the monorepo root so workspace packages land in the standalone bundle.
   outputFileTracingRoot: path.join(__dirname, "../../"),
   transpilePackages: ["@netfly/ui", "@netfly/api-client"],
@@ -29,6 +32,11 @@ const config: NextConfig = {
         ],
       },
     ];
+  },
+  // Low-disk hosts: skip the on-disk webpack cache (it can exceed the build itself).
+  webpack: (config) => {
+    if (process.env.NETFLY_BUILD_NO_CACHE === "1") config.cache = false;
+    return config;
   },
   async rewrites() {
     return [{ source: "/api/:path*", destination: `${api}/api/:path*` }];
