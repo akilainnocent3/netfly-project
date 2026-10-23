@@ -9,8 +9,36 @@ export interface UploadCallbacks {
 }
 
 const CONCURRENCY = 4;
-const SIGN_BATCH = 20;
-const MAX_ATTEMPTS = 5;
+const SIGN_BATCH = 8;
+// Per part, counted only while the browser is online — offline time never uses up attempts.
+const MAX_ATTEMPTS = 12;
+const MAX_BACKOFF_MS = 60_000;
+// Presigned part URLs live for an hour; re-sign well before that.
+const URL_TTL_MS = 40 * 60_000;
+// A part PUT that makes no progress for this long is aborted and retried.
+const STALL_MS = 90_000;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function waitForOnline(): Promise<void> {
+  if (typeof navigator === "undefined" || navigator.onLine) return Promise.resolve();
+  return new Promise((resolve) => window.addEventListener("online", () => resolve(), { once: true }));
+}
+
+/** Retry a control-plane API call (start / complete) through transient failures. */
+async function withRetry<T>(fn: () => Promise<T>, attempts = 6): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    await waitForOnline();
+    try {
+      return await fn();
+    } catch (error) {
+      const status = (error as { status?: number }).status;
+      const transient = !status || status >= 500 || status === 429;
+      if (!transient || attempt >= attempts) throw error;
+      await sleep(Math.min(MAX_BACKOFF_MS, 1000 * 2 ** attempt));
+    }
+  }
+}
 
 export function fingerprintOf(file: File): string {
   return `${file.name}:${file.size}:${file.lastModified}`;
@@ -27,7 +55,7 @@ export class MultipartUpload {
   private sessionId: string | null = null;
   private etags = new Map<number, string>();
   private partLoaded = new Map<number, number>();
-  private urls = new Map<number, string>();
+  private urls = new Map<number, { url: string; at: number }>();
   private inflight = new Set<XMLHttpRequest>();
   private wake: (() => void) | null = null;
   assetId: string | null = null;
@@ -40,16 +68,18 @@ export class MultipartUpload {
 
   async start(): Promise<string> {
     this.cb.onState("preparing");
-    const session = await unwrap(
-      api.POST("/api/v1/admin/uploads", {
-        body: {
-          filename: this.file.name,
-          size: this.file.size,
-          content_type: this.file.type,
-          kind: this.kind,
-          fingerprint: fingerprintOf(this.file),
-        },
-      }),
+    const session = await withRetry(() =>
+      unwrap(
+        api.POST("/api/v1/admin/uploads", {
+          body: {
+            filename: this.file.name,
+            size: this.file.size,
+            content_type: this.file.type,
+            kind: this.kind,
+            fingerprint: fingerprintOf(this.file),
+          },
+        }),
+      ),
     );
     this.sessionId = session.id;
     this.assetId = session.asset_id;
@@ -77,11 +107,13 @@ export class MultipartUpload {
 
     this.cb.onState("completing");
     const parts = [...this.etags.entries()].map(([number, etag]) => ({ number, etag }));
-    await unwrap(
-      api.POST("/api/v1/admin/uploads/{id}/complete", {
-        params: { path: { id: session.id } },
-        body: { parts },
-      }),
+    await withRetry(() =>
+      unwrap(
+        api.POST("/api/v1/admin/uploads/{id}/complete", {
+          params: { path: { id: session.id } },
+          body: { parts },
+        }),
+      ),
     );
     this.cb.onState("done");
     return session.asset_id;
@@ -119,7 +151,7 @@ export class MultipartUpload {
 
   private async signedUrl(number: number, count: number): Promise<string> {
     const cached = this.urls.get(number);
-    if (cached) return cached;
+    if (cached && Date.now() - cached.at < URL_TTL_MS) return cached.url;
     const numbers = Array.from({ length: SIGN_BATCH }, (_, i) => number + i).filter(
       (n) => n <= count && !this.etags.has(n),
     );
@@ -129,8 +161,9 @@ export class MultipartUpload {
         body: { numbers },
       }),
     );
-    for (const s of signed) this.urls.set(s.number, s.url);
-    return this.urls.get(number)!;
+    const at = Date.now();
+    for (const s of signed) this.urls.set(s.number, { url: s.url, at });
+    return this.urls.get(number)!.url;
   }
 
   private async uploadPart(number: number, partSize: number, count: number): Promise<void> {
@@ -140,6 +173,7 @@ export class MultipartUpload {
     );
     for (let attempt = 1; ; attempt++) {
       await this.waitIfPaused();
+      await waitForOnline();
       if (this.aborted) return;
       try {
         const etag = await this.put(await this.signedUrl(number, count), blob, number);
@@ -150,12 +184,18 @@ export class MultipartUpload {
       } catch (error) {
         if (this.paused || this.aborted) continue;
         this.partLoaded.set(number, 0);
+        this.report();
         this.urls.delete(number); // the URL may have expired
+        if (typeof navigator !== "undefined" && !navigator.onLine) {
+          attempt--; // went offline: wait for the connection instead of burning attempts
+          continue;
+        }
         if (attempt >= MAX_ATTEMPTS) {
           this.cb.onState("error", error instanceof Error ? error.message : "Upload failed");
           throw error;
         }
-        await new Promise((r) => setTimeout(r, Math.min(15_000, 500 * 2 ** attempt)));
+        // Exponential backoff with jitter so parallel parts don't retry in lockstep.
+        await sleep(Math.min(MAX_BACKOFF_MS, 1000 * 2 ** attempt) * (0.75 + Math.random() / 2));
       }
     }
   }
@@ -164,13 +204,27 @@ export class MultipartUpload {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       this.inflight.add(xhr);
+      let stalled = false;
+      let watchdog: ReturnType<typeof setTimeout>;
+      const arm = () => {
+        clearTimeout(watchdog);
+        watchdog = setTimeout(() => {
+          stalled = true;
+          xhr.abort();
+        }, STALL_MS);
+      };
+      const settle = () => {
+        clearTimeout(watchdog);
+        this.inflight.delete(xhr);
+      };
       xhr.open("PUT", url);
       xhr.upload.onprogress = (e) => {
+        arm();
         this.partLoaded.set(number, e.loaded);
         this.report();
       };
       xhr.onload = () => {
-        this.inflight.delete(xhr);
+        settle();
         const etag = xhr.getResponseHeader("ETag");
         if (xhr.status >= 200 && xhr.status < 300 && etag) resolve(etag);
         else
@@ -183,13 +237,14 @@ export class MultipartUpload {
           );
       };
       xhr.onerror = () => {
-        this.inflight.delete(xhr);
+        settle();
         reject(new Error("Network error"));
       };
       xhr.onabort = () => {
-        this.inflight.delete(xhr);
-        reject(new Error("aborted"));
+        settle();
+        reject(new Error(stalled ? "Upload stalled" : "aborted"));
       };
+      arm();
       xhr.send(blob);
     });
   }

@@ -14,7 +14,7 @@ import datetime as dt
 import hashlib
 import hmac
 import threading
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 from urllib.parse import quote, urlsplit
 
@@ -49,7 +49,7 @@ def s3_settings(overrides: dict[str, str] | None = None) -> S3Settings:
     prefix = o.get("prefix", config.get_str("storage.s3.prefix"))
     if prefix and not prefix.endswith("/"):
         prefix += "/"
-    return S3Settings(
+    s = S3Settings(
         bucket=o.get("bucket") or config.get_str("storage.s3.bucket"),
         region=o.get("region") or config.get_str("storage.s3.region") or "us-east-1",
         access_key=o.get("access_key_id") or config.get_secret("storage.s3.access_key_id"),
@@ -57,6 +57,36 @@ def s3_settings(overrides: dict[str, str] | None = None) -> S3Settings:
         endpoint=o.get("endpoint_url", config.get_str("storage.s3.endpoint_url")),
         prefix=prefix,
     )
+    region = _bucket_region(s)
+    return replace(s, region=region) if region and region != s.region else s
+
+
+_regions: dict[tuple[str, str], str | None] = {}
+
+
+def _bucket_region(s: S3Settings) -> str | None:
+    """The bucket's real AWS region. A mismatch with the configured region is
+    invisible server-side (boto follows S3's redirects) but breaks every
+    presigned URL handed to browsers: S3 rejects it without CORS headers, so
+    uploads fail as "Network error" and images don't load."""
+    if s.endpoint or not s.bucket:
+        return None
+    cache_key = (s.bucket, s.access_key)
+    if cache_key not in _regions:
+        region = None
+        try:
+            probe = _make_client(replace(s, region="us-east-1"))
+            meta = probe.head_bucket(Bucket=s.bucket)["ResponseMetadata"]
+            region = meta.get("HTTPHeaders", {}).get("x-amz-bucket-region")
+        except ClientError as exc:
+            # S3 reports the region even when HeadBucket itself is denied.
+            region = exc.response.get("ResponseMetadata", {}).get("HTTPHeaders", {}).get(
+                "x-amz-bucket-region"
+            )
+        except BotoCoreError:
+            return None  # transient: don't cache, try again next call
+        _regions[cache_key] = region
+    return _regions[cache_key]
 
 
 _clients: dict[str, Any] = {}
