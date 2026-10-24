@@ -1,0 +1,574 @@
+{
+    "coming_soon": [
+        {
+            "id": 10,
+            "slug": "glass-orchard",
+            "title": "Glass Orchard",
+            "type": "movie",
+            "year": 2026,
+            "maturity_rating": "PG-13",
+            "runtime_minutes": 1,
+            "season_count": null,
+            "short_synopsis": "A botanist inherits an orchard where the fruit remembers who planted it.",
+            "translation_status": "translated",
+            "translator_name": "",
+            "poster": null,
+            "backdrop": null,
+            "logo": null,
+            "genres": [
+                "Drama"
+            ],
+            "has_preview": false,
+            "match": null,
+            "context": null,
+            "in_my_list": false,
+            "rating": null,
+            "badge": null,
+            "top10_rank": null,
+            "moods": [
+                "Emotional"
+            ],
+            "synopsis": "A botanist inherits an orchard where the fruit remembers who planted it.",
+            "publish_at": "2026-10-29T13:07:37.383474Z",
+            "reminded": false
+        },
+        {
+            "id": 11,
+            "slug": "signal-fire",
+            "title": "Signal Fire",
+            "type": "movie",
+            "year": 2026,
+            "maturity_rating": "PG-13",
+            "runtime_minutes": 1,
+            "season_count": null,
+            "short_synopsis": "Two rival radio hosts discover their broadcasts are reaching the same stranger.",
+            "translation_status": "translated",
+            "translator_name": "",
+            "poster": null,
+            "backdrop": null,
+            "logo": null,
+            "genres": [
+                "Drama"
+            ],
+            "has_preview": false,
+            "match": null,
+            "context": null,
+            "in_my_list": false,
+            "rating": null,
+            "badge": null,
+            "top10_rank": null,
+            "moods": [
+                "Emotional"
+            ],
+            "synopsis": "Two rival radio hosts discover their broadcasts are reaching the same stranger.",
+            "publish_at": "2026-11-05T13:07:37.392718Z",
+            "reminded": false
+        }
+    ],
+    "everyone_watching": [
+        {
+            "id": 44,
+            "slug": "neon-tide",
+            "title": "Neon Tide",
+            "type": "movie",
+            "year": 2025,
+            "maturity_rating": "PG-13",
+            "runtime_minutes": 1,
+            "season_count": null,
+            "short_synopsis": "A salvage diver finds a city of light beneath the harbour \u2014 and someone who wants it to stay hidden.",
+            "translation_status": "translated",
+            "translator_name": "DJ Kanda",
+            "poster": {
+                "key": "images/44db6198-af75-4735-b299-49e5d166b55a/v1",
+                "blur": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAAAQBACdASoQABgAPu1kq04ppaQiMAgBMB2JaACdMoMYAEHynD1m2umiAADafjJ8bRkTPFQZIAfUS/Ts+P0cF/18WOs9IZc1+KvNmnakilx9WCUqk4oLPB56hUzqrnAA",
+                "color": "#4e86cd",
+                "width": 1000,
+                "height": 1500
+            },
+            "backdrop": {
+                "key": "images/a3b577e5-8118-4a6f-9acf-2e0aabd06d42/v1",
+                "blur": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAACQAwCdASoYAA4APu1Ct1apoqakGAEwHYlqAJ0ygAFj3V5QYAgAANXChUAcneeJfxQ2ETYQu7usAw04m/24tyyDXudt5HUB5uTJ5XNQAAA=",
+                "color": "#5e74ce",
+                "width": 2560,
+                "height": 1440
+            },
+            "logo": {
+                "key": "images/a4c7794f-d7a8-4101-afc3-03e2445864c2/v1",
+                "blur": "data:image/webp;base64,UklGRgoBAABXRUJQVlA4WAoAAAAQAAAAFwAABQAAQUxQSIAAAAABgGNt2/Hoja0uJ5Vt21aX1kmZznabsW17lmFvaWYJEZHwfzGDLXaRjXqSkEmneN1ylkOGcagBHhemx6fFncXyy0yUsbs/Gd+vlT6qAFuPVyeL5UZj7ew3AaliYWats/yUB0haC+m+tNxWhDJKMFhNkXGZO84jcTqL0WS0GqnwF1ZQOCBkAAAAcAMAnQEqGAAGAD7tYqlNqaWkIjAIATAdiUAAC4m3finTVcQAAP7rc1Yl8+vNocrtNwm8rnEJGpAjskN71fR5iWYB/1viMA1LmdcoWipf0s6OhSLiGLj8bTIIy6mvDLSFDAAAAA==",
+                "color": "#363839",
+                "width": 998,
+                "height": 240
+            },
+            "genres": [
+                "Thriller",
+                "Sci-Fi"
+            ],
+            "has_preview": true,
+            "match": null,
+            "context": null,
+            "in_my_list": false,
+            "rating": null,
+            "badge": "top10",
+            "top10_rank": 1,
+            "moods": [
+                "Suspenseful",
+                "Mind-bending"
+            ]
+        },
+        {
+            "id": 46,
+            "slug": "paper-kings",
+            "title": "Paper Kings",
+            "type": "movie",
+            "year": 2023,
+            "maturity_rating": "PG-13",
+            "runtime_minutes": 1,
+            "season_count": null,
+            "short_synopsis": "Two rival street vendors accidentally become the most powerful newspaper barons in town.",
+            "translation_status": "translated",
+            "translator_name": "VJ Sanko",
+            "poster": {
+                "key": "images/78a70271-3a54-4f00-9b09-aaa42cf3e465/v1",
+                "blur": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAABwAwCdASoQABgALrV2u12jqampiYC0S2AE6AGyz2mE7n1hAAAA+E9bc6bl/P+eE7Y9z9ImG/xb8G+doDsnTXJAq+rQzyZq0E3XWQEiray+5YdPbmVsAA==",
+                "color": "#65b04f",
+                "width": 1000,
+                "height": 1500
+            },
+            "backdrop": {
+                "key": "images/d40dd665-b796-43fe-90f1-42dff7f9a543/v1",
+                "blur": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAAAQBACdASoYAA4APu1iqU2ppaQiMAgBMB2JagCdMoACbnd7Y/mAPL+ZAAD+r4eusmO6aeIPQnXoSrc1/7HcAt0U6WqjS21/97l+pgv9eLCGL01JTFpxrwmhyVowHPAA",
+                "color": "#76a437",
+                "width": 2560,
+                "height": 1440
+            },
+            "logo": {
+                "key": "images/05c1ffc4-1a72-45a8-a9fd-028663f5ea73/v1",
+                "blur": "data:image/webp;base64,UklGRhYBAABXRUJQVlA4WAoAAAAQAAAAFwAABAAAQUxQSHkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB2lNTC1RYktmRHEXE1BNR1U9NGNGT1YCEr+rxo2esqeZfdo5Ie5PjKy6oohwh5QLD3Izg3t/GV2JYXBBGoNncGh6Y4CMWpgQDDIzLjA1MDQWAgADAAADAgAAAAMDBQQAAFZQOCB2AAAAkAMAnQEqGAAFAD7tYqlNqaWjojAIATAdiWIAqPQiql8KRpwMmAD+7dk3PR6WFWUk1RykWCP/+sRLVCf6rN/7QNdVSytPl9sf6DDNLusBaI2x28lQ4vIUn/f5qeZLXdjSPv2X/hr/pPZfdAudf/jw0YKSQAAAAA==",
+                "color": "#3a3a38",
+                "width": 1201,
+                "height": 240
+            },
+            "genres": [
+                "Drama",
+                "Comedy"
+            ],
+            "has_preview": true,
+            "match": null,
+            "context": null,
+            "in_my_list": false,
+            "rating": null,
+            "badge": "top10",
+            "top10_rank": 2,
+            "moods": [
+                "Emotional",
+                "Witty"
+            ]
+        },
+        {
+            "id": 48,
+            "slug": "quiet-harbour",
+            "title": "Quiet Harbour",
+            "type": "movie",
+            "year": 2022,
+            "maturity_rating": "PG",
+            "runtime_minutes": 1,
+            "season_count": null,
+            "short_synopsis": "Every summer, a ferry captain and a lighthouse painter meet on the same crossing \u2014 for ten years.",
+            "translation_status": "translated",
+            "translator_name": "DJ Kanda",
+            "poster": {
+                "key": "images/1e52a56e-af87-404f-a3f3-7c8c35d42e8f/v1",
+                "blur": "data:image/webp;base64,UklGRmYAAABXRUJQVlA4IFoAAADwAwCdASoQABgAPu1yrU+pp6QiMAgBMB2JYgC/cUAAswFcbrk+p4QAANSR+KhC1AFy+8WRudt1JUI25fH4YB74dQ+lZc+hluUaXH4QSOzwzWbkUJApddziAAA=",
+                "color": "#665d83",
+                "width": 1000,
+                "height": 1500
+            },
+            "backdrop": {
+                "key": "images/396c12e8-ef5a-4ced-8d5a-71bad6104a31/v1",
+                "blur": "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAABwAwCdASoYAA4APu1qrU8ppiQiMAgBMB2JbACdABEQDSF4Q4AA/qfzZKVCvz2i9GUr5t8hGEWJaP6vP1UpVMU5/Qonovxtli6AAA==",
+                "color": "#667aa6",
+                "width": 2560,
+                "height": 1440
+            },
+            "logo": {
+                "key": "images/4fc1090a-3e2e-4f6c-8260-f3a9115dafef/v1",
+                "blur": "data:image/webp;base64,UklGRtgAAABXRUJQVlA4WAoAAAAQAAAAFwAAAwAAQUxQSGEAAAAAAAUAAAAABAcGAQAAAAACAAIABgAAAAEAJHtrWWxwiml5GHNbdk6bYJpfd2tWdJoXMISGioKGmT1OEpGMoo2cfbSCfIOQgp8oDlVMQzc4RjQUAwoTDBQMFR0HIgUgDAwLAFZQOCBQAAAAcAMAnQEqGAAEAD7tYqlNqaWjojAIATAdiWUAAFvpctIyvv4gAP7np/V2ECfpRKyV3trv9dSMkbYZvdM/AHgxFu231gpf7+H+dauHZSMAAAA=",
+                "color": "#3b393a",
+                "width": 1478,
+                "height": 240
+            },
+            "genres": [
+                "Drama",
+                "Romance"
+            ],
+            "has_preview": true,
+            "match": null,
+            "context": null,
+            "in_my_list": false,
+            "rating": null,
+            "badge": "top10",
+            "top10_rank": 3,
+            "moods": [
+                "Emotional",
+                "Romantic"
+            ]
+        },
+        {
+            "id": 50,
+            "slug": "kingdom-of-ash",
+            "title": "Kingdom of Ash",
+            "type": "series",
+            "year": 2025,
+            "maturity_rating": "TV-14",
+            "runtime_minutes": null,
+            "season_count": 2,
+            "short_synopsis": "Heirs to a burning throne fight to rebuild a kingdom \u2014 and each other.",
+            "translation_status": "translated",
+            "translator_name": "VJ Sanko",
+            "poster": {
+                "key": "images/3b788d4b-6c77-4817-a054-3ba06a249896/v1",
+                "blur": "data:image/webp;base64,UklGRngAAABXRUJQVlA4IGwAAABQBACdASoQABgAPu1krU6ppaSiMAgBMB2JZgCdMoR3ACxoIvkZJKgAr7sAAMw/s2jNRC3jqOFvFmIUZfb7Jj6BPdgwjADEvJdRjnR33VsUw/dZ1KWA3XKsyNgE4xBz6husHLMWSn6i66sAAAA=",
+                "color": "#914c2b",
+                "width": 1000,
+                "height": 1500
+            },
+            "backdrop": {
+                "key": "images/1d97d7ff-34dd-4680-a96f-721596b6bdee/v1",
+                "blur": "data:image/webp;base64,UklGRl4AAABXRUJQVlA4IFIAAACwAwCdASoYAA4APu1kqU2ppaOiMAgBMB2JZACdMoAB7/EihO0skAD1PR3a9zFpU4MyMAfHZfZxrIBnxv1EhAgQoKJZrTh3A42FH2qd9YqrAAAA",
+                "color": "#81421e",
+                "width": 2560,
+                "height": 1440
+            },
+            "logo": {
+                "key": "images/7a623ccb-b81b-4ba5-befa-0f2bf3e5ed0c/v1",
+                "blur": "data:image/webp;base64,UklGRt4AAABXRUJQVlA4WAoAAAAQAAAAFwAAAwAAQUxQSGEAAAAAAAADAAAABgMAAwAAAAADAAMBAAADAgAAL4Vcf3BzXntqdGuDghd2apMVU1x6WXQzOZ5riZ+DiY2LfoaOiiB+i3gKiouFiJI/FzZANjY4REQUGBIFCQAaEgYADg8fEQoIAFZQOCBWAAAAcAMAnQEqGAAEAD7tYqpNqaWkIjAIATAdiWUAAFwDEvuesaAAAP7f9qDJ6kkqWmP8/LMWyVD0l5+VXty5DdhxU4gN2PNXsnXTircbk/glV/pFEtBigAA=",
+                "color": "#393736",
+                "width": 1586,
+                "height": 240
+            },
+            "genres": [
+                "Action",
+                "Drama"
+            ],
+            "has_preview": true,
+            "match": null,
+            "context": null,
+            "in_my_list": false,
+            "rating": null,
+            "badge": "top10",
+            "top10_rank": 4,
+            "moods": [
+                "Exciting",
+                "Emotional"
+            ]
+        },
+        {
+            "id": 52,
+            "slug": "the-rain",
+            "title": "The Rain",
+            "type": "series",
+            "year": 2018,
+            "maturity_rating": "TV-MA",
+            "runtime_minutes": null,
+            "season_count": 2,
+            "short_synopsis": "After a storm that never ends, a ferry pilot and her brother cross a drowned coastline to find the one town where the rain has stopped.",
+            "translation_status": "translated",
+            "translator_name": "DJ Kanda",
+            "poster": {
+                "key": "images/d44a8986-2839-4fce-adc9-d2bd7fca8694/v1",
+                "blur": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAADwAwCdASoQABgAPu1yrU+pp6QiMAgBMB2JagCdMoR3AHnFBOu/UGQAAP5xrLW0lkOTWMleESm03hKQC0/R35+4Fv/cRG7GYJA4dfQXP5R4+oYPPYB2q7ClKjFvZsAA",
+                "color": "#366b82",
+                "width": 1000,
+                "height": 1500
+            },
+            "backdrop": {
+                "key": "images/c519146f-3bbd-4a72-885b-4dd1b1aa5a55/v1",
+                "blur": "data:image/webp;base64,UklGRmAAAABXRUJQVlA4IFQAAAAwBACdASoYAA4APu1iqU2ppaOiMAgBMB2JaACdMoR3AB08JietLvdh8hAA/lJpFnF+yTavBhZ8RPVAXeyT3+jwBJq/N/heujKL2CL5uyXvw/yKQAA=",
+                "color": "#346f85",
+                "width": 2560,
+                "height": 1440
+            },
+            "logo": {
+                "key": "images/77e900ff-3ab3-49ee-a4e3-c8032f8c5299/v1",
+                "blur": "data:image/webp;base64,UklGRk4BAABXRUJQVlA4WAoAAAAQAAAAFwAABgAAQUxQSJgAAAABgGPb2rHn+W3bVvmXtq1KA/AfVOls20ZnVU5KO5lRMoSISPg3gkah4RE4NJUKCAoRAA84NBaBBXT/y9iadip/343gXp4Z7W/U4dxFpB2AcsU8O3ovfbaC6OPJPPqUXSn/7k0BEK9pR5Hz2lMdKbmba3s42N1uWjraBMD7KU6Ow1DMoPAWRsKMstk0RoUJkGa7z+FxuBjwF1ZQOCCQAAAA8AMAnQEqGAAHAD7tYqlNqaWjojAIATAdiWYAuwGLwroXlS0Gfh78AAD+5+5cXNx7HTLx4hCdm42B1Cz5imiy/Zyt/xQqoJ8pJmAj7t23SqZAfapGovChrIaoT9A5dd09l8/AQU1HOrZHl/rvpTPs+qj7OittnyvSTtT6NlB1GIYOQlV4tuS5I5cnEGJVqwAA",
+                "color": "#343636",
+                "width": 875,
+                "height": 240
+            },
+            "genres": [
+                "Drama",
+                "Sci-Fi"
+            ],
+            "has_preview": true,
+            "match": null,
+            "context": null,
+            "in_my_list": false,
+            "rating": null,
+            "badge": "top10",
+            "top10_rank": 5,
+            "moods": [
+                "Emotional",
+                "Mind-bending"
+            ]
+        }
+    ],
+    "top10_series": [
+        {
+            "id": 50,
+            "slug": "kingdom-of-ash",
+            "title": "Kingdom of Ash",
+            "type": "series",
+            "year": 2025,
+            "maturity_rating": "TV-14",
+            "runtime_minutes": null,
+            "season_count": 2,
+            "short_synopsis": "Heirs to a burning throne fight to rebuild a kingdom \u2014 and each other.",
+            "translation_status": "translated",
+            "translator_name": "VJ Sanko",
+            "poster": {
+                "key": "images/3b788d4b-6c77-4817-a054-3ba06a249896/v1",
+                "blur": "data:image/webp;base64,UklGRngAAABXRUJQVlA4IGwAAABQBACdASoQABgAPu1krU6ppaSiMAgBMB2JZgCdMoR3ACxoIvkZJKgAr7sAAMw/s2jNRC3jqOFvFmIUZfb7Jj6BPdgwjADEvJdRjnR33VsUw/dZ1KWA3XKsyNgE4xBz6husHLMWSn6i66sAAAA=",
+                "color": "#914c2b",
+                "width": 1000,
+                "height": 1500
+            },
+            "backdrop": {
+                "key": "images/1d97d7ff-34dd-4680-a96f-721596b6bdee/v1",
+                "blur": "data:image/webp;base64,UklGRl4AAABXRUJQVlA4IFIAAACwAwCdASoYAA4APu1kqU2ppaOiMAgBMB2JZACdMoAB7/EihO0skAD1PR3a9zFpU4MyMAfHZfZxrIBnxv1EhAgQoKJZrTh3A42FH2qd9YqrAAAA",
+                "color": "#81421e",
+                "width": 2560,
+                "height": 1440
+            },
+            "logo": {
+                "key": "images/7a623ccb-b81b-4ba5-befa-0f2bf3e5ed0c/v1",
+                "blur": "data:image/webp;base64,UklGRt4AAABXRUJQVlA4WAoAAAAQAAAAFwAAAwAAQUxQSGEAAAAAAAADAAAABgMAAwAAAAADAAMBAAADAgAAL4Vcf3BzXntqdGuDghd2apMVU1x6WXQzOZ5riZ+DiY2LfoaOiiB+i3gKiouFiJI/FzZANjY4REQUGBIFCQAaEgYADg8fEQoIAFZQOCBWAAAAcAMAnQEqGAAEAD7tYqpNqaWkIjAIATAdiWUAAFwDEvuesaAAAP7f9qDJ6kkqWmP8/LMWyVD0l5+VXty5DdhxU4gN2PNXsnXTircbk/glV/pFEtBigAA=",
+                "color": "#393736",
+                "width": 1586,
+                "height": 240
+            },
+            "genres": [
+                "Action",
+                "Drama"
+            ],
+            "has_preview": true,
+            "match": null,
+            "context": {
+                "rank": 1
+            },
+            "in_my_list": false,
+            "rating": null,
+            "badge": "top10",
+            "top10_rank": 4,
+            "moods": [
+                "Exciting",
+                "Emotional"
+            ]
+        },
+        {
+            "id": 52,
+            "slug": "the-rain",
+            "title": "The Rain",
+            "type": "series",
+            "year": 2018,
+            "maturity_rating": "TV-MA",
+            "runtime_minutes": null,
+            "season_count": 2,
+            "short_synopsis": "After a storm that never ends, a ferry pilot and her brother cross a drowned coastline to find the one town where the rain has stopped.",
+            "translation_status": "translated",
+            "translator_name": "DJ Kanda",
+            "poster": {
+                "key": "images/d44a8986-2839-4fce-adc9-d2bd7fca8694/v1",
+                "blur": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAADwAwCdASoQABgAPu1yrU+pp6QiMAgBMB2JagCdMoR3AHnFBOu/UGQAAP5xrLW0lkOTWMleESm03hKQC0/R35+4Fv/cRG7GYJA4dfQXP5R4+oYPPYB2q7ClKjFvZsAA",
+                "color": "#366b82",
+                "width": 1000,
+                "height": 1500
+            },
+            "backdrop": {
+                "key": "images/c519146f-3bbd-4a72-885b-4dd1b1aa5a55/v1",
+                "blur": "data:image/webp;base64,UklGRmAAAABXRUJQVlA4IFQAAAAwBACdASoYAA4APu1iqU2ppaOiMAgBMB2JaACdMoR3AB08JietLvdh8hAA/lJpFnF+yTavBhZ8RPVAXeyT3+jwBJq/N/heujKL2CL5uyXvw/yKQAA=",
+                "color": "#346f85",
+                "width": 2560,
+                "height": 1440
+            },
+            "logo": {
+                "key": "images/77e900ff-3ab3-49ee-a4e3-c8032f8c5299/v1",
+                "blur": "data:image/webp;base64,UklGRk4BAABXRUJQVlA4WAoAAAAQAAAAFwAABgAAQUxQSJgAAAABgGPb2rHn+W3bVvmXtq1KA/AfVOls20ZnVU5KO5lRMoSISPg3gkah4RE4NJUKCAoRAA84NBaBBXT/y9iadip/343gXp4Z7W/U4dxFpB2AcsU8O3ovfbaC6OPJPPqUXSn/7k0BEK9pR5Hz2lMdKbmba3s42N1uWjraBMD7KU6Ow1DMoPAWRsKMstk0RoUJkGa7z+FxuBjwF1ZQOCCQAAAA8AMAnQEqGAAHAD7tYqlNqaWjojAIATAdiWYAuwGLwroXlS0Gfh78AAD+5+5cXNx7HTLx4hCdm42B1Cz5imiy/Zyt/xQqoJ8pJmAj7t23SqZAfapGovChrIaoT9A5dd09l8/AQU1HOrZHl/rvpTPs+qj7OittnyvSTtT6NlB1GIYOQlV4tuS5I5cnEGJVqwAA",
+                "color": "#343636",
+                "width": 875,
+                "height": 240
+            },
+            "genres": [
+                "Drama",
+                "Sci-Fi"
+            ],
+            "has_preview": true,
+            "match": null,
+            "context": {
+                "rank": 2
+            },
+            "in_my_list": false,
+            "rating": null,
+            "badge": "top10",
+            "top10_rank": 5,
+            "moods": [
+                "Emotional",
+                "Mind-bending"
+            ]
+        }
+    ],
+    "top10_films": [
+        {
+            "id": 44,
+            "slug": "neon-tide",
+            "title": "Neon Tide",
+            "type": "movie",
+            "year": 2025,
+            "maturity_rating": "PG-13",
+            "runtime_minutes": 1,
+            "season_count": null,
+            "short_synopsis": "A salvage diver finds a city of light beneath the harbour \u2014 and someone who wants it to stay hidden.",
+            "translation_status": "translated",
+            "translator_name": "DJ Kanda",
+            "poster": {
+                "key": "images/44db6198-af75-4735-b299-49e5d166b55a/v1",
+                "blur": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAAAQBACdASoQABgAPu1kq04ppaQiMAgBMB2JaACdMoMYAEHynD1m2umiAADafjJ8bRkTPFQZIAfUS/Ts+P0cF/18WOs9IZc1+KvNmnakilx9WCUqk4oLPB56hUzqrnAA",
+                "color": "#4e86cd",
+                "width": 1000,
+                "height": 1500
+            },
+            "backdrop": {
+                "key": "images/a3b577e5-8118-4a6f-9acf-2e0aabd06d42/v1",
+                "blur": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAACQAwCdASoYAA4APu1Ct1apoqakGAEwHYlqAJ0ygAFj3V5QYAgAANXChUAcneeJfxQ2ETYQu7usAw04m/24tyyDXudt5HUB5uTJ5XNQAAA=",
+                "color": "#5e74ce",
+                "width": 2560,
+                "height": 1440
+            },
+            "logo": {
+                "key": "images/a4c7794f-d7a8-4101-afc3-03e2445864c2/v1",
+                "blur": "data:image/webp;base64,UklGRgoBAABXRUJQVlA4WAoAAAAQAAAAFwAABQAAQUxQSIAAAAABgGNt2/Hoja0uJ5Vt21aX1kmZznabsW17lmFvaWYJEZHwfzGDLXaRjXqSkEmneN1ylkOGcagBHhemx6fFncXyy0yUsbs/Gd+vlT6qAFuPVyeL5UZj7ew3AaliYWats/yUB0haC+m+tNxWhDJKMFhNkXGZO84jcTqL0WS0GqnwF1ZQOCBkAAAAcAMAnQEqGAAGAD7tYqlNqaWkIjAIATAdiUAAC4m3finTVcQAAP7rc1Yl8+vNocrtNwm8rnEJGpAjskN71fR5iWYB/1viMA1LmdcoWipf0s6OhSLiGLj8bTIIy6mvDLSFDAAAAA==",
+                "color": "#363839",
+                "width": 998,
+                "height": 240
+            },
+            "genres": [
+                "Thriller",
+                "Sci-Fi"
+            ],
+            "has_preview": true,
+            "match": null,
+            "context": {
+                "rank": 1
+            },
+            "in_my_list": false,
+            "rating": null,
+            "badge": "top10",
+            "top10_rank": 1,
+            "moods": [
+                "Suspenseful",
+                "Mind-bending"
+            ]
+        },
+        {
+            "id": 46,
+            "slug": "paper-kings",
+            "title": "Paper Kings",
+            "type": "movie",
+            "year": 2023,
+            "maturity_rating": "PG-13",
+            "runtime_minutes": 1,
+            "season_count": null,
+            "short_synopsis": "Two rival street vendors accidentally become the most powerful newspaper barons in town.",
+            "translation_status": "translated",
+            "translator_name": "VJ Sanko",
+            "poster": {
+                "key": "images/78a70271-3a54-4f00-9b09-aaa42cf3e465/v1",
+                "blur": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAABwAwCdASoQABgALrV2u12jqampiYC0S2AE6AGyz2mE7n1hAAAA+E9bc6bl/P+eE7Y9z9ImG/xb8G+doDsnTXJAq+rQzyZq0E3XWQEiray+5YdPbmVsAA==",
+                "color": "#65b04f",
+                "width": 1000,
+                "height": 1500
+            },
+            "backdrop": {
+                "key": "images/d40dd665-b796-43fe-90f1-42dff7f9a543/v1",
+                "blur": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAAAQBACdASoYAA4APu1iqU2ppaQiMAgBMB2JagCdMoACbnd7Y/mAPL+ZAAD+r4eusmO6aeIPQnXoSrc1/7HcAt0U6WqjS21/97l+pgv9eLCGL01JTFpxrwmhyVowHPAA",
+                "color": "#76a437",
+                "width": 2560,
+                "height": 1440
+            },
+            "logo": {
+                "key": "images/05c1ffc4-1a72-45a8-a9fd-028663f5ea73/v1",
+                "blur": "data:image/webp;base64,UklGRhYBAABXRUJQVlA4WAoAAAAQAAAAFwAABAAAQUxQSHkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB2lNTC1RYktmRHEXE1BNR1U9NGNGT1YCEr+rxo2esqeZfdo5Ie5PjKy6oohwh5QLD3Izg3t/GV2JYXBBGoNncGh6Y4CMWpgQDDIzLjA1MDQWAgADAAADAgAAAAMDBQQAAFZQOCB2AAAAkAMAnQEqGAAFAD7tYqlNqaWjojAIATAdiWIAqPQiql8KRpwMmAD+7dk3PR6WFWUk1RykWCP/+sRLVCf6rN/7QNdVSytPl9sf6DDNLusBaI2x28lQ4vIUn/f5qeZLXdjSPv2X/hr/pPZfdAudf/jw0YKSQAAAAA==",
+                "color": "#3a3a38",
+                "width": 1201,
+                "height": 240
+            },
+            "genres": [
+                "Drama",
+                "Comedy"
+            ],
+            "has_preview": true,
+            "match": null,
+            "context": {
+                "rank": 2
+            },
+            "in_my_list": false,
+            "rating": null,
+            "badge": "top10",
+            "top10_rank": 2,
+            "moods": [
+                "Emotional",
+                "Witty"
+            ]
+        },
+        {
+            "id": 48,
+            "slug": "quiet-harbour",
+            "title": "Quiet Harbour",
+            "type": "movie",
+            "year": 2022,
+            "maturity_rating": "PG",
+            "runtime_minutes": 1,
+            "season_count": null,
+            "short_synopsis": "Every summer, a ferry captain and a lighthouse painter meet on the same crossing \u2014 for ten years.",
+            "translation_status": "translated",
+            "translator_name": "DJ Kanda",
+            "poster": {
+                "key": "images/1e52a56e-af87-404f-a3f3-7c8c35d42e8f/v1",
+                "blur": "data:image/webp;base64,UklGRmYAAABXRUJQVlA4IFoAAADwAwCdASoQABgAPu1yrU+pp6QiMAgBMB2JYgC/cUAAswFcbrk+p4QAANSR+KhC1AFy+8WRudt1JUI25fH4YB74dQ+lZc+hluUaXH4QSOzwzWbkUJApddziAAA=",
+                "color": "#665d83",
+                "width": 1000,
+                "height": 1500
+            },
+            "backdrop": {
+                "key": "images/396c12e8-ef5a-4ced-8d5a-71bad6104a31/v1",
+                "blur": "data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAABwAwCdASoYAA4APu1qrU8ppiQiMAgBMB2JbACdABEQDSF4Q4AA/qfzZKVCvz2i9GUr5t8hGEWJaP6vP1UpVMU5/Qonovxtli6AAA==",
+                "color": "#667aa6",
+                "width": 2560,
+                "height": 1440
+            },
+            "logo": {
+                "key": "images/4fc1090a-3e2e-4f6c-8260-f3a9115dafef/v1",
+                "blur": "data:image/webp;base64,UklGRtgAAABXRUJQVlA4WAoAAAAQAAAAFwAAAwAAQUxQSGEAAAAAAAUAAAAABAcGAQAAAAACAAIABgAAAAEAJHtrWWxwiml5GHNbdk6bYJpfd2tWdJoXMISGioKGmT1OEpGMoo2cfbSCfIOQgp8oDlVMQzc4RjQUAwoTDBQMFR0HIgUgDAwLAFZQOCBQAAAAcAMAnQEqGAAEAD7tYqlNqaWjojAIATAdiWUAAFvpctIyvv4gAP7np/V2ECfpRKyV3trv9dSMkbYZvdM/AHgxFu231gpf7+H+dauHZSMAAAA=",
+                "color": "#3b393a",
+                "width": 1478,
+                "height": 240
+            },
+            "genres": [
+                "Drama",
+                "Romance"
+            ],
+            "has_preview": true,
+            "match": null,
+            "context": {
+                "rank": 3
+            },
+            "in_my_list": false,
+            "rating": null,
+            "badge": "top10",
+            "top10_rank": 3,
+            "moods": [
+                "Emotional",
+                "Romantic"
+            ]
+        }
+    ]
+}

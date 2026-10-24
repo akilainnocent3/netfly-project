@@ -436,6 +436,40 @@ Ambiguities in the build brief, the option chosen, and why.
     access token in memory only. Refresh and sign-out are limited by `security.rate_token_refresh`.
     `payments.mobile_checkout_android` / `_ios` (public) let Studio switch the in-app checkout off per
     store.
+63. **Player: `video_player` (ExoPlayer / AVPlayer) with our own controls.** It plays the same signed
+    HLS (adaptive bitrate, the playback token in the query string, presigned segments: no cookies).
+    The web's controls are rebuilt in Flutter: ±10 s double-tap, scrubber with the same `thumbs.vtt`
+    sprites, Skip Intro / Recap / Next Episode from the same markers, episode drawer, speed, lock,
+    brightness / volume swipes, Picture-in-Picture (Android, via `MainActivity`). Quality works as on
+    the web: a fixed choice or Data saver caps the master playlist (`max_height`). Subtitles are the
+    HLS WebVTT renditions, fetched and drawn by the app (`player/subtitles.dart`), because
+    `video_player` doesn't expose text tracks. **Known limit:** `video_player` can't switch audio
+    tracks, so a title with several audio languages plays its default one in the app; if the
+    catalog starts relying on alternate audio, move the player to `media_kit` (libmpv), which can.
+    Progress and events use the web's endpoints and cadence (decision 17). A session longer than
+    `storage.signed_url_ttl_seconds` (6 h) needs a fresh playback token: the player's error screen
+    offers Try again, which requests playback again and resumes from the saved position.
+64. **Loaders on mobile follow decision 51.** `NetflyLoader` is the web's `LogoLoader` (light along
+    the ribbon's centre line, folds deepening, breathing scale, red glow, 1.6 s loop; an opacity pulse
+    with reduced motion), shown after 200 ms and kept at least 400 ms (`LoaderPresence`). It is used
+    for app start, screen loads, pull-to-refresh, player buffering and saves; rows and grids keep
+    brand-tinted skeletons so nothing jumps. A screen that reloads keeps showing its last data
+    instead of flashing back to a skeleton, and a button that opens a confirmation doesn't spin
+    behind the dialog.
+65. **Autoplay and Data saver defaults.** The account switches (decision 59) are shared with the web.
+    The app adds **Data saver: autoplay on Wi-Fi only**, stored per device and **on by default**:
+    previews and the next-episode countdown start by themselves only on an unmetered network
+    (`connectivity_plus`); previews also never start with reduced motion. Turning an autoplay switch on, or Data
+    saver off, shows the mobile-data warning first, with the same MB figures from
+    `/api/public/config`.
+66. **Payments in the app: native mobile-money checkout, switchable per store.** The owner chose to
+    sell plans inside the app with the web's Snippe mobile-money flow (plan picker → verification →
+    phone approval), built natively, not in a WebView. Apple's and Google's rules generally require
+    their in-app purchase systems for digital subscriptions sold inside an app, so this risks store
+    rejection. `payments.mobile_checkout_android` / `_ios` (Studio → Settings → Payments) turn the
+    in-app checkout off per store; the app then signs members in and says plans are managed on the
+    website (the "reader app" model) without changing the server. Entitlement is always the server's:
+    playback checks the member's plan and viewing allowance exactly as for the web.
 
 ## Resilience
 

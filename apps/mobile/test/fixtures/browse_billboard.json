@@ -1,0 +1,112 @@
+[
+    {
+        "id": 9,
+        "headline": "",
+        "tagline": "A salvage diver finds a city of light beneath the harbour \u2014 and someone who wants it to stay hidden.",
+        "use_trailer": true,
+        "title": {
+            "id": 44,
+            "slug": "neon-tide",
+            "title": "Neon Tide",
+            "type": "movie",
+            "year": 2025,
+            "maturity_rating": "PG-13",
+            "runtime_minutes": 1,
+            "season_count": null,
+            "short_synopsis": "A salvage diver finds a city of light beneath the harbour \u2014 and someone who wants it to stay hidden.",
+            "translation_status": "translated",
+            "translator_name": "DJ Kanda",
+            "poster": {
+                "key": "images/44db6198-af75-4735-b299-49e5d166b55a/v1",
+                "blur": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAAAQBACdASoQABgAPu1kq04ppaQiMAgBMB2JaACdMoMYAEHynD1m2umiAADafjJ8bRkTPFQZIAfUS/Ts+P0cF/18WOs9IZc1+KvNmnakilx9WCUqk4oLPB56hUzqrnAA",
+                "color": "#4e86cd",
+                "width": 1000,
+                "height": 1500
+            },
+            "backdrop": {
+                "key": "images/a3b577e5-8118-4a6f-9acf-2e0aabd06d42/v1",
+                "blur": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAACQAwCdASoYAA4APu1Ct1apoqakGAEwHYlqAJ0ygAFj3V5QYAgAANXChUAcneeJfxQ2ETYQu7usAw04m/24tyyDXudt5HUB5uTJ5XNQAAA=",
+                "color": "#5e74ce",
+                "width": 2560,
+                "height": 1440
+            },
+            "logo": {
+                "key": "images/a4c7794f-d7a8-4101-afc3-03e2445864c2/v1",
+                "blur": "data:image/webp;base64,UklGRgoBAABXRUJQVlA4WAoAAAAQAAAAFwAABQAAQUxQSIAAAAABgGNt2/Hoja0uJ5Vt21aX1kmZznabsW17lmFvaWYJEZHwfzGDLXaRjXqSkEmneN1ylkOGcagBHhemx6fFncXyy0yUsbs/Gd+vlT6qAFuPVyeL5UZj7ew3AaliYWats/yUB0haC+m+tNxWhDJKMFhNkXGZO84jcTqL0WS0GqnwF1ZQOCBkAAAAcAMAnQEqGAAGAD7tYqlNqaWkIjAIATAdiUAAC4m3finTVcQAAP7rc1Yl8+vNocrtNwm8rnEJGpAjskN71fR5iWYB/1viMA1LmdcoWipf0s6OhSLiGLj8bTIIy6mvDLSFDAAAAA==",
+                "color": "#363839",
+                "width": 998,
+                "height": 240
+            },
+            "genres": [
+                "Thriller",
+                "Sci-Fi"
+            ],
+            "has_preview": true,
+            "match": null,
+            "context": null,
+            "in_my_list": null,
+            "rating": null,
+            "badge": "top10",
+            "top10_rank": 1,
+            "moods": [
+                "Suspenseful",
+                "Mind-bending"
+            ]
+        }
+    },
+    {
+        "id": 10,
+        "headline": "",
+        "tagline": "Heirs to a burning throne fight to rebuild a kingdom \u2014 and each other.",
+        "use_trailer": true,
+        "title": {
+            "id": 50,
+            "slug": "kingdom-of-ash",
+            "title": "Kingdom of Ash",
+            "type": "series",
+            "year": 2025,
+            "maturity_rating": "TV-14",
+            "runtime_minutes": null,
+            "season_count": 2,
+            "short_synopsis": "Heirs to a burning throne fight to rebuild a kingdom \u2014 and each other.",
+            "translation_status": "translated",
+            "translator_name": "VJ Sanko",
+            "poster": {
+                "key": "images/3b788d4b-6c77-4817-a054-3ba06a249896/v1",
+                "blur": "data:image/webp;base64,UklGRngAAABXRUJQVlA4IGwAAABQBACdASoQABgAPu1krU6ppaSiMAgBMB2JZgCdMoR3ACxoIvkZJKgAr7sAAMw/s2jNRC3jqOFvFmIUZfb7Jj6BPdgwjADEvJdRjnR33VsUw/dZ1KWA3XKsyNgE4xBz6husHLMWSn6i66sAAAA=",
+                "color": "#914c2b",
+                "width": 1000,
+                "height": 1500
+            },
+            "backdrop": {
+                "key": "images/1d97d7ff-34dd-4680-a96f-721596b6bdee/v1",
+                "blur": "data:image/webp;base64,UklGRl4AAABXRUJQVlA4IFIAAACwAwCdASoYAA4APu1kqU2ppaOiMAgBMB2JZACdMoAB7/EihO0skAD1PR3a9zFpU4MyMAfHZfZxrIBnxv1EhAgQoKJZrTh3A42FH2qd9YqrAAAA",
+                "color": "#81421e",
+                "width": 2560,
+                "height": 1440
+            },
+            "logo": {
+                "key": "images/7a623ccb-b81b-4ba5-befa-0f2bf3e5ed0c/v1",
+                "blur": "data:image/webp;base64,UklGRt4AAABXRUJQVlA4WAoAAAAQAAAAFwAAAwAAQUxQSGEAAAAAAAADAAAABgMAAwAAAAADAAMBAAADAgAAL4Vcf3BzXntqdGuDghd2apMVU1x6WXQzOZ5riZ+DiY2LfoaOiiB+i3gKiouFiJI/FzZANjY4REQUGBIFCQAaEgYADg8fEQoIAFZQOCBWAAAAcAMAnQEqGAAEAD7tYqpNqaWkIjAIATAdiWUAAFwDEvuesaAAAP7f9qDJ6kkqWmP8/LMWyVD0l5+VXty5DdhxU4gN2PNXsnXTircbk/glV/pFEtBigAA=",
+                "color": "#393736",
+                "width": 1586,
+                "height": 240
+            },
+            "genres": [
+                "Action",
+                "Drama"
+            ],
+            "has_preview": true,
+            "match": null,
+            "context": null,
+            "in_my_list": null,
+            "rating": null,
+            "badge": "top10",
+            "top10_rank": 4,
+            "moods": [
+                "Exciting",
+                "Emotional"
+            ]
+        }
+    }
+]

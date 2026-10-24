@@ -54,6 +54,25 @@ jobs:
       - run: pnpm format:check
       - run: pnpm build
 
+  mobile:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: apps/mobile } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, flutter-version: 3.47.8, cache: true }
+      - run: flutter pub get
+      - run: dart format --set-exit-if-changed lib test integration_test test_driver tool
+      - run: flutter analyze --fatal-infos
+      - name: Dart API client is current
+        run: sh tool/generate_api.sh && git diff --exit-code lib/api/generated
+      - run: flutter test
+      - run: flutter build apk --release --dart-define=NETFLY_API_URL=https://api.netfly.example
+      - uses: actions/upload-artifact@v4
+        with: { name: netfly-android-apk, path: apps/mobile/build/app/outputs/flutter-apk/app-release.apk, retention-days: 14 }
+
   e2e:
     needs: [backend, frontend]
     runs-on: ubuntu-latest

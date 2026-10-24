@@ -2,7 +2,9 @@
   "name": "netfly",
   "private": true,
   "packageManager": "pnpm@10.12.4",
-  "engines": { "node": ">=20.18" },
+  "engines": {
+     "node": ">=20.18" 
+    },
   "scripts": {
     "dev": "pnpm --parallel --filter @netfly/client --filter @netfly/admin dev",
     "build": "pnpm --filter @netfly/client --filter @netfly/admin build",
@@ -10,7 +12,7 @@
     "typecheck": "pnpm -r typecheck",
     "format": "prettier --write \"apps/**/*.{ts,tsx,css}\" \"packages/**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"apps/**/*.{ts,tsx,css}\" \"packages/**/*.{ts,tsx}\"",
-    "api:generate": "pnpm --filter @netfly/api-client generate",
+    "api:generate": "pnpm --filter @netfly/api-client generate && sh apps/mobile/tool/generate_api.sh",
     "e2e": "pnpm --filter @netfly/e2e test",
     "seo:audit": "node scripts/seo-audit.mjs"
   },

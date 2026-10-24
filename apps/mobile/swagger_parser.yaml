@@ -1,0 +1,14 @@
+# Generated client for the NETFLY API (`pnpm api:generate` regenerates it with the web types).
+swagger_parser:
+  schema_path: build/openapi.mobile.json
+  output_directory: lib/api/generated
+  name: netfly_api
+  language: dart
+  json_serializer: json_serializable
+  root_client: true
+  root_client_name: NetflyApi
+  put_clients_in_folder: true
+  enums_to_json: true
+  unknown_enum_value: true
+  mark_files_as_generated: true
+  original_http_response: false

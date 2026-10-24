@@ -1,0 +1,79 @@
+{
+    "subscription": {
+        "plan": {
+            "id": 1,
+            "slug": "bure",
+            "name": "Bure",
+            "tagline": "Watch for free, every day.",
+            "price_tzs": 0,
+            "period_days": 30,
+            "daily_limit_minutes": 60,
+            "weekly_limit_minutes": 240,
+            "monthly_limit_minutes": 720,
+            "trial_eligible": false,
+            "is_free": true,
+            "is_default": true,
+            "highlight_label": "",
+            "order": 0,
+            "feature_bullets": [
+                "Best video quality (same on every plan)",
+                "Every title in the catalog",
+                "No payment needed"
+            ]
+        },
+        "status": "free",
+        "current_period_start": null,
+        "current_period_end": null,
+        "trial_start": null,
+        "trial_end": null,
+        "auto_renew": true,
+        "cancel_at_period_end": false,
+        "scheduled_plan": null,
+        "payment_phone_masked": "",
+        "payment_network": null,
+        "grace_until": null
+    },
+    "usage": {
+        "plan": {
+            "slug": "bure",
+            "name": "Bure",
+            "is_free": true
+        },
+        "exempt": true,
+        "allowed": true,
+        "limit_reached": null,
+        "limits": {
+            "day": null,
+            "week": null,
+            "month": null
+        },
+        "used": {
+            "day": 0,
+            "week": 0,
+            "month": 0
+        },
+        "remaining": {
+            "day": null,
+            "week": null,
+            "month": null
+        },
+        "remaining_seconds": null,
+        "resets_at": {
+            "day": "2026-10-25T00:00:00+03:00",
+            "week": "2026-10-26T00:00:00+03:00",
+            "month": "2026-11-01T00:00:00+03:00"
+        },
+        "warn_at_minutes": [
+            10,
+            2
+        ],
+        "heartbeat_seconds": 30,
+        "server_time": "2026-10-24T14:00:22.245199+00:00",
+        "notice": null
+    },
+    "trial": {
+        "enabled": true,
+        "days": 7,
+        "eligible": true
+    }
+}

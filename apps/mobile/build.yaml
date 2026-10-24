@@ -1,0 +1,8 @@
+targets:
+  $default:
+    builders:
+      json_serializable:
+        options:
+          # PATCH bodies must only carry the fields being changed (an unset field is omitted,
+          # never sent as null).
+          include_if_null: false
