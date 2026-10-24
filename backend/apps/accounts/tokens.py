@@ -149,8 +149,9 @@ def rotate_refresh_token(
     raise RefreshError("refresh_reused", "Your session has ended. Please log in again.")
 
 
-def revoke_refresh_token(raw: str) -> None:
-    record = RefreshToken.objects.filter(token_hash=_hash(raw)).first()
+def revoke_refresh_token(raw: str, app: str | None = None) -> None:
+    records = RefreshToken.objects.filter(token_hash=_hash(raw))
+    record = (records.filter(app=app) if app else records).first()
     if record:
         RefreshToken.objects.filter(family=record.family, revoked_at__isnull=True).update(
             revoked_at=timezone.now()

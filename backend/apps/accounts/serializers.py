@@ -118,6 +118,29 @@ class SessionSerializer(serializers.Serializer):
     user = UserSerializer()
 
 
+class MobileSignupSerializer(SignupSerializer):
+    app = None  # always the mobile app
+
+
+class MobileLoginSerializer(serializers.Serializer):
+    # Username, verified email or verified phone — as on the web.
+    username = serializers.CharField(max_length=254)
+    password = serializers.CharField(write_only=True, trim_whitespace=False)
+
+
+class MobileRefreshSerializer(serializers.Serializer):
+    refresh = serializers.CharField(max_length=128, write_only=True)
+
+
+class MobileSessionSerializer(serializers.Serializer):
+    """The web's session, with the refresh token in the body instead of an httpOnly cookie."""
+
+    access = serializers.CharField()
+    expires_in = serializers.IntegerField()
+    refresh = serializers.CharField()
+    user = UserSerializer()
+
+
 class UsernameAvailabilitySerializer(serializers.Serializer):
     username = serializers.CharField()
     available = serializers.BooleanField()

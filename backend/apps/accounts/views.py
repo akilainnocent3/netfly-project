@@ -21,6 +21,10 @@ from .serializers import (
     AppSerializer,
     ChangePasswordSerializer,
     LoginSerializer,
+    MobileLoginSerializer,
+    MobileRefreshSerializer,
+    MobileSessionSerializer,
+    MobileSignupSerializer,
     SessionSerializer,
     SignupSerializer,
     UsernameAvailabilitySerializer,
@@ -120,6 +124,26 @@ def _clear_cookies(response: Response, app: str) -> None:
     response.delete_cookie(f"{CSRF_COOKIE}_{app}", path="/", domain=domain)
 
 
+def create_viewer(data: dict) -> User:
+    if not config.get_bool("features.signup_enabled", True):
+        raise APIError("Sign-ups are closed right now.", "signup_closed", 403)
+    try:
+        with transaction.atomic():
+            return User.objects.create_user(
+                data["username"],
+                data["password"],
+                full_name=data["full_name"],
+                translation_mode=config.get_str("content.default_translation_mode"),
+            )
+    except IntegrityError as exc:
+        raise APIError(
+            "That username is taken.",
+            "validation_error",
+            400,
+            {"username": "That username is taken."},
+        ) from exc
+
+
 class SignupView(APIView):
     # JSON only: a cross-site HTML form can't send it (no login CSRF).
     parser_classes = [JSONParser]
@@ -130,26 +154,10 @@ class SignupView(APIView):
         request=SignupSerializer, responses={201: SessionSerializer}, operation_id="auth_signup"
     )
     def post(self, request):
-        if not config.get_bool("features.signup_enabled", True):
-            raise APIError("Sign-ups are closed right now.", "signup_closed", 403)
         serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        try:
-            with transaction.atomic():
-                user = User.objects.create_user(
-                    data["username"],
-                    data["password"],
-                    full_name=data["full_name"],
-                    translation_mode=config.get_str("content.default_translation_mode"),
-                )
-        except IntegrityError as exc:
-            raise APIError(
-                "That username is taken.",
-                "validation_error",
-                400,
-                {"username": "That username is taken."},
-            ) from exc
+        user = create_viewer(data)
         return _session_response(request, user, data["app"], status_code=201)
 
 
@@ -166,35 +174,41 @@ class LoginView(APIView):
         identifier, password, app, remember = (
             serializer.validated_data[k] for k in ("username", "password", "app", "remember")
         )
-        user = find_login_user(identifier)
-        # Lock the account, not the spelling: username / email / phone share one counter.
-        lock_key = f"user:{user.pk}" if user else identifier.strip().lower()
-        if lockout.is_locked(lock_key):
-            minutes = config.get_int("auth.login_lockout_minutes", 15)
-            raise APIError(
-                f"Too many failed attempts. Try again in {minutes} minutes.", "account_locked", 429
-            )
-        if user is None:
-            check_password(password, _DUMMY_HASH)  # equalise timing
-            valid = False
-        else:
-            valid = user.check_password(password) and user.is_active
-        if not valid:
-            locked = lockout.register_failure(lock_key)
-            message = (
-                "Too many failed attempts. Your account is locked for a few minutes."
-                if locked
-                else "Wrong username or password."
-            )
-            raise APIError(
-                message,
-                "account_locked" if locked else "invalid_credentials",
-                429 if locked else 400,
-            )
+        user = check_credentials(identifier, password)
         if app == "admin" and not user.is_staff:
             raise APIError("This account doesn't have staff access.", "not_staff", 403)
-        lockout.clear(lock_key)
         return _session_response(request, user, app, persistent=remember)
+
+
+def check_credentials(identifier: str, password: str) -> User:
+    """The user for a sign-in, or the generic error (with lockout and equal timing)."""
+    user = find_login_user(identifier)
+    # Lock the account, not the spelling: username / email / phone share one counter.
+    lock_key = f"user:{user.pk}" if user else identifier.strip().lower()
+    if lockout.is_locked(lock_key):
+        minutes = config.get_int("auth.login_lockout_minutes", 15)
+        raise APIError(
+            f"Too many failed attempts. Try again in {minutes} minutes.", "account_locked", 429
+        )
+    if user is None:
+        check_password(password, _DUMMY_HASH)  # equalise timing
+        valid = False
+    else:
+        valid = user.check_password(password) and user.is_active
+    if not valid:
+        locked = lockout.register_failure(lock_key)
+        message = (
+            "Too many failed attempts. Your account is locked for a few minutes."
+            if locked
+            else "Wrong username or password."
+        )
+        raise APIError(
+            message,
+            "account_locked" if locked else "invalid_credentials",
+            429 if locked else 400,
+        )
+    lockout.clear(lock_key)
+    return user
 
 
 def find_login_user(identifier: str) -> User | None:
@@ -336,3 +350,107 @@ class ChangePasswordView(APIView):
         revoke_all_for_user(user)
         app = "admin" if request.data.get("app") == "admin" else "client"
         return _session_response(request, user, app)
+
+
+# ---- Mobile app (DECISIONS "Mobile auth tokens") ---------------------------------------------
+# The app can't hold an httpOnly cookie, so the opaque refresh token travels in the body and the
+# app keeps it in the platform keystore. Everything else is the web's: the same rotation, family
+# revocation on reuse, lockout and token_version. Tokens are scoped to app="mobile", so a mobile
+# token is refused by the cookie endpoints and the other way round. No cookies are read or set,
+# so there is nothing for CSRF to forge.
+
+MOBILE = "mobile"
+
+
+def _mobile_session(request, user: User, *, refresh=None, status_code=200) -> Response:
+    access, expires_in = issue_access_token(user)
+    if refresh is None:
+        refresh = issue_refresh_token(
+            user,
+            MOBILE,
+            user_agent=request.META.get("HTTP_USER_AGENT", ""),
+            ip=client_ip(request),
+        )
+    response = Response(
+        {
+            "access": access,
+            "expires_in": expires_in,
+            "refresh": refresh.raw,
+            "user": UserSerializer(user).data,
+        },
+        status=status_code,
+    )
+    response["Cache-Control"] = "no-store"
+    return response
+
+
+class MobileSignupView(APIView):
+    authentication_classes: list = []
+    throttle_classes = [throttle("security.rate_signup")]
+
+    @extend_schema(
+        request=MobileSignupSerializer,
+        responses={201: MobileSessionSerializer},
+        operation_id="auth_mobile_signup",
+    )
+    def post(self, request):
+        serializer = MobileSignupSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = create_viewer(serializer.validated_data)
+        return _mobile_session(request, user, status_code=201)
+
+
+class MobileLoginView(APIView):
+    authentication_classes: list = []
+    throttle_classes = [throttle("security.rate_login")]
+
+    @extend_schema(
+        request=MobileLoginSerializer,
+        responses=MobileSessionSerializer,
+        operation_id="auth_mobile_login",
+    )
+    def post(self, request):
+        serializer = MobileLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        d = serializer.validated_data
+        return _mobile_session(request, check_credentials(d["username"], d["password"]))
+
+
+class MobileRefreshView(APIView):
+    authentication_classes: list = []
+    throttle_classes = [throttle("security.rate_token_refresh")]
+
+    @extend_schema(
+        request=MobileRefreshSerializer,
+        responses=MobileSessionSerializer,
+        operation_id="auth_mobile_refresh",
+    )
+    def post(self, request):
+        serializer = MobileRefreshSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            user, issued = rotate_refresh_token(
+                serializer.validated_data["refresh"],
+                MOBILE,
+                user_agent=request.META.get("HTTP_USER_AGENT", ""),
+                ip=client_ip(request),
+            )
+        except RefreshError as exc:
+            raise APIError(exc.message, exc.code, 401) from exc
+        return _mobile_session(request, user, refresh=issued)
+
+
+class MobileLogoutView(APIView):
+    authentication_classes: list = []
+    throttle_classes = [throttle("security.rate_token_refresh")]
+
+    @extend_schema(
+        request=MobileRefreshSerializer,
+        responses={204: None},
+        operation_id="auth_mobile_logout",
+    )
+    def post(self, request):
+        serializer = MobileRefreshSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        revoke_refresh_token(serializer.validated_data["refresh"], app=MOBILE)
+        return Response(status=status.HTTP_204_NO_CONTENT)

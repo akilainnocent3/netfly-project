@@ -1516,6 +1516,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/mobile/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["auth_mobile_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mobile/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["auth_mobile_logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mobile/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["auth_mobile_refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/mobile/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["auth_mobile_signup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/password-reset/confirm": {
         parameters: {
             query?: never;
@@ -3103,6 +3167,25 @@ export interface components {
             subscription: components["schemas"]["Subscription"];
             usage: components["schemas"]["UsageSnapshot"];
             trial: components["schemas"]["TrialInfo"];
+        };
+        MobileLoginRequest: {
+            username: string;
+            password: string;
+        };
+        MobileRefreshRequest: {
+            refresh: string;
+        };
+        /** @description The web's session, with the refresh token in the body instead of an httpOnly cookie. */
+        MobileSession: {
+            access: string;
+            expires_in: number;
+            refresh: string;
+            user: components["schemas"]["User"];
+        };
+        MobileSignupRequest: {
+            username: string;
+            full_name: string;
+            password: string;
         };
         NewAndPopular: {
             coming_soon: components["schemas"]["Upcoming"][];
@@ -7405,6 +7488,101 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Session"];
+                };
+            };
+        };
+    };
+    auth_mobile_login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobileLoginRequest"];
+                "multipart/form-data": components["schemas"]["MobileLoginRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MobileSession"];
+                };
+            };
+        };
+    };
+    auth_mobile_logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobileRefreshRequest"];
+                "multipart/form-data": components["schemas"]["MobileRefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    auth_mobile_refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobileRefreshRequest"];
+                "multipart/form-data": components["schemas"]["MobileRefreshRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MobileSession"];
+                };
+            };
+        };
+    };
+    auth_mobile_signup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobileSignupRequest"];
+                "multipart/form-data": components["schemas"]["MobileSignupRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MobileSession"];
                 };
             };
         };

@@ -873,6 +873,13 @@ KEYS: list[Key] = [
     Key("security.rate_login", "string", "10/min", "Login attempts per IP.", validation=RATE_RE),
     Key("security.rate_signup", "string", "5/min", "Sign-ups per IP.", validation=RATE_RE),
     Key(
+        "security.rate_token_refresh",
+        "string",
+        "30/min",
+        "Mobile app session refreshes and sign-outs per IP.",
+        validation=RATE_RE,
+    ),
+    Key(
         "security.rate_username_check",
         "string",
         "90/min",
@@ -1445,6 +1452,25 @@ KEYS: list[Key] = [
         public=True,
         unit="s",
         validation={"min": 1, "max": 30},
+    ),
+    Key(
+        "payments.mobile_checkout_android",
+        "bool",
+        True,
+        "The Android app sells plans with in-app mobile-money checkout. Off: the app only signs "
+        "members in, and plans are bought on the website (switch off if Google Play requires it).",
+        label="In-app checkout (Android)",
+        public=True,
+    ),
+    Key(
+        "payments.mobile_checkout_ios",
+        "bool",
+        True,
+        "The iPhone app sells plans with in-app mobile-money checkout. Off: the app only signs "
+        "members in, and plans are bought on the website (switch off if App Store review requires "
+        "it).",
+        label="In-app checkout (iOS)",
+        public=True,
     ),
     # ---- testing ------------------------------------------------------------
     Key(

@@ -8,6 +8,10 @@ urlpatterns = [
     path("login", views.LoginView.as_view(), name="auth-login"),
     path("refresh", views.RefreshView.as_view(), name="auth-refresh"),
     path("logout", views.LogoutView.as_view(), name="auth-logout"),
+    path("mobile/signup", views.MobileSignupView.as_view(), name="auth-mobile-signup"),
+    path("mobile/login", views.MobileLoginView.as_view(), name="auth-mobile-login"),
+    path("mobile/refresh", views.MobileRefreshView.as_view(), name="auth-mobile-refresh"),
+    path("mobile/logout", views.MobileLogoutView.as_view(), name="auth-mobile-logout"),
     path(
         "username-available",
         views.UsernameAvailabilityView.as_view(),

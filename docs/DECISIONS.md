@@ -421,6 +421,22 @@ Ambiguities in the build brief, the option chosen, and why.
     that is used once and not stored. The most likely live cause — an unregistered sender ID (111) —
     can only be confirmed against the owner's Beem account (see the hand-off report).
 
+## Mobile app
+
+62. **Mobile auth tokens: the web's session, with the refresh token in the body.** An app can't keep
+    an httpOnly cookie, so `POST /api/v1/auth/mobile/{signup,login,refresh,logout}` return
+    `{access, expires_in, refresh, user}` and take `{refresh}`. Everything else is decision 6:
+    access tokens are the same 15-minute JWTs (with `token_version`), refresh tokens are opaque,
+    stored hashed, rotate on every use, and a replay revokes the whole family (with the same
+    seconds-long grace for a lost response from the same device). Sign-in uses the shared
+    `check_credentials` (username, verified email or verified phone; one lockout counter for web and
+    app). The tokens are scoped to `app="mobile"`: the cookie endpoints refuse them and the mobile
+    endpoints refuse web tokens. No cookie is read or set, so there's nothing for CSRF to forge.
+    The app keeps the refresh token in the platform keystore (`flutter_secure_storage`) and the
+    access token in memory only. Refresh and sign-out are limited by `security.rate_token_refresh`.
+    `payments.mobile_checkout_android` / `_ios` (public) let Studio switch the in-app checkout off per
+    store.
+
 ## Resilience
 
 32. **Errors are contained where they happen:** each home row and the hero have their own error boundary
