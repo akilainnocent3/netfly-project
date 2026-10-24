@@ -522,6 +522,60 @@ class GenreViewSet(AuditedMixin, viewsets.ModelViewSet):
         return Response(status=204)
 
 
+class GenreTitlesView(APIView):
+    """Studio → Categories → a category: the titles in it, and adding / removing many at once."""
+
+    permission_classes = [StaffPermission]
+    throttle_classes = [throttle("security.rate_genre_titles", per_user=True)]
+
+    def _list(self, genre):
+        titles = genre.titles.select_related("poster").order_by("-popularity", "title")
+        return Response(
+            {"count": titles.count(), "results": s.RelatedBriefSerializer(titles, many=True).data}
+        )
+
+    @extend_schema(responses=s.GenreTitlesSerializer, operation_id="admin_genre_titles")
+    def get(self, request, pk: int):
+        return self._list(get_object_or_404(Genre, pk=pk))
+
+    @extend_schema(
+        request=s.GenreTitlesChangeSerializer,
+        responses=s.GenreTitlesSerializer,
+        operation_id="admin_genre_titles_change",
+    )
+    def post(self, request, pk: int):
+        genre = get_object_or_404(Genre, pk=pk)
+        data = s.GenreTitlesChangeSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        add, remove = set(data.validated_data["add"]), set(data.validated_data["remove"])
+        if add & remove:
+            raise APIError("A title can't be added and removed at once.", "validation_error")
+        found = set(Title.objects.filter(pk__in=add | remove).values_list("pk", flat=True))
+        if missing := (add | remove) - found:
+            raise APIError(
+                f"Unknown title{'s' if len(missing) > 1 else ''}: "
+                + ", ".join(str(m) for m in sorted(missing)),
+                "validation_error",
+            )
+        with transaction.atomic():
+            current = set(genre.titles.values_list("pk", flat=True))
+            added, removed = sorted(add - current), sorted(remove & current)
+            if added:
+                genre.titles.add(*added)
+            if removed:
+                genre.titles.remove(*removed)
+            if added or removed:
+                bump_catalog_on_commit()  # the m2m signal bumps too; explicit for any path
+                record(
+                    request.user,
+                    "genre.titles",
+                    genre,
+                    changes={"added": added, "removed": removed},
+                    ip=client_ip(request),
+                )
+        return self._list(genre)
+
+
 class OrderedViewSet(AuditedMixin, viewsets.ModelViewSet):
     """CRUD + drag reorder for home rows and billboards."""
 

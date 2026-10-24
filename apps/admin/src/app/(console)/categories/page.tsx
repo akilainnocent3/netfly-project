@@ -20,9 +20,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FolderTree, GripVertical, Home, Plus, Trash2 } from "lucide-react";
+import { Film, FolderTree, GripVertical, Home, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ImageSlot } from "@/components/catalog/editor/image-slot";
+import { GenreTitlesDialog } from "@/components/catalog/genre-titles";
 import { useAuth } from "@/components/providers/auth";
 import { useToast } from "@/components/providers/toast";
 import { IconButton, useAction, useConfirm } from "@/components/ui/actions";
@@ -86,7 +87,7 @@ export default function CategoriesPage() {
     <>
       <PageHeader
         title="Categories & genres"
-        description="Drag to set the order viewers see. Genres marked “Home row” get their own row on the home page."
+        description="Drag to set the order viewers see. Open a category's titles to add or remove films and series. Genres marked “Home row” get their own row on the home page."
       />
       {!readOnly && (
         <form
@@ -156,6 +157,7 @@ function GenreCard({
   refresh: () => void;
 }) {
   const confirm = useConfirm();
+  const [titlesOpen, setTitlesOpen] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: genre.id,
     disabled: readOnly,
@@ -216,9 +218,16 @@ function GenreCard({
               void save({ name: e.target.value.trim() })
             }
           />
-          <span className="tabular text-subtle shrink-0 text-[12px]">
-            {genre.title_count} titles
-          </span>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="tabular shrink-0"
+            onClick={() => setTitlesOpen(true)}
+            aria-label={`Titles in ${genre.name}: ${genre.title_count}`}
+          >
+            <Film className="size-3.5" /> {genre.title_count}{" "}
+            {genre.title_count === 1 ? "title" : "titles"}
+          </Button>
         </div>
         <ImageSlot
           kind="artwork"
@@ -226,6 +235,14 @@ function GenreCard({
           image={genre.artwork}
           disabled={readOnly}
           onAttach={(id) => save({ artwork_id: id })}
+        />
+        <GenreTitlesDialog
+          genreId={genre.id}
+          genreName={genre.name}
+          readOnly={readOnly}
+          open={titlesOpen}
+          onOpenChange={setTitlesOpen}
+          onChanged={refresh}
         />
         <div className="mt-3 flex items-center justify-between">
           <label className="flex items-center gap-2 text-[12.5px]">

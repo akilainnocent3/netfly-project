@@ -867,6 +867,13 @@ KEYS: list[Key] = [
         validation=RATE_RE,
     ),
     Key(
+        "security.rate_genre_titles",
+        "string",
+        "60/min",
+        "Category membership changes (add / remove titles) per staff user.",
+        validation=RATE_RE,
+    ),
+    Key(
         "security.rate_toolchain_check",
         "string",
         "12/min",

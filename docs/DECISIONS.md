@@ -369,6 +369,13 @@ Ambiguities in the build brief, the option chosen, and why.
     `/categories/<slug>` and of the public `/genre/<slug>` page, and its Open Graph / Twitter image.
     Studio shows Retry on a failed render and on one still "processing" after two minutes
     (`POST /admin/images/{id}/retry`, audited).
+58. **Titles join a category from either side.** The title editor's *Categories (genres)* card (chips
+    first, searchable) and Studio → Categories → *N titles* (list with remove, multi-select *Add
+    titles* through the title picker) both write the same M2M. `POST /admin/genres/{id}/titles
+    {add, remove}` is one transaction, all-or-nothing (unknown ids or a title in both lists → 400),
+    audited as `genre.titles` (only when something changed), bumps the catalog version and is limited
+    by `security.rate_genre_titles`; content managers write, analysts read. `Title.genres` has no
+    per-genre order, so a category lists most popular first (as viewers see it).
 
 ## Resilience
 

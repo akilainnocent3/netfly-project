@@ -3,6 +3,9 @@
 import { unwrap } from "@netfly/api-client";
 import { cn } from "@netfly/ui";
 import { useQuery } from "@tanstack/react-query";
+import { Search, X } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 import { useConfig } from "@/components/providers/config";
 import { Card, Input, Label, Select, Textarea } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
@@ -146,6 +149,12 @@ export function DetailsTab({
       </Card>
 
       <div className="space-y-4">
+        <GenrePicker
+          genres={genres.data ?? []}
+          loading={genres.isPending}
+          selected={selectedGenres}
+          onChange={(ids) => onChange({ genre_ids: ids })}
+        />
         <Card className="space-y-4 p-5">
           <div>
             <Label>Translation</Label>
@@ -234,37 +243,110 @@ export function DetailsTab({
             </div>
           </div>
         </Card>
-        <Card className="p-5">
-          <Label>Genres</Label>
-          <div className="flex flex-wrap gap-1.5">
-            {genres.data?.map((g) => {
-              const on = selectedGenres.has(g.id);
-              return (
-                <button
-                  type="button"
-                  key={g.id}
-                  aria-pressed={on}
-                  onClick={() => {
-                    const next = new Set(selectedGenres);
-                    if (on) next.delete(g.id);
-                    else next.add(g.id);
-                    onChange({ genre_ids: [...next] });
-                  }}
-                  className={cn(
-                    "h-7 rounded-full border px-3 text-[12.5px] transition-colors",
-                    on ? "border-accent bg-accent text-accent-fg" : "border-line hover:bg-hover",
-                  )}
-                >
-                  {g.name}
-                </button>
-              );
-            })}
-            {genres.data?.length === 0 && (
-              <p className="text-muted text-[12.5px]">Create genres under Categories first.</p>
-            )}
-          </div>
-        </Card>
       </div>
     </fieldset>
+  );
+}
+
+/** “Categories (genres)”: chosen ones first as removable chips, then a searchable list. */
+function GenrePicker({
+  genres,
+  loading,
+  selected,
+  onChange,
+}: {
+  genres: { id: number; name: string }[];
+  loading: boolean;
+  selected: Set<number>;
+  onChange: (ids: number[]) => void;
+}) {
+  const [q, setQ] = useState("");
+  const chosen = genres.filter((g) => selected.has(g.id));
+  const needle = q.trim().toLowerCase();
+  const options = genres.filter(
+    (g) => !selected.has(g.id) && (!needle || g.name.toLowerCase().includes(needle)),
+  );
+  const toggle = (id: number) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    onChange([...next]);
+  };
+  return (
+    <Card className="p-5">
+      <section aria-labelledby="t-genres-label">
+        <p id="t-genres-label" className="text-[13px] font-semibold">
+          Categories (genres)
+        </p>
+        <p className="text-muted mt-0.5 mb-3 text-[12.5px]">
+          Where viewers find this title: its category pages and genre rows. You can also add titles
+          from{" "}
+          <Link href="/categories" className="text-fg underline underline-offset-2">
+            Categories
+          </Link>
+          .
+        </p>
+        <div className="mb-3 flex min-h-7 flex-wrap gap-1.5" aria-label="Selected categories">
+          {chosen.length ? (
+            chosen.map((g) => (
+              <span
+                key={g.id}
+                className="border-accent bg-accent text-accent-fg inline-flex h-7 items-center gap-1 rounded-full border pr-1 pl-3 text-[12.5px]"
+              >
+                {g.name}
+                <button
+                  type="button"
+                  onClick={() => toggle(g.id)}
+                  aria-label={`Remove ${g.name}`}
+                  className="grid size-5 place-items-center rounded-full hover:bg-black/20"
+                >
+                  <X className="size-3" />
+                </button>
+              </span>
+            ))
+          ) : (
+            <span className="text-subtle self-center text-[12.5px]">
+              None yet — this title won&rsquo;t appear in any category.
+            </span>
+          )}
+        </div>
+        <div className="relative mb-2">
+          <Search className="text-subtle pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && options[0]) {
+                e.preventDefault();
+                toggle(options[0].id);
+                setQ("");
+              }
+            }}
+            placeholder="Search categories…"
+            aria-label="Search categories"
+            className="pl-8"
+          />
+        </div>
+        <div className="flex max-h-48 flex-wrap gap-1.5 overflow-y-auto">
+          {options.map((g) => (
+            <button
+              type="button"
+              key={g.id}
+              aria-pressed={false}
+              onClick={() => toggle(g.id)}
+              className="border-line hover:bg-hover h-7 rounded-full border px-3 text-[12.5px] transition-colors"
+            >
+              + {g.name}
+            </button>
+          ))}
+          {!loading && genres.length === 0 && (
+            <p className="text-muted text-[12.5px]">Create categories under Categories first.</p>
+          )}
+          {!loading && genres.length > 0 && !options.length && needle && (
+            <p className="text-muted text-[12.5px]">No category matches “{q}”.</p>
+          )}
+        </div>
+      </section>
+    </Card>
   );
 }

@@ -334,6 +334,24 @@ export interface paths {
         patch: operations["admin_genres_partial_update"];
         trace?: never;
     };
+    "/api/v1/admin/genres/{id}/titles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Studio → Categories → a category: the titles in it, and adding / removing many at once. */
+        get: operations["admin_genre_titles"];
+        put?: never;
+        /** @description Studio → Categories → a category: the titles in it, and adding / removing many at once. */
+        post: operations["admin_genre_titles_change"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/genres/reorder": {
         parameters: {
             query?: never;
@@ -2928,6 +2946,14 @@ export interface components {
             readonly title_count: number;
             readonly sample: components["schemas"]["ImageRef"] | null;
         };
+        GenreTitles: {
+            count: number;
+            results: components["schemas"]["RelatedBrief"][];
+        };
+        GenreTitlesChangeRequest: {
+            add?: number[];
+            remove?: number[];
+        };
         Health: {
             ok: boolean;
         };
@@ -5211,6 +5237,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GenreAdmin"];
+                };
+            };
+        };
+    };
+    admin_genre_titles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreTitles"];
+                };
+            };
+        };
+    };
+    admin_genre_titles_change: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["GenreTitlesChangeRequest"];
+                "multipart/form-data": components["schemas"]["GenreTitlesChangeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreTitles"];
                 };
             };
         };

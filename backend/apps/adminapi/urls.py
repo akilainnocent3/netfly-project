@@ -29,6 +29,7 @@ router.register("subscribers", bv.SubscriberViewSet, basename="admin-subscribers
 
 urlpatterns = [
     path("title-picker", cv.TitlePickerView.as_view(), name="admin-title-picker"),
+    path("genres/<int:pk>/titles", cv.GenreTitlesView.as_view(), name="admin-genre-titles"),
     path("dashboard", pv.DashboardView.as_view(), name="admin-dashboard"),
     path("billing/stats", bv.BillingStatsView.as_view(), name="admin-billing-stats"),
     path(

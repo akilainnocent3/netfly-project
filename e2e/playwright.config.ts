@@ -23,7 +23,7 @@ export default defineConfig({
     video: "retain-on-failure",
   },
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"], channel, viewport: { width: 1440, height: 900 } }, testIgnore: /(mobile|profiles|priority)\.spec\.ts/ },
+    { name: "desktop", use: { ...devices["Desktop Chrome"], channel, viewport: { width: 1440, height: 900 } }, testIgnore: /(mobile|profiles|priority|categories)\.spec\.ts/ },
     // Phones and a tablet (all below lg, so the tab bar shows). Device profiles run in Chromium.
     { name: "mobile", use: { ...devices["Pixel 7"] }, testMatch: /mobile\.spec\.ts/ },
     { name: "mobile-iphone13", use: { ...devices["iPhone 13"], browserName: "chromium" }, testMatch: /mobile\.spec\.ts/ },
@@ -42,6 +42,13 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], channel, viewport: { width: 1440, height: 900 } },
       testMatch: /priority\.spec\.ts/,
       dependencies: ["profiles"],
+    },
+    // Changes a category's artwork and titles for everyone (and restores them): after priority.
+    {
+      name: "categories",
+      use: { ...devices["Desktop Chrome"], channel, viewport: { width: 1440, height: 900 } },
+      testMatch: /categories\.spec\.ts/,
+      dependencies: ["priority"],
     },
   ],
 });

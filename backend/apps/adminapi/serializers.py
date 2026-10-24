@@ -336,6 +336,20 @@ class RelatedBriefSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "type", "year", "poster", "status", "translation_status"]
 
 
+class GenreTitlesSerializer(serializers.Serializer):
+    count = serializers.IntegerField()
+    results = RelatedBriefSerializer(many=True)
+
+
+class GenreTitlesChangeSerializer(serializers.Serializer):
+    add = serializers.ListField(
+        child=serializers.IntegerField(), required=False, default=list, max_length=500
+    )
+    remove = serializers.ListField(
+        child=serializers.IntegerField(), required=False, default=list, max_length=500
+    )
+
+
 class RelatedAdminSerializer(serializers.ModelSerializer):
     related = RelatedBriefSerializer(read_only=True)
     related_id = serializers.PrimaryKeyRelatedField(
