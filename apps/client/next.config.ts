@@ -50,6 +50,15 @@ const config: NextConfig = {
   async rewrites() {
     return [
       { source: "/api/:path*", destination: `${api}/api/:path*` },
+      // App Links / Universal Links association files (`mobile.*` settings; 404 until set).
+      {
+        source: "/.well-known/assetlinks.json",
+        destination: `${api}/api/v1/public/assetlinks.json`,
+      },
+      {
+        source: "/.well-known/apple-app-site-association",
+        destination: `${api}/api/v1/public/apple-app-site-association`,
+      },
       // IndexNow key file (`seo.indexnow_key`): the API answers 404 unless it's the configured key.
       {
         source: "/:key([A-Za-z0-9-]{8,128}).txt",

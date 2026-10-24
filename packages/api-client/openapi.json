@@ -6810,6 +6810,56 @@
                 }
             }
         },
+        "/api/v1/public/apple-app-site-association": {
+            "get": {
+                "operationId": "public_apple_app_site_association",
+                "description": "`/.well-known/apple-app-site-association`; 404 until the iOS app ID is configured.",
+                "tags": [
+                    "public"
+                ],
+                "security": [
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/public/assetlinks.json": {
+            "get": {
+                "operationId": "public_assetlinks",
+                "description": "`/.well-known/assetlinks.json`; 404 until the signing certificate is configured.",
+                "tags": [
+                    "public"
+                ],
+                "security": [
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/public/catalog": {
             "get": {
                 "operationId": "public_catalog",

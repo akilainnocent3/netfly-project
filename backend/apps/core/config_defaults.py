@@ -24,6 +24,7 @@ GROUPS: list[tuple[str, str, str]] = [
         "Payments (Snippe)",
         "Mobile-money payments, free trials, renewals, retries and grace.",
     ),
+    ("mobile", "Mobile app", "The Android and iOS apps: which site links open the app."),
     (
         "testing",
         "Test mode",
@@ -1471,6 +1472,38 @@ KEYS: list[Key] = [
         "it).",
         label="In-app checkout (iOS)",
         public=True,
+    ),
+    # ---- mobile app ---------------------------------------------------------
+    Key(
+        "mobile.android_package",
+        "string",
+        "app.netfly.netfly",
+        "The Android app's package name, for App Links (/.well-known/assetlinks.json).",
+        label="Android package",
+        validation={"regex": r"^[a-zA-Z][A-Za-z0-9_]*(\.[a-zA-Z][A-Za-z0-9_]*)+$"},
+    ),
+    Key(
+        "mobile.android_cert_sha256",
+        "string",
+        "",
+        "SHA-256 fingerprints of the Android app's signing certificate (Play Console → App "
+        "integrity), comma-separated, like AB:CD:…. When set, links to /title/… open the app. "
+        "Empty: the site serves no assetlinks.json.",
+        label="Android signing certificate SHA-256",
+        validation={
+            "regex": r"^$|^([0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){31})(\s*,\s*[0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){31})*$"
+        },
+    ),
+    Key(
+        "mobile.ios_app_ids",
+        "string",
+        "",
+        "The iOS app's ID (TEAMID.bundle.id; comma-separated for several), for Universal Links "
+        "(/.well-known/apple-app-site-association). Empty: the site serves none.",
+        label="iOS app IDs",
+        validation={
+            "regex": r"^$|^[A-Z0-9]{10}\.[A-Za-z0-9.-]+(\s*,\s*[A-Z0-9]{10}\.[A-Za-z0-9.-]+)*$"
+        },
     ),
     # ---- testing ------------------------------------------------------------
     Key(

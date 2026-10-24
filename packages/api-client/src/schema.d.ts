@@ -2236,6 +2236,40 @@ export interface paths {
         patch: operations["profiles_update"];
         trace?: never;
     };
+    "/api/v1/public/apple-app-site-association": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description `/.well-known/apple-app-site-association`; 404 until the iOS app ID is configured. */
+        get: operations["public_apple_app_site_association"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/assetlinks.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description `/.well-known/assetlinks.json`; 404 until the signing certificate is configured. */
+        get: operations["public_assetlinks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/public/catalog": {
         parameters: {
             query?: never;
@@ -8502,6 +8536,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Profile"];
+                };
+            };
+        };
+    };
+    public_apple_app_site_association: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    public_assetlinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };
