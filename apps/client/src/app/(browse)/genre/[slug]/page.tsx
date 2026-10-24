@@ -3,13 +3,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageShell, TitleGrid } from "@/components/browse/title-grid";
 import { getPublicConfig } from "@/lib/server-config";
-import { JsonLd, publicGenre, siteName, siteUrl } from "@/lib/seo";
+import { imageUrl, JsonLd, publicGenre, siteName, siteUrl } from "@/lib/seo";
 
 async function load(slug: string) {
   const [data, config] = await Promise.all([publicGenre(slug), getPublicConfig()]);
   const row = data?.rows[0];
-  if (!row || !row.items.length) return null;
-  return { row, name: siteName(config), site: await siteUrl(config) };
+  if (!data || !row || !row.items.length) return null;
+  const cover = data.genre ? (data.genre.artwork ?? data.genre.sample) : null;
+  return { row, cover, genre: data.genre, name: siteName(config), site: await siteUrl(config) };
 }
 
 export async function generateMetadata({
@@ -20,18 +21,21 @@ export async function generateMetadata({
   const { slug } = await params;
   const data = await load(slug);
   if (!data) return { title: "Genre not found", robots: { index: false } };
-  const { row, name, site } = data;
+  const { row, cover, name, site } = data;
   const examples = row.items
     .slice(0, 3)
     .map((t) => t.title)
     .join(", ");
   const description = `Watch ${row.title} films and series on ${name}, including ${examples}.`;
   const url = `${site}/genre/${slug}`;
+  const image = imageUrl(site, cover?.key, 1280);
+  const images = image ? [{ url: image, width: 1280, height: 720, alt: row.title }] : undefined;
   return {
     title: `${row.title} films & series`,
     description,
     alternates: { canonical: url },
-    openGraph: { type: "website", url, title: `${row.title} · ${name}`, description },
+    openGraph: { type: "website", url, title: `${row.title} · ${name}`, description, images },
+    twitter: { card: image ? "summary_large_image" : "summary", images: image },
   };
 }
 
@@ -43,7 +47,7 @@ export default async function GenrePage({ params }: { params: Promise<{ slug: st
   const { slug } = await params;
   const data = await load(slug);
   if (!data) notFound();
-  const { row, site } = data;
+  const { row, cover, genre, site } = data;
   const list = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -58,7 +62,11 @@ export default async function GenrePage({ params }: { params: Promise<{ slug: st
   return (
     <>
       <JsonLd data={list} />
-      <PageShell title={`${row.title} films & series`}>
+      <PageShell
+        title={`${row.title} films & series`}
+        subtitle={genre?.description || undefined}
+        cover={cover}
+      >
         <nav aria-label="Breadcrumb" className="text-meta text-muted -mt-4 mb-6">
           <Link href="/browse" className="hover:text-white">
             Home

@@ -1,7 +1,10 @@
+import datetime as dt
+
 from django.contrib.postgres.search import TrigramSimilarity
 from django.db import transaction
 from django.db.models import Count, Max, Prefetch, Q
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -604,6 +607,30 @@ class ImageViewSet(
         cache.delete(f"img:{asset.id}")
         self._audit("crop", asset, {"crop": asset.crop})
         render_image.delay(str(asset.id))
+
+    @extend_schema(request=None, responses=AdminImageSerializer)
+    @action(detail=True, methods=["post"])
+    def retry(self, request, pk=None):
+        """Render again: after a failure, or when rendering looks stuck (no worker took it)."""
+        from django.core.cache import cache
+
+        from apps.media.tasks import render_image
+
+        asset = self.get_object()
+        stuck = (
+            asset.status == ImageAsset.Status.PROCESSING
+            and asset.created_at < timezone.now() - dt.timedelta(minutes=2)
+        )
+        if asset.status == ImageAsset.Status.READY or (
+            asset.status == ImageAsset.Status.PROCESSING and not stuck
+        ):
+            raise APIError("This image is already rendered or rendering.", "conflict", 409)
+        ImageAsset.objects.filter(pk=asset.pk).update(status=ImageAsset.Status.PROCESSING, error="")
+        cache.delete(f"img:{asset.id}")
+        self._audit("retry", asset, {"was": asset.status})
+        render_image.delay(str(asset.id))
+        asset.refresh_from_db()
+        return Response(AdminImageSerializer(asset).data)
 
 
 class TitlePickerView(APIView):

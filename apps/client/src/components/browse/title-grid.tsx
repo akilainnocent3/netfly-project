@@ -3,7 +3,8 @@
 import { LazyLogoLoader } from "@netfly/ui";
 import { AnimatePresence, m } from "framer-motion";
 import { useEffect, useRef } from "react";
-import type { TitleCard } from "@/lib/types";
+import type { ImageRef, TitleCard } from "@/lib/types";
+import { NetflyImage } from "../ui/netfly-image";
 import { Card } from "./card";
 
 export function TitleGrid({
@@ -79,22 +80,43 @@ export function PageShell({
   title,
   subtitle,
   actions,
+  cover,
   children,
 }: {
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
+  /** A full-bleed header image (a category's artwork) behind the title. */
+  cover?: ImageRef | null;
   children: React.ReactNode;
 }) {
+  const heading = (
+    <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 className="text-h1 font-black tracking-tight">{title}</h1>
+        {subtitle && <p className="text-muted text-body mt-1 max-w-prose">{subtitle}</p>}
+      </div>
+      {actions}
+    </div>
+  );
+  if (cover) {
+    return (
+      <div className="pb-tabbar">
+        <div
+          data-testid="page-cover"
+          className="relative -mb-10 flex aspect-[16/10] max-h-[52vh] min-h-[240px] w-full items-end overflow-hidden px-[max(4vw,16px)] pt-[var(--header-h)] md:aspect-[21/7]"
+        >
+          <NetflyImage image={cover} alt="" sizes="100vw" priority className="object-cover" />
+          <div className="from-bg via-bg/50 absolute inset-0 bg-gradient-to-t to-black/30" />
+          <div className="relative w-full pb-6">{heading}</div>
+        </div>
+        <div className="relative px-[max(4vw,16px)] pt-10">{children}</div>
+      </div>
+    );
+  }
   return (
     <div className="pb-tabbar px-[max(4vw,16px)] pt-[calc(var(--header-h)+28px)]">
-      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-h1 font-black tracking-tight">{title}</h1>
-          {subtitle && <p className="text-muted text-body mt-1">{subtitle}</p>}
-        </div>
-        {actions}
-      </div>
+      {heading}
       {children}
     </div>
   );

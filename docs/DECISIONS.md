@@ -354,6 +354,22 @@ Ambiguities in the build brief, the option chosen, and why.
     * **Typed before hydration.** `Field` / `LightField` hand text typed before the page hydrated to
       `onChange` on mount, so a quick typist on a slow phone never loses it.
 
+## Categories, autoplay, badges and SMS delivery
+
+57. **A category tile always has an image, and a new artwork shows on the next request.** The
+    owner's "category images don't display" had two causes. (1) `GenresView` only looked for a fallback
+    when `artwork_id` was empty, so a genre whose artwork was still rendering (or had failed, or whose
+    render no worker picked up) got no image at all — while Studio, which previews the *original*
+    upload, looked fine. (2) That empty response was sent with `public, max-age=60,
+    stale-while-revalidate=300` and kept for 5 minutes by the client. Now the fallback (the backdrop
+    of the genre's most popular visible title) applies whenever the artwork isn't `ready`; the tiles
+    are cached server-side under the catalog version and served `public, no-cache` with that version
+    as ETag (a revalidation is a 304); and `render_image` bumps the catalog version when an image a
+    genre uses finishes or fails. The genre artwork (or the fallback) is the header of
+    `/categories/<slug>` and of the public `/genre/<slug>` page, and its Open Graph / Twitter image.
+    Studio shows Retry on a failed render and on one still "processing" after two minutes
+    (`POST /admin/images/{id}/retry`, audited).
+
 ## Resilience
 
 32. **Errors are contained where they happen:** each home row and the hero have their own error boundary

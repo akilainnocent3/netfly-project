@@ -105,7 +105,7 @@ export function useGenres() {
     queryKey: keys.genres(mode),
     queryFn: () => unwrap(api.GET("/api/v1/genres", { params: { query: { translation: mode } } })),
     placeholderData: keepPreviousData,
-    staleTime: 5 * 60_000,
+    staleTime: 30_000, // cheap: the API answers 304 until the catalog changes
   });
 }
 

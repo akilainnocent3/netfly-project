@@ -70,8 +70,20 @@ def render_image(self, asset_id: str) -> None:
             ImageAsset.objects.filter(pk=asset_id).update(
                 status=ImageAsset.Status.FAILED, error=str(exc)[:2000]
             )
+            _bump_if_shown(asset_id)
             return
         raise self.retry(exc=exc) from exc
+    _bump_if_shown(asset_id)
+
+
+def _bump_if_shown(asset_id: str) -> None:
+    """Category tiles are cached under the catalog version and were built while this artwork
+    was still rendering (with a fallback image). Now that it's ready (or has failed), rebuild."""
+    from apps.catalog.models import Genre
+    from apps.recommendations.cache import bump_catalog
+
+    if Genre.objects.filter(artwork_id=asset_id).exists():
+        bump_catalog()
 
 
 # A generated trailer's progress bar: cutting fills 0–20 %, the normal pipeline 20–100 %.

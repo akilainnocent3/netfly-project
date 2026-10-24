@@ -303,6 +303,9 @@ class TitlePageSerializer(serializers.Serializer):
 
 
 class GenreTileSerializer(serializers.ModelSerializer):
+    """`artwork` is the editor's image once it has rendered; `sample` is a backdrop from one of
+    the genre's titles whenever the artwork is missing, still rendering or failed."""
+
     artwork = ImageRef(read_only=True)
     title_count = serializers.IntegerField(read_only=True)
     sample = serializers.SerializerMethodField()
@@ -313,9 +316,19 @@ class GenreTileSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(ImageRef(allow_null=True))
     def get_sample(self, obj):
-        """Fallback artwork: a backdrop from one of the genre's titles."""
         sample = self.context.get("samples", {}).get(obj.pk)
         return ImageRef().to_representation(sample) if sample else None
+
+
+class GenreHeaderSerializer(GenreTileSerializer):
+    """The category page header (no count: the grid pages through the titles)."""
+
+    class Meta(GenreTileSerializer.Meta):
+        fields = ["id", "name", "slug", "description", "artwork", "sample"]
+
+
+class GenrePageSerializer(HomePageSerializer):
+    genre = GenreHeaderSerializer()
 
 
 class EpisodePageSerializer(serializers.Serializer):

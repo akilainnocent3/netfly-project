@@ -18,10 +18,13 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
   const [sort, setSort] = useState<(typeof SORTS)[number]["value"]>("suggested");
   const titles = useGenreTitles(slug, sort);
   const items = titles.data?.pages.flatMap((p) => p.rows[0]?.items ?? []) ?? [];
-  const name = titles.data?.pages[0]?.rows[0]?.title ?? "";
+  const genre = titles.data?.pages[0]?.genre;
+  const name = genre?.name ?? titles.data?.pages[0]?.rows[0]?.title ?? "";
   return (
     <PageShell
       title={name || " "}
+      subtitle={genre?.description || undefined}
+      cover={genre ? (genre.artwork ?? genre.sample) : null}
       actions={
         <SegmentedControl
           label="Sort"

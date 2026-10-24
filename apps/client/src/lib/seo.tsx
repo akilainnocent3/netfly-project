@@ -112,10 +112,10 @@ export const publicEpisodes = (slug: string, season: number) =>
  * feature flag): the sitemap lists a genre when it has any published title, so its public page
  * must show them all.
  */
-export async function publicGenre(slug: string): Promise<Schemas["HomePage"] | null> {
+export async function publicGenre(slug: string): Promise<Schemas["GenrePage"] | null> {
   const path = `/api/v1/genres/${encodeURIComponent(slug)}/titles?sort=suggested&translation=`;
   const pages = await Promise.all(
-    ["translated", "not_translated"].map((mode) => get<Schemas["HomePage"]>(path + mode)),
+    ["translated", "not_translated"].map((mode) => get<Schemas["GenrePage"]>(path + mode)),
   );
   const base = pages.find((p) => p?.rows[0]) ?? pages.find(Boolean);
   if (!base) return null;

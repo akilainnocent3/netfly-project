@@ -442,6 +442,23 @@ export interface paths {
         patch: operations["admin_images_partial_update"];
         trace?: never;
     };
+    "/api/v1/admin/images/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Render again: after a failure, or when rendering looks stuck (no worker took it). */
+        post: operations["admin_images_retry_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/legal": {
         parameters: {
             query?: never;
@@ -2880,10 +2897,28 @@ export interface components {
             name: string;
             slug: string;
         };
+        /** @description The category page header (no count: the grid pages through the titles). */
+        GenreHeader: {
+            readonly id: number;
+            name: string;
+            slug: string;
+            description?: string;
+            readonly artwork: components["schemas"]["ImageRef"] | null;
+            readonly sample: components["schemas"]["ImageRef"] | null;
+        };
         GenreLink: {
             name: string;
             slug: string;
         };
+        GenrePage: {
+            rows: components["schemas"]["Row"][];
+            next: string | null;
+            genre: components["schemas"]["GenreHeader"];
+        };
+        /**
+         * @description `artwork` is the editor's image once it has rendered; `sample` is a backdrop from one of
+         *     the genre's titles whenever the artwork is missing, still rendering or failed.
+         */
         GenreTile: {
             readonly id: number;
             name: string;
@@ -5465,6 +5500,28 @@ export interface operations {
             };
         };
     };
+    admin_images_retry_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this image asset. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminImage"];
+                };
+            };
+        };
+    };
     admin_legal_list: {
         parameters: {
             query?: never;
@@ -7879,7 +7936,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HomePage"];
+                    "application/json": components["schemas"]["GenrePage"];
                 };
             };
         };

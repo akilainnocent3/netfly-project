@@ -18,6 +18,7 @@ from apps.accounts.viewer import Viewer, viewer_for
 from apps.core.config import config
 from apps.core.throttling import throttle
 from apps.engagement.models import MyListItem, Rating, Reminder, SearchLog, WatchProgress
+from apps.media.models import ImageAsset
 from apps.recommendations import engine, feed
 from apps.recommendations.cache import catalog_version
 
@@ -372,6 +373,36 @@ class EpisodesView(APIView):
         )
 
 
+def genre_samples(genres, visible) -> dict:
+    """Fallback images for genres whose artwork isn't usable (none, still rendering, or failed):
+    the backdrop of the genre's most popular visible title."""
+    samples = {}
+    for g in genres:
+        if g.artwork_id and g.artwork.status == ImageAsset.Status.READY:
+            continue
+        t = (
+            visible.filter(genres=g, backdrop__status=ImageAsset.Status.READY)
+            .select_related("backdrop")
+            .order_by("-popularity")
+            .first()
+        )
+        if t:
+            samples[g.pk] = t.backdrop
+    return samples
+
+
+def _versioned(request, response: Response, version: str) -> Response:
+    """Shared caches may keep it, but must revalidate: the ETag carries the catalog version, so
+    an artwork that just rendered (or a Studio edit) shows on the next request, not after a TTL."""
+    etag = f'"{version}"'
+    if request.headers.get("If-None-Match") == etag:
+        response = Response(status=304)
+    response["ETag"] = etag
+    patch_cache_control(response, public=True, no_cache=True)
+    patch_vary_headers(response, ("Authorization", "X-Profile"))
+    return response
+
+
 class GenresView(APIView):
     authentication_classes: list = []
 
@@ -380,28 +411,22 @@ class GenresView(APIView):
     )
     def get(self, request):
         mode = translation_mode(request)
-        visible = visible_titles(mode)
-        genres = list(
-            Genre.objects.filter(is_active=True)
-            .select_related("artwork")
-            .annotate(title_count=Count("titles", filter=Q(titles__in=visible), distinct=True))
-            .filter(title_count__gt=0)
-            .order_by("order", "name")
-        )
-        samples = {}
-        for g in genres:
-            if not g.artwork_id:
-                t = (
-                    visible.filter(genres=g, backdrop__status="ready")
-                    .select_related("backdrop")
-                    .order_by("-popularity")
-                    .first()
-                )
-                if t:
-                    samples[g.pk] = t.backdrop
-        return _public_cache(
-            Response(s.GenreTileSerializer(genres, many=True, context={"samples": samples}).data)
-        )
+        version = f"genres:{catalog_version()}:{mode}"
+        data = cache.get(version)
+        if data is None:
+            visible = visible_titles(mode)
+            genres = list(
+                Genre.objects.filter(is_active=True)
+                .select_related("artwork")
+                .annotate(title_count=Count("titles", filter=Q(titles__in=visible), distinct=True))
+                .filter(title_count__gt=0)
+                .order_by("order", "name")
+            )
+            data = s.GenreTileSerializer(
+                genres, many=True, context={"samples": genre_samples(genres, visible)}
+            ).data
+            cache.set(version, data, 600)
+        return _versioned(request, Response(data), version)
 
 
 SORTS = {"newest": ("-published_at", "-id"), "az": ("title", "id"), "year": ("-year", "-id")}
@@ -414,11 +439,13 @@ class GenreTitlesView(APIView):
             CURSOR,
             OpenApiParameter("sort", str, enum=["suggested", "newest", "az", "year"]),
         ],
-        responses=s.HomePageSerializer,
+        responses=s.GenrePageSerializer,
         operation_id="genre_titles",
     )
     def get(self, request, slug: str):
-        genre = get_object_or_404(Genre, slug=slug, is_active=True)
+        genre = get_object_or_404(
+            Genre.objects.select_related("artwork"), slug=slug, is_active=True
+        )
         mode = translation_mode(request)
         sort = request.query_params.get("sort", "suggested")
         size = config.get_int("content.page_size", 30)
@@ -443,8 +470,12 @@ class GenreTitlesView(APIView):
         cards = cards_by_ids(ids[:size])
         viewer = viewer_state(who, [c.pk for c in cards])
         badges = badge_context(mode)
+        header = s.GenreHeaderSerializer(
+            genre, context={"samples": genre_samples([genre], base)}
+        ).data
         return Response(
             {
+                "genre": header,
                 "rows": [
                     {
                         "key": f"genre:{genre.pk}",

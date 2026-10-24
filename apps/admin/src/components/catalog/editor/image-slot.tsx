@@ -4,8 +4,8 @@ import { ApiError, unwrap } from "@netfly/api-client";
 import { cn, LazyLogoLoader } from "@netfly/ui";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Crop, ImagePlus, RefreshCw, Trash2 } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { Crop, ImagePlus, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 import { useToast } from "@/components/providers/toast";
 import { IconButton, useConfirm } from "@/components/ui/actions";
@@ -45,6 +45,20 @@ export function useImage(id: string | null | undefined, initial?: AdminImage | n
     queryFn: () => unwrap(api.GET("/api/v1/admin/images/{id}", { params: { path: { id: id! } } })),
     refetchInterval: (q) => (q.state.data?.status === "processing" ? 1200 : false),
   });
+}
+
+const STUCK_MS = 2 * 60_000;
+
+/** True once an image has been "processing" for longer than a render ever takes. */
+function useStuck(image: AdminImage | null): boolean {
+  const since = image?.status === "processing" ? Date.parse(image.created_at) : NaN;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (Number.isNaN(since)) return;
+    const id = setInterval(() => setNow(Date.now()), 10_000);
+    return () => clearInterval(id);
+  }, [since]);
+  return !Number.isNaN(since) && now - since > STUCK_MS;
 }
 
 /** Shows the crop of `image` (from the original) exactly as the variants will render it. */
@@ -111,6 +125,19 @@ export function ImageSlot({
   const live = useImage(image?.id, image);
   const confirm = useConfirm();
   const current = live.data ?? image ?? null;
+  const stuck = useStuck(current);
+  const retry = async () => {
+    if (!current) return;
+    try {
+      const fresh = await unwrap(
+        api.POST("/api/v1/admin/images/{id}/retry", { params: { path: { id: current.id } } }),
+      );
+      queryClient.setQueryData(["image", fresh.id], fresh);
+      toast(`${label}: rendering again`);
+    } catch (e) {
+      toast(e instanceof ApiError ? e.message : "Couldn't retry", "error");
+    }
+  };
 
   const handleFile = useCallback(
     async (file: File | undefined) => {
@@ -172,15 +199,39 @@ export function ImageSlot({
         )}
         {(uploading || current?.status === "processing") && (
           <div className="absolute inset-0 grid place-items-center bg-black/40 text-[12px] font-medium text-white backdrop-blur-[1px]">
-            <span className="flex items-center gap-1.5">
-              <LazyLogoLoader size="sm" decorative delay={0} className="[--nf-size:14px]" />{" "}
-              {uploading ? "Uploading…" : "Rendering sizes…"}
+            <span className="flex flex-col items-center gap-1.5 px-3 text-center">
+              <span className="flex items-center gap-1.5">
+                <LazyLogoLoader size="sm" decorative delay={0} className="[--nf-size:14px]" />{" "}
+                {uploading ? "Uploading…" : "Rendering sizes…"}
+              </span>
+              {stuck && (
+                <>
+                  <span className="text-white/80">
+                    Still rendering after 2 minutes — the image worker may not be running.
+                  </span>
+                  {!disabled && (
+                    <Button size="sm" variant="secondary" onClick={() => retry()}>
+                      <RotateCcw className="size-3.5" /> Retry
+                    </Button>
+                  )}
+                </>
+              )}
             </span>
           </div>
         )}
         {current?.status === "failed" && (
-          <div className="absolute inset-x-0 bottom-0 bg-red-600/90 px-2 py-1 text-[12px] text-white">
-            Processing failed: {current.error}
+          <div
+            role="alert"
+            className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-red-600/90 px-2 py-1 text-[12px] text-white"
+          >
+            <span className="min-w-0 flex-1 truncate" title={current.error}>
+              Processing failed{current.error ? `: ${current.error}` : ""}
+            </span>
+            {!disabled && (
+              <Button size="sm" variant="secondary" onClick={() => retry()}>
+                <RotateCcw className="size-3.5" /> Retry
+              </Button>
+            )}
           </div>
         )}
         {current && !disabled && (

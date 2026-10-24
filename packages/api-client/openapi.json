@@ -1790,6 +1790,44 @@
                 }
             }
         },
+        "/api/v1/admin/images/{id}/retry": {
+            "post": {
+                "operationId": "admin_images_retry_create",
+                "description": "Render again: after a failure, or when rendering looks stuck (no worker took it).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this image asset.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminImage"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/admin/legal": {
             "get": {
                 "operationId": "admin_legal_list",
@@ -6058,7 +6096,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/HomePage"
+                                    "$ref": "#/components/schemas/GenrePage"
                                 }
                             }
                         },
@@ -9071,6 +9109,54 @@
                     "slug"
                 ]
             },
+            "GenreHeader": {
+                "type": "object",
+                "description": "The category page header (no count: the grid pages through the titles).",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 80
+                    },
+                    "slug": {
+                        "type": "string",
+                        "maxLength": 90,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "artwork": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "sample": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImageRef"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "artwork",
+                    "id",
+                    "name",
+                    "sample",
+                    "slug"
+                ]
+            },
             "GenreLink": {
                 "type": "object",
                 "properties": {
@@ -9086,8 +9172,32 @@
                     "slug"
                 ]
             },
+            "GenrePage": {
+                "type": "object",
+                "properties": {
+                    "rows": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Row"
+                        }
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "genre": {
+                        "$ref": "#/components/schemas/GenreHeader"
+                    }
+                },
+                "required": [
+                    "genre",
+                    "next",
+                    "rows"
+                ]
+            },
             "GenreTile": {
                 "type": "object",
+                "description": "`artwork` is the editor's image once it has rendered; `sample` is a backdrop from one of\nthe genre's titles whenever the artwork is missing, still rendering or failed.",
                 "properties": {
                     "id": {
                         "type": "integer",
