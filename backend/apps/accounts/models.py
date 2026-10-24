@@ -17,7 +17,12 @@ class UserManager(BaseUserManager):
         return self.get(username__iexact=username)
 
     def create_user(self, username: str, password: str | None = None, **extra):
+        from apps.core.config import config
+
         extra.setdefault("full_name", username)
+        autoplay = config.get_bool("playback.autoplay_default", True)
+        extra.setdefault("autoplay_next", autoplay)
+        extra.setdefault("autoplay_previews", autoplay)
         user = self.model(username=username, **extra)
         user.set_password(password)
         user.save(using=self._db)

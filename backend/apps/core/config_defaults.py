@@ -462,6 +462,15 @@ KEYS: list[Key] = [
         unit="s",
     ),
     Key(
+        "playback.autoplay_default",
+        "bool",
+        True,
+        "New accounts start with “Autoplay next episode” and “Autoplay previews” on. Viewers "
+        "change it in Account → Playback (turning it on warns that it uses mobile data).",
+        label="Autoplay for new accounts",
+        public=True,
+    ),
+    Key(
         "playback.data_saver_max_height",
         "int",
         480,

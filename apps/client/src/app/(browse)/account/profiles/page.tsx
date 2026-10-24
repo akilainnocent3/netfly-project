@@ -1,44 +1,39 @@
 "use client";
 
 import { Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { AccountPanel } from "@/components/account/account-nav";
-import { PlaybackSettings } from "@/components/account/settings";
-import { useAuth } from "@/components/providers/auth";
 import { useProfiles } from "@/components/providers/profile";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProfilesPage() {
-  const { user } = useAuth();
   const profiles = useProfiles();
+  const router = useRouter();
+  // Playback settings moved to their own section; old links to this page land there.
+  useEffect(() => {
+    if (!profiles.enabled) router.replace("/account/playback");
+  }, [profiles.enabled, router]);
+  if (!profiles.enabled) return <Skeleton className="h-40 rounded" />;
   return (
-    <div className="space-y-6">
-      {profiles.enabled ? (
-        <AccountPanel
-          title="Profiles"
-          description="Each profile has its own Continue Watching, My List and recommendations."
-          actions={
-            <Button
-              variant="accent"
-              className="rounded"
-              icon={<Pencil />}
-              onClick={() => profiles.openGate("manage")}
-            >
-              Manage profiles
-            </Button>
-          }
+    <AccountPanel
+      title="Profiles"
+      description="Each profile has its own Continue Watching, My List and recommendations. Playback settings apply to every profile."
+      actions={
+        <Button
+          variant="accent"
+          className="rounded"
+          icon={<Pencil />}
+          onClick={() => profiles.openGate("manage")}
         >
-          <p className="text-body text-[#b3b3b3]">
-            Watching as <span className="font-semibold text-white">{profiles.active?.name}</span>.
-          </p>
-        </AccountPanel>
-      ) : null}
-      <AccountPanel
-        title="Playback settings"
-        description="Every plan streams in the same, best quality."
-      >
-        {user ? <PlaybackSettings user={user} /> : <Skeleton className="h-40 rounded" />}
-      </AccountPanel>
-    </div>
+          Manage profiles
+        </Button>
+      }
+    >
+      <p className="text-body text-[#b3b3b3]">
+        Watching as <span className="font-semibold text-white">{profiles.active?.name}</span>.
+      </p>
+    </AccountPanel>
   );
 }

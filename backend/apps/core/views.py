@@ -61,8 +61,11 @@ class PublicConfigView(APIView):
         operation_id="public_config",
     )
     def get(self, request):
+        from apps.media.data_usage import public_values
+
         values = config.public()
         values["media_origins"] = media_origins()
+        values.update(public_values())  # derived from the ladder: the autoplay data warnings
         response = Response({"values": values})
         patch_cache_control(response, public=True, max_age=15, stale_while_revalidate=60)
         return response

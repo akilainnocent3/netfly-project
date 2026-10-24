@@ -376,6 +376,19 @@ Ambiguities in the build brief, the option chosen, and why.
     audited as `genre.titles` (only when something changed), bumps the catalog version and is limited
     by `security.rate_genre_titles`; content managers write, analysts read. `Title.genres` has no
     per-genre order, so a category lists most popular first (as viewers see it).
+59. **Autoplay is the viewer's choice, and turning it on says what it costs.** Account → Playback (its
+    own section now; it was under Profiles) has *Autoplay next episode* and *Autoplay previews
+    (trailers on browse and hover)*. Turning one **on** asks first — "Autoplay plays video
+    automatically and uses mobile data (about X MB per minute …). Turn on?" with *Turn on* /
+    *Cancel*; turning off saves at once. X is never hard-coded: `/api/public/config` derives
+    `playback.preview_mb_per_minute` (highest rung ≤ the 720p preview cap, peak `max_kbps` + audio,
+    rounded up) and `playback.episode_mb_per_minute` from `transcoding.ladder`. The settings stay per
+    account (the model has no per-profile fields; they apply to every profile); new accounts start
+    from `playback.autoplay_default`. Every autoplay path honours them: the hero trailer, hover and
+    modal previews (`PreviewVideo`: setting + `prefers-reduced-motion` + Save-Data), the hover/focus
+    prefetch (it used to request a preview session even with previews off) and the next-episode
+    countdown. "Data saver: autoplay on Wi-Fi only" exists only in the mobile app (browsers can't
+    tell Wi-Fi from mobile data reliably).
 
 ## Resilience
 

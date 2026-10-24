@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { FormActions } from "@/components/ui/form-actions";
 import { SwitchRow } from "@/components/ui/switch";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { api } from "@/lib/api";
 
@@ -66,7 +67,7 @@ export function NameSetting({ user }: { user: User }) {
   );
 }
 
-/** Quality, subtitles and autoplay (per account; the same top quality on every plan). */
+/** Quality, subtitles and autoplay (per account, every profile; the same top quality on every plan). */
 export function PlaybackSettings({ user }: { user: User }) {
   const { saving, save } = useSavePref();
   return (
@@ -114,23 +115,78 @@ export function PlaybackSettings({ user }: { user: User }) {
           </option>
         </select>
       </label>
+      <AutoplaySettings user={user} saving={saving} save={save} />
+    </div>
+  );
+}
+
+type AutoplayKey = "autoplay_next" | "autoplay_previews";
+
+/**
+ * The autoplay switches. Turning one *on* first asks, because autoplay streams video on its
+ * own (the MB figure comes from the live bitrate ladder, never a hard-coded number); turning
+ * one off saves at once. Settings are per account, so they apply to every profile.
+ */
+export function AutoplaySettings({
+  user,
+  saving,
+  save,
+}: {
+  user: User;
+  saving: PrefKey | null;
+  save: (key: PrefKey, patch: Partial<Prefs>) => Promise<void>;
+}) {
+  const config = useConfig();
+  const [asking, setAsking] = useState<AutoplayKey | null>(null);
+  const previewMb = config.num("playback.preview_mb_per_minute", 0);
+  const episodeMb = config.num("playback.episode_mb_per_minute", 0);
+  const toggle = (key: AutoplayKey, on: boolean) => {
+    if (on) setAsking(key);
+    else void save(key, { [key]: false });
+  };
+  const usage =
+    asking === "autoplay_previews"
+      ? previewMb
+        ? ` (about ${previewMb} MB per minute of preview)`
+        : ""
+      : episodeMb
+        ? ` (up to about ${episodeMb} MB per minute of video)`
+        : "";
+  return (
+    <>
       <SwitchRow
         label="Autoplay next episode"
         description="Start the next episode automatically after a countdown."
         checked={user.autoplay_next ?? true}
         saving={saving === "autoplay_next"}
         disabled={saving !== null}
-        onChange={(v) => void save("autoplay_next", { autoplay_next: v })}
+        onChange={(v) => toggle("autoplay_next", v)}
       />
       <SwitchRow
         label="Autoplay previews"
-        description="Play muted previews while you browse."
+        description="Play trailers on browse and hover (muted)."
         checked={user.autoplay_previews ?? true}
         saving={saving === "autoplay_previews"}
         disabled={saving !== null}
-        onChange={(v) => void save("autoplay_previews", { autoplay_previews: v })}
+        onChange={(v) => toggle("autoplay_previews", v)}
       />
-    </div>
+      <ConfirmDialog
+        open={asking !== null}
+        onOpenChange={(open) => !open && setAsking(null)}
+        title={
+          asking === "autoplay_previews"
+            ? "Turn on autoplay previews?"
+            : "Turn on autoplay next episode?"
+        }
+        confirmLabel="Turn on"
+        cancelLabel="Cancel"
+        onConfirm={async () => {
+          if (asking) await save(asking, { [asking]: true });
+        }}
+      >
+        <p>Autoplay plays video automatically and uses mobile data{usage}. Turn on?</p>
+      </ConfirmDialog>
+    </>
   );
 }
 

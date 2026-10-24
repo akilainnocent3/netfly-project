@@ -1,9 +1,10 @@
 "use client";
 
 import { cn } from "@netfly/ui";
-import { CreditCard, Gauge, House, ShieldCheck, UsersRound } from "lucide-react";
+import { CreditCard, Gauge, House, MonitorPlay, ShieldCheck, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useProfiles } from "../providers/profile";
 import { FormActions } from "../ui/form-actions";
 import { LinkPending } from "../ui/link-pending";
 
@@ -11,6 +12,7 @@ export const ACCOUNT_SECTIONS = [
   { href: "/account", label: "Overview", icon: House },
   { href: "/account/membership", label: "Membership", icon: CreditCard },
   { href: "/account/usage", label: "Usage", icon: Gauge },
+  { href: "/account/playback", label: "Playback", icon: MonitorPlay },
   { href: "/account/security", label: "Security", icon: ShieldCheck },
   { href: "/account/profiles", label: "Profiles", icon: UsersRound },
 ] as const;
@@ -18,13 +20,18 @@ export const ACCOUNT_SECTIONS = [
 /** Netflix account navigation: a left column on desktop, a scrollable tab strip on phones. */
 export function AccountNav() {
   const pathname = usePathname();
+  const profiles = useProfiles();
+  // Profiles only exist with `features.profiles_enabled`; Playback holds the settings either way.
+  const sections = ACCOUNT_SECTIONS.filter(
+    (s) => s.href !== "/account/profiles" || profiles.enabled,
+  );
   return (
     <nav
       aria-label="Account"
       className="lg:sticky lg:top-[calc(var(--header-h)+24px)] lg:self-start"
     >
       <ul className="no-scrollbar -mx-[max(4vw,16px)] flex gap-1 overflow-x-auto px-[max(4vw,16px)] lg:mx-0 lg:flex-col lg:px-0">
-        {ACCOUNT_SECTIONS.map(({ href, label, icon: Icon }) => {
+        {sections.map(({ href, label, icon: Icon }) => {
           const active = pathname === href;
           return (
             <li key={href} className="shrink-0">

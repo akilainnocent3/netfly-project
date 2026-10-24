@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, Gauge, KeyRound, UsersRound } from "lucide-react";
+import { CreditCard, Gauge, KeyRound, MonitorPlay } from "lucide-react";
 import { AccountLinkRow, AccountPanel } from "@/components/account/account-nav";
 import { MembershipCard } from "@/components/account/membership-card";
 import { NameSetting } from "@/components/account/settings";
@@ -32,8 +32,8 @@ export default function AccountOverviewPage() {
           />
           <AccountLinkRow href="/account/security" icon={<KeyRound />} label="Update password" />
           <AccountLinkRow
-            href="/account/profiles"
-            icon={<UsersRound />}
+            href="/account/playback"
+            icon={<MonitorPlay />}
             label="Playback settings"
             hint="Autoplay, subtitles and quality"
           />

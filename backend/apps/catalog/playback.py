@@ -14,6 +14,7 @@ from apps.core.config import config
 from apps.core.exceptions import APIError
 from apps.engagement.models import WatchProgress
 from apps.media import delivery
+from apps.media.data_usage import PREVIEW_MAX_HEIGHT
 from apps.media.models import VideoAsset
 from apps.media.serializers import ImageRef
 from apps.recommendations.feed import next_episode
@@ -184,7 +185,7 @@ class PlaybackView(APIView):
                 start_at = progress.position_seconds
 
         nxt = next_episode(episode) if episode else None
-        max_height = 720 if preview else None
+        max_height = PREVIEW_MAX_HEIGHT if preview else None
         token = delivery.issue_token(
             str(asset.pk),
             request.user.pk,

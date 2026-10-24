@@ -15,7 +15,7 @@ import { ContinueMenu } from "./continue-menu";
 import { NetflyImage } from "../ui/netfly-image";
 import { PlayLink } from "../auth/auth-gate";
 import { MyListButton } from "./my-list-button";
-import { PreviewVideo, prefetchPlayback } from "./preview-video";
+import { PreviewVideo, usePrefetchPlayback } from "./preview-video";
 import { RatingButton } from "./rating-button";
 
 export function titleHref(title: TitleCard): string {
@@ -138,6 +138,7 @@ export function Card({
   const badge = badgeFromApi(title.badge);
   const config = useConfig();
   const router = useRouter();
+  const prefetchPlayback = usePrefetchPlayback();
   const ref = useRef<HTMLAnchorElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Viewport rect plus the scroll offset at open: the panel keeps its document position even if

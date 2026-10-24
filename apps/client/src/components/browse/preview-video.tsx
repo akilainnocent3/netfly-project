@@ -4,19 +4,32 @@ import { LoaderPresence } from "@netfly/ui";
 import type Hls from "hls.js";
 import { AnimatePresence, m } from "framer-motion";
 import { RotateCcw, Volume2, VolumeX } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getPlayback, warmManifest } from "@/lib/playback";
 import type { TitleCard } from "@/lib/types";
 import { useAuth } from "../providers/auth";
 import { IconButton } from "../ui/button";
 
-export function prefetchPlayback(title: TitleCard): void {
-  if (!title.has_preview) return;
-  void getPlayback(title.slug, { preview: true });
-  void getPlayback(title.slug, { episode: title.context?.episode_id ?? null }).then(warmManifest);
+/**
+ * Warm a title's playback on hover/focus: the preview session only when previews may autoplay
+ * (the viewer's "Autoplay previews", reduced motion, Save-Data), the main session either way.
+ */
+export function usePrefetchPlayback(): (title: TitleCard) => void {
+  const { user } = useAuth();
+  const autoplayPreviews = user?.autoplay_previews;
+  return useCallback(
+    (title: TitleCard) => {
+      if (!title.has_preview) return;
+      if (previewsAllowed(autoplayPreviews)) void getPlayback(title.slug, { preview: true });
+      void getPlayback(title.slug, { episode: title.context?.episode_id ?? null }).then(
+        warmManifest,
+      );
+    },
+    [autoplayPreviews],
+  );
 }
 
-function previewsAllowed(autoplayPreviews: boolean | undefined): boolean {
+export function previewsAllowed(autoplayPreviews: boolean | undefined): boolean {
   if (autoplayPreviews === false) return false;
   if (typeof window === "undefined") return false;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;

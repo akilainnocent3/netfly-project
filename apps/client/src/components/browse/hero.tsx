@@ -15,7 +15,7 @@ import { NetflyImage } from "../ui/netfly-image";
 import { PageDots } from "../ui/page-dots";
 import { PlayLink, useAuthGate } from "../auth/auth-gate";
 import { titleHref } from "./card";
-import { prefetchPlayback, PreviewVideo, type PreviewState } from "./preview-video";
+import { usePrefetchPlayback, PreviewVideo, type PreviewState } from "./preview-video";
 
 const TRAILER_DELAY_MS = 2000;
 
@@ -134,6 +134,7 @@ function HeroSlide({
   preview: PreviewState;
   onPreview: (s: PreviewState) => void;
 }) {
+  const prefetchPlayback = usePrefetchPlayback();
   const Heading = useContext(HeadingLevel);
   const title = item.title;
   const synopsis = item.tagline || title.short_synopsis;
