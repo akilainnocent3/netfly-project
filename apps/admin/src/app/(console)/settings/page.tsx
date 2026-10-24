@@ -685,7 +685,13 @@ const TOOLS: Record<string, () => React.ReactNode> = {
   testing: () => <TestModeTools />,
 };
 
-type ToolResult = { ok: boolean; message: string };
+type ToolResult = {
+  ok: boolean;
+  message: string;
+  /** What the provider answered, shown verbatim (SMS test). */
+  provider?: Record<string, unknown>;
+  to?: string;
+};
 
 /** One "test" action: a button with a spinner, then the provider's answer inline. */
 function useTool() {
@@ -719,6 +725,21 @@ function ToolResultLine({ result }: { result: ToolResult | null }) {
       {result.ok ? <Check className="size-3.5" /> : <CircleAlert className="size-3.5" />}
       {result.message}
     </p>
+  );
+}
+
+/** The provider's raw answer, so "texts never arrive" can be traced to its cause. */
+function ProviderResponse({ result }: { result: ToolResult | null }) {
+  if (!result?.provider || !Object.keys(result.provider).length) return null;
+  return (
+    <details className="border-line rounded-md border text-[12.5px]" open={!result.ok}>
+      <summary className="cursor-pointer px-3 py-2 font-medium">
+        Provider response{result.to ? ` for ${result.to}` : ""}
+      </summary>
+      <pre className="bg-raised overflow-x-auto px-3 py-2 font-mono text-[12px] leading-relaxed">
+        {JSON.stringify(result.provider, null, 2)}
+      </pre>
+    </details>
   );
 }
 
@@ -760,8 +781,10 @@ function SmsTools() {
   return (
     <div className="space-y-3 px-5 py-4">
       <p className="text-muted text-[12.5px]">
-        Beem Africa: save the API key, secret key and an approved sender ID below. Codes use our own
-        template by default so phones can fill them in automatically (WebOTP).
+        Beem Africa: save the API key, secret key and an approved sender ID below (an unapproved
+        sender ID is the most common reason texts never arrive). Codes use our own template by
+        default so phones can fill them in automatically (WebOTP). The test number is used once and
+        not stored.
       </p>
       <form
         className="flex flex-wrap items-center gap-2"
@@ -792,6 +815,7 @@ function SmsTools() {
         </Button>
       </form>
       <ToolResultLine result={send.result} />
+      <ProviderResponse result={send.result} />
       <ToolResultLine result={balance.result} />
     </div>
   );

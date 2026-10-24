@@ -718,7 +718,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Settings → SMS → Send test SMS. */
+        /**
+         * @description Settings → SMS → Send test SMS: to a number typed in the field (never stored), showing
+         *     what Beem answered so an operator can see exactly why texts don't arrive.
+         */
         post: operations["admin_sms_test"];
         delete?: never;
         options?: never;
@@ -3806,6 +3809,14 @@ export interface components {
         SmsTestRequestRequest: {
             to: string;
         };
+        SmsTestResult: {
+            ok: boolean;
+            message: string;
+            to: string;
+            provider: {
+                [key: string]: unknown;
+            };
+        };
         StaffInputRequest: {
             username: string;
             full_name?: string;
@@ -6109,7 +6120,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["StorageTestResult"];
+                    "application/json": components["schemas"]["SmsTestResult"];
                 };
             };
         };

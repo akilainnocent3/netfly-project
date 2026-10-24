@@ -169,6 +169,11 @@ def _within_hourly_cap(channel: str, target: str, cap: int) -> bool:
     return count <= cap
 
 
+def _refund_hourly_cap(channel: str, target: str) -> None:
+    digest = hashlib.sha256(target.encode()).hexdigest()[:24]
+    get_redis().decr(f"verify:sent:{channel}:{digest}")
+
+
 def _deliver(channel: str, target: str, code: str, *, user: User, minutes: int, host: str) -> str:
     """Send the code; returns the provider reference (Beem pin id for beem_otp, else "")."""
     site = _site_name()
@@ -247,11 +252,38 @@ def start(
     try:
         provider_ref = _deliver(channel, target, code, user=user, minutes=minutes, host=host)
     except MessagingError as exc:
-        log.warning("verification send failed: channel=%s reason=%s", channel, exc.code)
+        _refund_hourly_cap(channel, target)  # a send that never happened doesn't count
+        # The provider's answer (never the code or the text) goes to the log and the audit log,
+        # so "codes never arrive" can be diagnosed from Studio → Audit log.
+        log.warning(
+            "verification send failed: channel=%s to=%s reason=%s provider=%s",
+            channel,
+            mask(channel, target),
+            exc.message,
+            exc.provider,
+        )
+        record(
+            user,
+            f"verification.{channel}_send_failed",
+            user,
+            changes={
+                "to": mask(channel, target),
+                "purpose": purpose,
+                "reason": exc.message,
+                "provider": exc.provider,
+            },
+            ip=ip,
+        )
         raise VerificationError(
-            "We couldn't send the code right now. Please try again in a moment.",
+            (
+                "We couldn't send a text to this number. Check the number or use email."
+                if channel == Channel.PHONE
+                else "We couldn't send the email right now. Check the address or try again in "
+                "a moment."
+            ),
             "send_failed",
             502,
+            field="value" if getattr(exc, "rejected_number", False) else None,
         ) from exc
     now = timezone.now()
     with transaction.atomic():

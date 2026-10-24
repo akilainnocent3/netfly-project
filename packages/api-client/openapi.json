@@ -2748,7 +2748,7 @@
         "/api/v1/admin/sms/test": {
             "post": {
                 "operationId": "admin_sms_test",
-                "description": "Settings → SMS → Send test SMS.",
+                "description": "Settings → SMS → Send test SMS: to a number typed in the field (never stored), showing\nwhat Beem answered so an operator can see exactly why texts don't arrive.",
                 "tags": [
                     "admin"
                 ],
@@ -2777,7 +2777,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/StorageTestResult"
+                                    "$ref": "#/components/schemas/SmsTestResult"
                                 }
                             }
                         },
@@ -12310,6 +12310,30 @@
                     }
                 },
                 "required": [
+                    "to"
+                ]
+            },
+            "SmsTestResult": {
+                "type": "object",
+                "properties": {
+                    "ok": {
+                        "type": "boolean"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "to": {
+                        "type": "string"
+                    },
+                    "provider": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    }
+                },
+                "required": [
+                    "message",
+                    "ok",
+                    "provider",
                     "to"
                 ]
             },

@@ -1228,6 +1228,16 @@ KEYS: list[Key] = [
         "Beem SMS API (staging: https://dev-sms.beem.africa).",
         label="Beem SMS base URL",
     ),
+    Key(
+        "sms.default_region",
+        "string",
+        "TZ",
+        "Country for phone numbers typed without a country code (ISO code, e.g. TZ, KE, UG). "
+        "0712 345 678 with TZ is +255 712 345 678.",
+        label="Default country",
+        public=True,
+        validation={"regex": r"^[A-Z]{2}$"},
+    ),
     Key("sms.api_key", "secret", "", "Beem API key.", label="API key"),
     Key("sms.secret_key", "secret", "", "Beem secret key.", label="Secret key"),
     Key(

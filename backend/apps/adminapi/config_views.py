@@ -14,6 +14,7 @@ from apps.core.audit import client_ip, record
 from apps.core.config import ConfigValidationError, config
 from apps.core.exceptions import APIError
 from apps.core.models import AuditLog, ConfigEntry, ConfigGroup, LegalPage
+from apps.core.throttling import throttle
 
 
 class ConfigEntrySerializer(serializers.ModelSerializer):
@@ -370,14 +371,27 @@ class EmailTestView(APIView):
         return Response({"ok": True, "message": f"Sent a test email to {to}."})
 
 
+SmsTestResult = inline_serializer(
+    "SmsTestResult",
+    {
+        "ok": serializers.BooleanField(),
+        "message": serializers.CharField(),
+        "to": serializers.CharField(allow_blank=True),
+        "provider": serializers.DictField(child=serializers.JSONField()),
+    },
+)
+
+
 class SmsTestView(APIView):
-    """Settings → SMS → Send test SMS."""
+    """Settings → SMS → Send test SMS: to a number typed in the field (never stored), showing
+    what Beem answered so an operator can see exactly why texts don't arrive."""
 
     permission_classes = [SuperadminOnly]
+    throttle_classes = [throttle("security.rate_otp_send", per_user=True)]
 
     @extend_schema(
         request=inline_serializer("SmsTestRequest", {"to": serializers.CharField()}),
-        responses=TestResult,
+        responses=SmsTestResult,
         operation_id="admin_sms_test",
     )
     def post(self, request):
@@ -388,15 +402,42 @@ class SmsTestView(APIView):
         try:
             to = phones.normalize(str(request.data.get("to") or ""))
         except ValueError as exc:
-            return Response({"ok": False, "message": str(exc)})
+            return Response({"ok": False, "message": str(exc), "to": "", "provider": {}})
         site = config.get_str("branding.site_name", "NETFLY")
+        shown = "+" + to
         try:
-            ref = sms.send(to, f"This is a test SMS from {site}. Your SMS settings work.")
+            ref, provider = sms.send_with_response(
+                to, f"This is a test SMS from {site}. Your SMS settings work."
+            )
         except MessagingError as exc:
-            return Response({"ok": False, "message": exc.message})
-        record(request.user, "sms.test", None, target_type="sms", ip=client_ip(request))
+            record(
+                request.user,
+                "sms.test_failed",
+                None,
+                target_type="sms",
+                changes={"to": phones.masked(to), "reason": exc.message, "provider": exc.provider},
+                ip=client_ip(request),
+            )
+            return Response(
+                {"ok": False, "message": exc.message, "to": shown, "provider": exc.provider}
+            )
+        record(
+            request.user,
+            "sms.test",
+            None,
+            target_type="sms",
+            changes={"to": phones.masked(to), "provider": provider},
+            ip=client_ip(request),
+        )
         return Response(
-            {"ok": True, "message": f"Sent to {phones.masked(to)} (Beem request {ref})."}
+            {
+                "ok": True,
+                "message": f"Beem accepted it for {phones.masked(to)} (request {ref}). "
+                "If it doesn't arrive within a minute, check the delivery report in the "
+                "Beem dashboard.",
+                "to": shown,
+                "provider": provider,
+            }
         )
 
 

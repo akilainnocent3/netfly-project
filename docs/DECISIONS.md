@@ -405,6 +405,21 @@ Ambiguities in the build brief, the option chosen, and why.
     `published_at + window`; everything that caches cards — the signed-out billboard and New & Popular,
     the SEO pages, and the public `max-age` / `stale-while-revalidate` — is capped at the seconds left
     until the next badge boundary (`badges.cap`, cached as an absolute time under the catalog version).
+61. **An SMS that wasn't sent is never reported as sent.** Diagnosing "phone codes never arrive (email
+    works)" found: Beem answers `successful: true, code: 100` even when it sent nothing (`valid: 0`,
+    `invalid` or `opted_out` > 0) and we treated that as success; our Beem error table contradicted
+    Beem's documentation (102 is *insufficient balance*, not "invalid recipient"; 114 is *too many
+    recipients*, not "no credit"); a template with characters outside GSM 03.38 (curly quotes, en
+    dashes, emoji) is refused (code 110) because `encoding: 0` is the only documented encoding; a failed
+    send still used up the per-number hourly cap; and failures were logged as `send_failed` only, with
+    Beem's answer discarded. Now: numbers are parsed and validated with `phonenumbers` in
+    `sms.default_region` (TZ) and must be mobile numbers; outgoing text is made GSM-safe; any refusal
+    returns *"We couldn't send a text to this number. Check the number or use email."* (`send_failed`,
+    502) and records Beem's answer (code, status text, recipient counts — never the code or the text)
+    in the server log and the audit log (`verification.phone_send_failed`, masked number); the hourly
+    cap is refunded; Studio → Settings → SMS → *Send test SMS* shows Beem's raw answer for a number
+    that is used once and not stored. The most likely live cause — an unregistered sender ID (111) —
+    can only be confirmed against the owner's Beem account (see the hand-off report).
 
 ## Resilience
 
