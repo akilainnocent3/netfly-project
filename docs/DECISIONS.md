@@ -354,6 +354,14 @@ Ambiguities in the build brief, the option chosen, and why.
     * **Typed before hydration.** `Field` / `LightField` hand text typed before the page hydrated to
       `onChange` on mount, so a quick typist on a slow phone never loses it.
 
+52a. **Badges are the one exception to the 12 px minimum.** "Recently added", "New episodes" and
+    "Leaving soon" are a discreet ribbon: ≈10 px caps (9.5 px below `sm`), 0.04em tracking, 2 × 4 px
+    padding, radius 2 — Netflix's scale, chosen by the owner over decision 52's minimum. On cards the
+    ribbon sits bottom-centre on the artwork's edge and the logo art is lifted above it (never
+    covered); in the hero it is a small pill beside the maturity rating (Top 10 keeps its own line).
+    Contrast stays WCAG AA (white on accent 4.8:1, black on white for Leaving soon). Every other text
+    keeps the 12 px rule.
+
 ## Categories, autoplay, badges and SMS delivery
 
 57. **A category tile always has an image, and a new artwork shows on the next request.** The
@@ -389,6 +397,14 @@ Ambiguities in the build brief, the option chosen, and why.
     prefetch (it used to request a preview session even with previews off) and the next-episode
     countdown. "Data saver: autoplay on Wi-Fi only" exists only in the mobile app (browsers can't
     tell Wi-Fi from mobile data reliably).
+60. **One window per badge, computed from the clock.** `content.recently_added_hours` (168),
+    `content.new_episodes_hours` (168) and `content.leaving_soon_days` (14) replace the shared
+    `content.badge_days`; migration `core.0004` carries an operator's customised value over (days →
+    hours) and gives untouched installs the new defaults. For one release the old key is still read
+    when a new key has no stored value. Badges are computed per request, so one ends exactly at
+    `published_at + window`; everything that caches cards — the signed-out billboard and New & Popular,
+    the SEO pages, and the public `max-age` / `stale-while-revalidate` — is capped at the seconds left
+    until the next badge boundary (`badges.cap`, cached as an absolute time under the catalog version).
 
 ## Resilience
 

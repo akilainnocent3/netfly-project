@@ -22,6 +22,7 @@ from apps.media.models import ImageAsset
 from apps.recommendations import engine, feed
 from apps.recommendations.cache import catalog_version
 
+from . import badges
 from . import serializers as s
 from .models import Episode, Genre, Season, Title
 from .queries import (
@@ -52,11 +53,13 @@ def _offset(cursor: str | None) -> int:
 
 
 def _public_cache(response: Response) -> Response:
+    # Never let a shared cache keep a card's badge past the moment it ends (or appears).
+    max_age = badges.cap(config.get_int("content.public_cache_seconds", 60))
     patch_cache_control(
         response,
         public=True,
-        max_age=config.get_int("content.public_cache_seconds", 60),
-        stale_while_revalidate=300,
+        max_age=max_age,
+        stale_while_revalidate=max(0, badges.cap(max_age + 300) - max_age),
     )
     # A shared cache must never hand a signed-out response to a signed-in viewer (or vice versa).
     patch_vary_headers(response, ("Authorization", "X-Profile"))
@@ -126,7 +129,7 @@ class BillboardView(APIView):
             data = cache.get(ck)
             if data is None:
                 data = self._build(mode, None, kind)
-                cache.set(ck, data, 60)
+                cache.set(ck, data, badges.cap(60))
             return _public_cache(Response(data))
         return _private(Response(self._build(mode, who, kind)))
 
@@ -771,7 +774,7 @@ class NewAndPopularView(APIView):
             data = cache.get(ck)
             if data is None:
                 data = self._build(None, mode)
-                cache.set(ck, data, 60)
+                cache.set(ck, data, badges.cap(60))
             return _public_cache(Response(data))
         return _private(Response(self._build(who, mode)))
 

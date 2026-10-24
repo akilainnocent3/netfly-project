@@ -41,11 +41,14 @@ export function CardArt({
   sizes,
   priority,
   showText = true,
+  liftLogo = false,
 }: {
   title: TitleCard;
   sizes: string;
   priority?: boolean;
   showText?: boolean;
+  /** Keep the logo art clear of a bottom-centre badge. */
+  liftLogo?: boolean;
 }) {
   return (
     <div className="absolute inset-0">
@@ -62,7 +65,12 @@ export function CardArt({
       {showText && (
         <>
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-          <div className="absolute inset-x-3 bottom-2.5 flex items-end">
+          <div
+            className={cn(
+              "absolute inset-x-3 flex items-end",
+              liftLogo ? "bottom-[18px]" : "bottom-2.5",
+            )}
+          >
             {title.logo ? (
               <div
                 className="relative h-[34%] max-h-12 w-[62%]"
@@ -220,6 +228,7 @@ export function Card({
             title={title}
             sizes="(min-width:1536px) 17vw, (min-width:1024px) 20vw, (min-width:640px) 30vw, 45vw"
             priority={priority}
+            liftLogo={!!badge && badge !== "top10" && typeof progress !== "number"}
           />
         )}
         {badge === "top10" && rank === undefined && (
@@ -232,7 +241,7 @@ export function Card({
         {badge && badge !== "top10" && typeof progress !== "number" && (
           <Badge
             kind={badge}
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-b-none whitespace-nowrap"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-b-none whitespace-nowrap shadow-[0_-1px_4px_rgb(0_0_0/0.35)]"
           />
         )}
         {title.context?.other_mode && (

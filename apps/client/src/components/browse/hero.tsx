@@ -9,7 +9,7 @@ import { useBillboard, useInList, useMode, useMyListToggle, usePendingFor } from
 import type { BillboardItem, TitleCard } from "@/lib/types";
 import { useMedia } from "@/lib/use-media";
 import { useConfig } from "../providers/config";
-import { Badge } from "../ui/badge";
+import { Badge, badgeFromApi } from "../ui/badge";
 import { Button } from "../ui/button";
 import { NetflyImage } from "../ui/netfly-image";
 import { PageDots } from "../ui/page-dots";
@@ -137,6 +137,9 @@ function HeroSlide({
   const prefetchPlayback = usePrefetchPlayback();
   const Heading = useContext(HeadingLevel);
   const title = item.title;
+  // Top 10 has its own line; the other badges are a small pill beside the maturity rating.
+  const kind = badgeFromApi(title.badge);
+  const ribbon = kind && kind !== "top10" ? kind : null;
   const synopsis = item.tagline || title.short_synopsis;
   const playing = preview === "playing";
   // Once the trailer has started, the copy steps back: smaller logo, shorter synopsis.
@@ -258,13 +261,18 @@ function HeroSlide({
           </div>
         </m.div>
       </div>
-      {title.maturity_rating && (
-        <span
-          data-testid="hero-maturity"
-          className="text-body absolute right-0 bottom-[22%] z-10 border-l-[3px] border-white/70 bg-[rgb(51_51_51/0.6)] py-1.5 pr-[max(4vw,16px)] pl-3 font-medium"
-        >
-          {title.maturity_rating}
-        </span>
+      {(title.maturity_rating || ribbon) && (
+        <div className="absolute right-0 bottom-[22%] z-10 flex items-center gap-2.5">
+          {ribbon && <Badge kind={ribbon} className="shadow" />}
+          {title.maturity_rating && (
+            <span
+              data-testid="hero-maturity"
+              className="text-body border-l-[3px] border-white/70 bg-[rgb(51_51_51/0.6)] py-1.5 pr-[max(4vw,16px)] pl-3 font-medium"
+            >
+              {title.maturity_rating}
+            </span>
+          )}
+        </div>
       )}
     </div>
   );
@@ -274,6 +282,9 @@ function HeroSlide({
 function PosterHero({ item, priority }: { item: BillboardItem; priority: boolean }) {
   const Heading = useContext(HeadingLevel);
   const title = item.title;
+  // Top 10 has its own line; the other badges are a small pill beside the maturity rating.
+  const kind = badgeFromApi(title.badge);
+  const ribbon = kind && kind !== "top10" ? kind : null;
   return (
     <div className="relative px-[max(6vw,16px)] pt-[calc(var(--header-h)+env(safe-area-inset-top)+56px)] pb-8">
       <div className="absolute inset-0 overflow-hidden" aria-hidden>
@@ -316,6 +327,16 @@ function PosterHero({ item, priority }: { item: BillboardItem; priority: boolean
               {title.type === "series" ? "Series" : "Films"} Today
             </p>
           ) : null}
+          {(title.maturity_rating || ribbon) && (
+            <p className="mb-1.5 flex items-center justify-center gap-1.5">
+              {title.maturity_rating && (
+                <span className="text-caption rounded-[2px] border border-white/40 px-1 leading-4 font-medium text-white/85">
+                  {title.maturity_rating}
+                </span>
+              )}
+              {ribbon && <Badge kind={ribbon} />}
+            </p>
+          )}
           {title.genres.length > 0 && (
             <p className="text-meta mb-4 text-white/85">{title.genres.join(" • ")}</p>
           )}

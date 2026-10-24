@@ -10,7 +10,11 @@ const LABEL: Record<Exclude<BadgeKind, "neutral" | "top10">, string> = {
   leaving_soon: "Leaving soon",
 };
 
-/** Card / hero ribbons. `top10` renders the TOP 10 mark with the rank. */
+/**
+ * Card / hero ribbons. `top10` renders the TOP 10 mark with the rank. The others are a small,
+ * discreet ribbon (≈10 px caps, 2 × 4 px padding, radius 2), the one exception to the 12 px text
+ * minimum (DECISIONS 52a). Colours keep WCAG AA contrast (white on accent 4.8:1).
+ */
 export function Badge({
   kind,
   rank,
@@ -39,7 +43,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "text-caption inline-flex items-center rounded-sm px-1.5 py-0.5 font-bold tracking-wide uppercase",
+        "inline-flex items-center rounded-[2px] px-1 py-0.5 text-[9.5px] leading-[1.1] font-bold tracking-[0.04em] uppercase sm:text-[10px]",
         kind === "leaving_soon"
           ? "bg-white/90 text-black"
           : kind === "neutral"

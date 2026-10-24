@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 from apps.accounts.models import ViewerProfile
 from apps.accounts.permissions import IsViewer
 from apps.accounts.viewer import viewer_for
+from apps.catalog import badges
 from apps.catalog.models import Title
 from apps.catalog.queries import (
     badge_context,
@@ -22,7 +23,6 @@ from apps.catalog.queries import (
     visible_titles,
 )
 from apps.catalog.serializers import TitleCardSerializer
-from apps.core.config import config
 from apps.core.throttling import throttle
 from apps.recommendations.cache import invalidate_viewer
 
@@ -188,7 +188,7 @@ class NotificationsView(APIView):
         who = viewer_for(request)
         mode = translation_mode(request)
         now = timezone.now()
-        window = dt.timedelta(days=max(config.get_int("content.badge_days", 14), 7) * 2)
+        window = max(badges.windows().recently_added, dt.timedelta(days=7)) * 2
         since = now - window
         visible = visible_titles(mode, who.kids)
         items: dict[int, tuple[str, str, dt.datetime]] = {}

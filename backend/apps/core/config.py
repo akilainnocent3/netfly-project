@@ -178,6 +178,11 @@ class ConfigService:
             return spec.default
         return default
 
+    def is_set(self, key: str) -> bool:
+        """True when the key has a stored value (not just the registry default)."""
+        item = self._snapshot().get(key)
+        return item is not None and (bool(item["e"]) if item["s"] else item["v"] is not None)
+
     def get_str(self, key: str, default: str = "") -> str:
         value = self.get(key, default)
         return "" if value is None else str(value)

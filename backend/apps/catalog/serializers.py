@@ -1,12 +1,9 @@
-import datetime as dt
-
-from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from apps.core.config import config
 from apps.media.serializers import ImageRef
 
+from .badges import BADGES, card_badge
 from .models import Episode, Genre, Season, Title
 
 
@@ -46,31 +43,6 @@ GENRE_MOODS = {
     "kids": "Feel-good",
     "music": "Uplifting",
 }
-
-BADGES = ["top10", "new_episodes", "recently_added", "leaving_soon"]
-
-
-def card_badge(obj, top10: dict) -> str | None:
-    """One badge per card, most important first: Top 10 → Leaving soon → New episodes → Recently added."""
-    if obj.pk in top10:
-        return "top10"
-    now = timezone.now()
-    window = dt.timedelta(days=config.get_int("content.badge_days", 14))
-    if obj.license_end and now < obj.license_end <= now + window:
-        return "leaving_soon"
-    latest = getattr(obj, "latest_episode_at", None)
-    published = obj.published_at
-    if (
-        obj.type == Title.Type.SERIES
-        and latest
-        and latest >= now - window
-        and published
-        and published < now - window
-    ):
-        return "new_episodes"
-    if published and published >= now - window:
-        return "recently_added"
-    return None
 
 
 class TitleCardSerializer(serializers.ModelSerializer):

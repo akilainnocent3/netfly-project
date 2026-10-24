@@ -18,6 +18,7 @@ from apps.core.throttling import throttle
 from apps.media.models import ImageAsset
 from apps.recommendations.cache import catalog_version
 
+from . import badges
 from . import serializers as s
 from .models import Genre, Title
 from .queries import card_queryset
@@ -30,13 +31,14 @@ def _cached(key: str, build, seconds: int = 300):
     data = cache.get(ck)
     if data is None:
         data = build()
-        cache.set(ck, data, seconds)
+        cache.set(ck, data, badges.cap(seconds))
     return data
 
 
 def _public(response: Response) -> Response:
-    max_age = config.get_int("content.public_cache_seconds", 60)
-    response["Cache-Control"] = f"public, max-age={max_age}, stale-while-revalidate=300"
+    max_age = badges.cap(config.get_int("content.public_cache_seconds", 60))
+    swr = max(0, badges.cap(max_age + 300) - max_age)
+    response["Cache-Control"] = f"public, max-age={max_age}, stale-while-revalidate={swr}"
     return response
 
 
