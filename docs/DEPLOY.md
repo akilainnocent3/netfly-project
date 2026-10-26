@@ -9,7 +9,7 @@ browser ──► │ edge (nginx / ALB)                    │──► S3 (HLS
             │   studio.*    → admin  (Next.js)      │
             │   /api/*      → backend (gunicorn)    │──► Postgres 16, Redis 7
             └───────────────────────────────────────┘
-                      workers: default queue · transcode queue (FFmpeg) · one beat
+                      workers: default queue · transcode queue (FFmpeg) · extraction queue · one beat
 ```
 
 Web tiers are stateless; scale `backend`, `client`, `admin` horizontally behind the edge. Video bytes never
@@ -84,6 +84,23 @@ even though every URL is signed.
   download, no retries), and Studio → Transcoding shows the worker status. After fixing, press *Retry*:
   the S3 source is reused, no re-upload.
 * **default** queue (`worker`): image renders, event flushing, popularity refresh — light; 2–4 concurrency.
+* **extraction** queue (`worker-extraction`): Studio → Video extraction crawls and link checks. They
+  fetch arbitrary websites, so they run on their own workers (`-Q extraction -c 2`), never on the
+  default queue. Network-bound and light (a crawl holds at most two requests per site); one or two
+  replicas are plenty. A crawl is limited to 30 minutes and a link check to 2 minutes.
+  * **Image.** `docker-compose.prod.yml` builds it from the `extraction` stage of `backend/Dockerfile`:
+    the prod image plus Playwright and Chromium (≈ 400 MB more), used only for the optional *Render
+    JavaScript* crawl option. The API and the other workers keep the slim image. Run it from the
+    `prod` image instead and Studio simply shows *Render JavaScript* as unavailable, with the reason.
+    Chromium needs `shm_size: 512mb` (set in the compose file).
+  * **Network.** The crawler only connects to public addresses on ports 80/443, resolves DNS itself
+    and pins the vetted IP, re-checks every redirect, and never sends cookies or credentials
+    (decision 67). Defence in depth: give these workers a network where only Postgres, Redis and the
+    internet are reachable — no route to other internal services or the cloud metadata endpoint
+    (on AWS also set IMDSv2 hop limit 1).
+  * **ffprobe** (already in the image) is used to read a direct file's codec, resolution and duration
+    from a sparse local copy of its first and last few MB; without it checks still work and say
+    “codec not checked”.
 * **beat**: exactly **one** instance. Besides catalog jobs it runs `run_renewals` (every 5 min: renewal
   reminders and pushes, trial conversions, retries, grace, downgrades), `reconcile_payments` (every 2 min:
   polls Snippe for pending payments in case a webhook was lost) and `purge_usage_keys` (hourly). They are
@@ -117,6 +134,10 @@ even though every URL is signed.
   rejected and logged as rejected `PaymentEvent`s.
 * **Test mode** (`testing.mock_providers`) must be **off** in production: with it on no SMS, email or
   payment is real. Studio shows a warning banner while it's on.
+* **Video extraction** makes the server fetch URLs staff type in. Keep `extraction.allowed_ports` at
+  `[80, 443]`, keep `extraction.test_hosts` empty (it only works in test mode anyway), and isolate
+  `worker-extraction` as described in §5. Only content managers and superadmins can use it; every
+  crawl, check, approval, edit and revoke is in the audit log.
 * Secrets (SMTP password, Beem keys, Snippe key and webhook secret) are write-only in Studio and
   Fernet-encrypted with `CONFIG_ENCRYPTION_KEY`; codes and message bodies never reach the logs.
 
@@ -138,6 +159,42 @@ even though every URL is signed.
 * On staging set `seo.indexing_enabled = false`: every page becomes `noindex` and robots.txt disallows all.
 
 ## 10. Upgrading to this release
+
+### Studio → Video extraction (this release)
+
+Migration (additive): `extraction.0001_initial` — `ExtractionJob`, `DiscoveredLink`,
+`ApprovedEmbed`. New service **`worker-extraction`** (`celery -A netfly worker -Q extraction`), built
+from the new `extraction` stage of `backend/Dockerfile` in production (Chromium for *Render
+JavaScript*); in `docker-compose.yml` it uses the dev image without Chromium. Without any extraction
+worker, crawls stay *queued* and Studio says so. New Python dependencies: `httpx[http2]`, `h2`,
+`selectolax`, `tldextract` (bundled public-suffix list, no network), `defusedxml`; the extraction
+stage adds `playwright`. Beat runs `purge_old_jobs` daily.
+
+New settings group **Video extraction** (seeded; edit in *Studio → Settings*):
+
+| Key | Default | Purpose |
+|---|---|---|
+| `extraction.max_pages` | 200 | Most pages one crawl fetches (staff may choose fewer) |
+| `extraction.max_depth` | 2 | Clicks away from the start page |
+| `extraction.max_links` | 5000 | Most links one crawl records |
+| `extraction.max_probes` | 300 | HEAD requests to classify links that weren't crawled |
+| `extraction.timeout_seconds` | 15 | Per-request timeout (total per request: twice this) |
+| `extraction.delay_ms` | 500 | Pause between requests to one site (robots.txt Crawl-delay wins, ≤ 10 s) |
+| `extraction.user_agent` | `NetflyBot/1.0 (+{site_url})` | Crawler User-Agent; `{site_url}` = `seo.site_url` |
+| `extraction.respect_robots` | true | Default of the per-crawl *Respect robots.txt* option |
+| `extraction.max_response_mb` | 10 | Largest response read, after decompression |
+| `extraction.allowed_ports` | `[80, 443]` | Ports the crawler may connect to |
+| `extraction.max_concurrent_jobs` | 2 | Running crawls per staff member (more → 429 `too_many_jobs`) |
+| `extraction.retention_days` | 30 | Crawls and links are deleted after this; approved embeds stay |
+| `extraction.check_cache_seconds` | 3600 | A link check is reused for the same URL this long |
+| `extraction.embed_hosts` | YouTube, Vimeo, Dailymotion, Wistia, JW Player, Facebook, Instagram, TikTok, Twitch, Streamable, SoundCloud player hosts | Hosts provider embed iframes may come from |
+| `extraction.facebook_app_token` | — (secret) | Facebook/Instagram oEmbed; without it those videos say “needs provider token” |
+| `extraction.test_hosts` | `[]` | `host:port` the crawler may reach although private — **only while test mode is on** (e2e) |
+| `security.rate_extraction` | 240/min | Extraction reads and previews per staff user / IP |
+| `security.rate_extraction_start` | 30/hour | Crawls started per staff user |
+| `security.rate_extraction_write` | 60/min | Checks, approvals, edits, revokes, cancels per staff user |
+
+Approved embeds are stored for the viewer app but **not shown to viewers yet** (decision 72).
 
 ### Plans, verification, payments and search (this release)
 

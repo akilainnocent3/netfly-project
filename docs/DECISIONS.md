@@ -471,6 +471,67 @@ Ambiguities in the build brief, the option chosen, and why.
     website (the "reader app" model) without changing the server. Entitlement is always the server's:
     playback checks the member's plan and viewing allowance exactly as for the web.
 
+## Studio: video extraction
+
+67. **The server fetches arbitrary URLs, so every fetch passes one SSRF guard.** `apps/extraction`
+    talks to the internet only through `fetch.Fetcher`: http/https on `extraction.allowed_ports`
+    (80/443) only; credentials stripped from URLs; the host is resolved by us and *every* address
+    it resolves to must be public (loopback, RFC 1918, link-local, CGNAT, multicast, reserved,
+    IPv6 ULA, IPv4-mapped/6to4/Teredo forms of those, and the cloud metadata IPs are refused — one
+    private answer refuses the name); the connection goes to the vetted IP (Host header + TLS SNI
+    carry the name), so a second DNS answer can't redirect it (rebinding). Redirects are followed
+    by hand (max 5) and each hop is checked again. No cookie jar, no auth headers, no proxies or
+    `.netrc` from the environment (we call the httpx transport, not a client). Timeouts per phase
+    plus a total deadline; bodies are streamed and cut at `extraction.max_response_mb` both on the
+    wire and after decompression (we only accept gzip/deflate and inflate with a cap, so a 50 MB
+    zip bomb stops at the limit); untrusted XML (sitemaps, DASH) goes through `defusedxml`; ffprobe
+    reads a local sparse copy, never the network. Fetched HTML is parsed, never executed, except
+    in the optional Playwright renderer, whose every request passes the same check. The API runs
+    the same validation on the start URL and answers with a clear message. Crawls and checks run on
+    their own `extraction` queue and workers. The e2e suite reaches its local fixture site through
+    `extraction.test_hosts`, honoured only while test mode is on (never the metadata IP).
+68. **The server's verdict is the answer; the preview only confirms it.** Browsers don't tell a
+    page why a frame refused to load (X-Frame-Options / frame-ancestors failures are silent), so
+    Studio's "Page embeddable" and "Plays in NETFLY" verdicts come from the server: the response
+    headers evaluated like a browser would against NETFLY's client origins (`seo.site_url` + CORS
+    origins — CSP `frame-ancestors` from headers only, overriding X-Frame-Options; mixed content;
+    401/403 and bot challenges are "unknown"), and for videos the provider's oEmbed answer, file
+    headers (status, type, ranges, CORS, hotlink protection via a Referer comparison), ffprobe,
+    and HLS/DASH manifests (renditions, segment reachability, DRM, signed expiring URLs). The live
+    preview is labelled as a visual confirmation, with guidance for when it stays blank. Results
+    are cached per URL for an hour; *Recheck* bypasses the cache.
+69. **The preview gets its own route and its own CSP; Studio's CSP stays closed.** No
+    `frame-src *`. The Overview frames `/extraction/preview/<ref>?t=<token>`; the token is a signed,
+    15-minute grant for one link (or approved embed) issued to a content manager. Studio's
+    middleware sends that token to the API, which answers with the origins recorded in that
+    check, and only that route's CSP adds them to `frame-src` / `media-src` / `connect-src` (and
+    allows being framed by Studio itself). Origins never come from the query string and are
+    re-validated as bare `scheme://host[:port]`. Every other Studio page keeps the old CSP. The
+    preview page renders the embed from its URL (an iframe we build, or `<video>` + hls.js like the
+    title editor), never the provider's HTML, and skips Studio's session bootstrap so it can't
+    rotate the session under the page that frames it. Thumbnails are fetched by the server and
+    stored as small JPEG `data:` URIs, so `img-src` doesn't open up either.
+70. **Official provider embeds first.** A known provider (YouTube, Vimeo, Dailymotion, Wistia,
+    JW Player, Facebook/Instagram with an app token, TikTok, Twitch with `parent` set to our
+    domains, Streamable, SoundCloud) or an oEmbed endpoint the page advertises is checked through
+    oEmbed; 401/403 means the owner disabled embedding. Its embed code is reduced to exactly one
+    iframe from `extraction.embed_hosts` (or the page's own domain for discovered endpoints),
+    rebuilt from whitelisted attributes. The recommendation prefers that player over a raw file
+    or stream the same page exposes: it keeps the owner's player, ads and analytics, and doesn't
+    hotlink their bandwidth.
+71. **Nothing is approved without a rights confirmation, a title and a description.** *Confirm
+    embedding* is enabled only for a "yes" verdict. The dialog requires the box "I confirm NETFLY
+    has the rights to show this video, or its owner permits embedding." (also a database
+    constraint), and a title and description written for viewers — the title is prefilled from the
+    check, the description is written by staff (the site's own text is offered as a starting point,
+    never filled in silently). The embed itself is derived on the server from the stored check, not
+    from the request. Approve, edit and revoke are audit-logged; title and description stay editable.
+72. **Approved embeds are not shown to viewers yet.** `ApprovedEmbed` is the hand-off to the viewer
+    app — sanitised embed, type, provider, title, description, thumbnail, duration, an optional
+    NETFLY title, approval and revocation — and nothing in `apps/client` or the public API reads it
+    in this release. A later task decides how viewers see them. Retention (`extraction.retention_days`)
+    deletes old crawls and their links; approved embeds stay, keeping their original URL.
+
 ## Resilience
 
 32. **Errors are contained where they happen:** each home row and the hero have their own error boundary

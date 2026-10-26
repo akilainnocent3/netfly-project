@@ -6,7 +6,7 @@ Amazon S3 storage, and two Next.js 15 apps — **client** (viewers) and **admin*
 ## Quick start (local)
 
 ```bash
-docker compose up            # postgres, redis, backend, workers, beat, client, admin
+docker compose up            # postgres, redis, backend, workers (default, transcode, extraction), beat, client, admin
 ```
 
 | URL                              | What                                                                                                       |
@@ -41,7 +41,11 @@ docker compose exec backend python manage.py seed_demo --reset
 - **Studio** — plans, subscribers, billing tiles, catalog editor, uploads and transcoding monitor, home layout, settings, users, audit log, and a
   per-title **recommendation priority** (boost −2…+5 with an optional campaign window) that reaches every
   viewer immediately. A title's trailer can be uploaded or **generated from its own video**: pick a range
-  (e.g. 7:00 → 9:00) on the preview and NETFLY cuts and transcodes it (decision 56).
+  (e.g. 7:00 → 9:00) on the preview and NETFLY cuts and transcodes it (decision 56). **Video
+  extraction** crawls a website, lists every link it finds, checks whether a page or video can be
+  embedded or played in NETFLY (with a live preview), and saves approved embeds — with a title and
+  description written by staff and a rights confirmation — for the viewer app, which doesn't show
+  them yet (decisions 67–72).
 
 ## Configuration
 
@@ -73,7 +77,7 @@ Going live with membership (all in _Studio → Settings_):
 
 ```
 backend/            Django 5 + DRF (apps: core, accounts, catalog, media, engagement, recommendations,
-                    billing, messaging, adminapi)
+                    billing, messaging, extraction, adminapi)
 apps/client/        Next.js viewer app      apps/admin/   Next.js studio
 packages/api-client Typed client generated from OpenAPI   packages/ui   shared tokens, hooks
 infra/              node image, nginx edge  e2e/          Playwright suite
