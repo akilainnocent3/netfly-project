@@ -101,7 +101,9 @@ export function LinksTable({
       ),
     getNextPageParam: (last, all) => (last.next ? all.length + 1 : undefined),
     placeholderData: keepPreviousData,
-    refetchInterval: active ? 3000 : false,
+    // Live while crawling, but only the first page: refetching every loaded page of a long list
+    // each tick would be heavy (the list refetches once more when the crawl ends).
+    refetchInterval: (q) => (active && (q.state.data?.pages.length ?? 0) <= 1 ? 3000 : false),
   });
   const rows = useMemo(() => links.data?.pages.flatMap((p) => p.results) ?? [], [links.data]);
   const total = links.data?.pages[0]?.count ?? 0;
