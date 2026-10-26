@@ -154,3 +154,8 @@ def test_source_matching_edge_cases():
     assert source_matches("'self'", "https://videos.example.test", "http://videos.example.test/")
     assert not source_matches("'unsafe-inline'", "https://watch.netfly.test", page)
     assert source_matches("https://watch.netfly.test/some/path", "https://watch.netfly.test", page)
+
+
+def test_cloudflare_scripts_on_an_ordinary_page_are_not_a_challenge():
+    body = b'<html><script src="/cdn-cgi/challenge-platform/scripts/jsd/main.js"></script></html>'
+    assert verdict({"server": "cloudflare"}, body=body)["verdict"] == "yes"

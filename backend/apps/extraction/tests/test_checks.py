@@ -419,3 +419,34 @@ def test_thumbnails_are_fetched_server_side_as_small_data_uris(web):
     with Image.open(io.BytesIO(base64.b64decode(data.split(",", 1)[1]))) as thumb:
         assert thumb.size == (320, 180)
     assert result["videos"][0]["thumbnail_data"] == ""  # not an image: nothing, never the bytes
+
+
+def test_sign_in_and_tag_frames_are_not_players_and_duplicates_collapse(web):
+    import json as _json
+
+    web.page(
+        "https://site.example.test/v",
+        '<iframe src="https://accounts.google.com/ServiceLogin"></iframe>'
+        '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+        '<a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">same video</a>'
+        '<meta property="og:video" content="https://www.youtube.com/embed/dQw4w9WgXcQ">',
+    )
+    body = {
+        "html": '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?feature=oembed"></iframe>'
+    }
+    web.add("https://www.youtube.com/oembed", _json.dumps(body), content_type="application/json")
+    result = run_check("https://site.example.test/v")
+    assert [v["provider"] for v in result["videos"]] == ["YouTube"]
+    assert not web.sent("accounts.google.com")
+
+
+def test_unlisted_vimeo_player_keeps_its_privacy_hash_for_oembed(web):
+    from apps.extraction.providers import canonical_page
+
+    assert canonical_page(
+        "Vimeo", "https://player.vimeo.com/video/1070507470?h=3ef796e42&badge=0"
+    ) == ("https://vimeo.com/1070507470/3ef796e42")
+    assert (
+        canonical_page("Vimeo", "https://player.vimeo.com/video/76979871")
+        == "https://vimeo.com/76979871"
+    )

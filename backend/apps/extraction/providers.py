@@ -36,7 +36,9 @@ def canonical_page(provider: str, url: str) -> str:
         if parts.hostname and parts.hostname.endswith("youtu.be"):
             return f"https://www.youtube.com/watch?v={path.strip('/')}"
     if provider == "Vimeo" and (m := re.match(r"^/video/(\d+)", path)):
-        return f"https://vimeo.com/{m.group(1)}"
+        # An unlisted video's privacy hash (?h=…) must travel with it, or oEmbed says 404.
+        secret = parse_qs(parts.query).get("h", [""])[0]
+        return f"https://vimeo.com/{m.group(1)}" + (f"/{quote(secret)}" if secret else "")
     if provider == "Dailymotion" and (m := re.match(r"^/embed/video/(\w+)", path)):
         return f"https://www.dailymotion.com/video/{m.group(1)}"
     return url

@@ -122,7 +122,7 @@ class Crawler:
         self.fetcher = fetcher or Fetcher()
         self.renderer = renderer
         self.max_links = config.get_int("extraction.max_links", 5000)
-        self.max_probes = config.get_int("extraction.max_probes", 300)
+        self.max_probes = config.get_int("extraction.max_probes", 100)
         self.delay = config.get_int("extraction.delay_ms", 500) / 1000
         self.links: dict[str, LinkRec] = {}
         self.queue: deque[tuple[str, int]] = deque()

@@ -111,11 +111,8 @@ def _run(url: str, fetcher: Fetcher) -> dict:
             candidates = _candidates(url, page)
         elif provider_for(url):
             candidates = [("provider", url, {}, "")]
-        result["videos"] = [
-            v
-            for v in (_check_candidate(c, fetcher, origins, res.final_url) for c in candidates)
-            if v
-        ]
+        checked = (_check_candidate(c, fetcher, origins, res.final_url) for c in candidates)
+        result["videos"] = _unique([v for v in checked if v])
     else:
         result["page_embeddable"] = {
             "verdict": UNKNOWN,
@@ -129,6 +126,18 @@ def _run(url: str, fetcher: Fetcher) -> dict:
     result["recommended"] = recommend(result)
     attach_thumbnails(result, fetcher)
     return result
+
+
+def _unique(videos: list[dict]) -> list[dict]:
+    """One entry per playable thing: a watch URL and its /embed/ URL are the same video."""
+    out, seen = [], set()
+    for video in videos:
+        key = (video.get("embed") or {}).get("src") or video["url"]
+        key = key.split("?", 1)[0] if video["kind"] == "provider_embed" else key
+        if key not in seen:
+            seen.add(key)
+            out.append(video)
+    return out
 
 
 def _candidates(url: str, page) -> list[tuple[str, str, dict, str]]:
@@ -270,9 +279,10 @@ def recommend(result: dict):
 # ---- players we don't know: is the player page itself frameable? ---------------------------
 
 
+# A <video> element, or a player library being set up (not merely mentioned in a big bundle).
 PLAYER_HINTS = re.compile(
-    rb"<video\b|jwplayer\(|videojs|video-js|plyr|flowplayer|shaka-player|hls\.js|dash\.js|"
-    rb"bitmovin|theoplayer|clappr|mediaelement",
+    rb"<video\b|jwplayer\([^)]*\)\.setup|videojs\(|new\s+Plyr\(|flowplayer\(|"
+    rb"new\s+shaka\.Player|new\s+Hls\(|dashjs\.MediaPlayer|bitmovin\.player|new\s+Clappr\.Player",
     re.I,
 )
 VIDEO_SOURCES = {S.VIDEO_SRC, S.SOURCE_SRC, S.OG_VIDEO, S.JSON_LD, S.SCRIPT, S.OEMBED}

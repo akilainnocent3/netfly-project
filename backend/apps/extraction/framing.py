@@ -233,13 +233,20 @@ def evaluate_framing(
 
 
 def is_bot_challenge(status: int, headers, body: bytes = b"") -> bool:
+    """A bot-protection interstitial instead of the page. Cloudflare injects its challenge
+    scripts into ordinary pages too, so the markers only count on a refusal status."""
     if (headers.get("cf-mitigated") or "").lower() == "challenge":
         return True
+    if status not in (403, 429, 503):
+        return False
     server = (headers.get("server") or "").lower()
     text = body[:20000].lower() if body else b""
-    if status in (403, 503) and ("cloudflare" in server or b"cf-chl" in text):
-        return True
-    return b"challenge-platform" in text or b"<title>just a moment...</title>" in text
+    return (
+        "cloudflare" in server
+        or b"cf-chl" in text
+        or b"challenge-platform" in text
+        or b"<title>just a moment...</title>" in text
+    )
 
 
 def _get_list(headers: dict, key: str) -> list[str]:

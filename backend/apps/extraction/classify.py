@@ -48,7 +48,10 @@ PROVIDER_PATTERNS: list[tuple[str, re.Pattern]] = [
     (
         "Vimeo",
         re.compile(
-            r"^https?://(?:www\.|player\.)?vimeo\.com/(?:video/)?(?:\d+|channels/|showcase/)", re.I
+            # A video (numeric id), not a channel, group or showcase page.
+            r"^https?://(?:www\.|player\.)?vimeo\.com/(?:video/|channels/[\w-]+/|groups/[\w-]+/videos/"
+            r"|showcase/\d+/video/)?\d+(?:[/?#]|$)",
+            re.I,
         ),
     ),
     (
@@ -90,6 +93,20 @@ PROVIDER_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("Streamable", re.compile(r"^https?://(?:www\.)?streamable\.com/(?:e/)?\w+", re.I)),
     ("SoundCloud", re.compile(r"^https?://(?:www\.|m\.|w\.)?soundcloud\.com/", re.I)),
 ]
+
+
+# Frames that are never videos: sign-in, consent, captcha, tag managers, ads, payment widgets.
+NOT_PLAYER_HOSTS = re.compile(
+    r"^https?://(?:[\w-]+\.)*(?:accounts\.google\.com|googletagmanager\.com|doubleclick\.net|"
+    r"googlesyndication\.com|recaptcha\.net|hcaptcha\.com|challenges\.cloudflare\.com|"
+    r"consent\.(?:google|youtube)\.com|js\.stripe\.com|platform\.twitter\.com|"
+    r"facebook\.com/plugins/(?:like|page|comments))|^https?://www\.google\.com/recaptcha",
+    re.I,
+)
+
+
+def is_player_frame(url: str) -> bool:
+    return not NOT_PLAYER_HOSTS.match(url)
 
 
 def provider_for(url: str) -> str | None:

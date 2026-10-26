@@ -754,7 +754,7 @@ KEYS: list[Key] = [
     Key(
         "extraction.max_probes",
         "int",
-        300,
+        100,
         "Most HEAD requests a crawl makes to classify links it didn't crawl (videos, unknown "
         "file types).",
         label="Link probes per crawl",

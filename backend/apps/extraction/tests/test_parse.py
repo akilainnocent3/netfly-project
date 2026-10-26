@@ -338,3 +338,50 @@ def test_hostile_sitemaps_are_ignored():
     assert parse_sitemap(b"not xml", "https://example.test/s.xml").entries == []
     bomb = gzip.compress(b"<urlset>" + b" " * (30 * 1024 * 1024) + b"</urlset>")
     assert parse_sitemap(bomb, "https://example.test/s.xml.gz").entries == []
+
+
+def test_provider_video_urls_in_script_data():
+    html = """<script>var ytInitialData = {"contents":[
+      {"videoId":"aaaaaaaaaaa","url":"/watch?v=aaaaaaaaaaa"},
+      {"url":"/shorts/bbbbbbbbbbb"},
+      {"href":"https:\\/\\/vimeo.com\\/76979871"},
+      {"x":"/watch?v=short"}]};</script>"""
+    on_youtube = parse_html(html, "https://www.youtube.com/@channel/videos")
+    assert {f.url for f in on_youtube.links if f.source == "script"} == {
+        "https://www.youtube.com/watch?v=aaaaaaaaaaa",
+        "https://www.youtube.com/shorts/bbbbbbbbbbb",
+        "https://vimeo.com/76979871",
+    }
+    assert all(f.kind == "embed" for f in on_youtube.links if f.source == "script")
+    elsewhere = parse_html(html, "https://blog.example.test/")
+    # Relative /watch?v= means nothing off YouTube; the absolute Vimeo URL still counts.
+    assert {f.url for f in elsewhere.links if f.source == "script"} == {
+        "https://vimeo.com/76979871"
+    }
+
+
+def test_non_player_frames_are_other():
+    html = '<iframe src="https://www.googletagmanager.com/ns.html?id=1"></iframe><iframe src="https://player.example.test/e/1"></iframe>'
+    kinds = {f.url: f.kind for f in parse_html(html, "https://example.test/").links}
+    assert kinds == {
+        "https://www.googletagmanager.com/ns.html?id=1": "other",
+        "https://player.example.test/e/1": "embed",
+    }
+
+
+@pytest.mark.parametrize(
+    "url, provider",
+    [
+        ("https://vimeo.com/76979871", "Vimeo"),
+        ("https://vimeo.com/channels/staffpicks/1085116418", "Vimeo"),
+        ("https://player.vimeo.com/video/76979871?h=abc", "Vimeo"),
+        ("https://vimeo.com/channels/staffpicks", None),
+        ("https://vimeo.com/showcase/1234", None),
+        ("https://www.youtube.com/watch?v=dQw4w9WgXcQ", "YouTube"),
+        ("https://youtu.be/dQw4w9WgXcQ", "YouTube"),
+    ],
+)
+def test_provider_patterns_match_videos_not_listing_pages(url, provider):
+    from apps.extraction.classify import provider_for
+
+    assert provider_for(url) == provider

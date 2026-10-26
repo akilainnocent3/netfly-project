@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 
 from selectolax.lexbor import LexborHTMLParser
 
-from .classify import by_extension
+from .classify import by_extension, is_player_frame
 from .models import DiscoveredLink
 from .urls_norm import normalize
 
@@ -107,10 +107,11 @@ def parse_html(html: str | bytes, page_url: str) -> ParsedPage:
         add(href, S.LINK, None, rel=" ".join(rel))
 
     # ---- frames, embeds, objects --------------------------------------------------------------
-    for node in tree.css("iframe[src], frame[src], embed[src]"):
-        add(node.attributes.get("src"), S.IFRAME, K.EMBED, title=node.attributes.get("title"))
-    for node in tree.css("object[data]"):
-        add(node.attributes.get("data"), S.IFRAME, K.EMBED)
+    for node in tree.css("iframe[src], frame[src], embed[src], object[data]"):
+        src = node.attributes.get("src") or node.attributes.get("data") or ""
+        resolved = normalize(src, base) or ""
+        kind = K.EMBED if is_player_frame(resolved) else K.OTHER
+        add(src, S.IFRAME, kind, title=node.attributes.get("title"))
 
     # ---- media elements ---------------------------------------------------------------------
     for node in tree.css("video, audio"):
@@ -198,8 +199,11 @@ def parse_html(html: str | bytes, page_url: str) -> ParsedPage:
         if node.attributes.get("src"):
             add(node.attributes.get("src"), S.SCRIPT, K.OTHER)
             continue
-        for url in media_urls_in_text(node.text()[:MAX_SCRIPT_CHARS]):
+        text = node.text()[:MAX_SCRIPT_CHARS]
+        for url in media_urls_in_text(text):
             add(url, S.SCRIPT, _media_kind(url))
+        for url in provider_urls_in_text(text, page_url):
+            add(url, S.SCRIPT, K.EMBED)
     for node in tree.css("*"):
         for name, value in (node.attributes or {}).items():
             if name.startswith("data-") and value and re.search(MEDIA_EXT, value, re.I):
@@ -209,6 +213,29 @@ def parse_html(html: str | bytes, page_url: str) -> ParsedPage:
                 for url in found:
                     add(url, S.SCRIPT, _media_kind(url))
     return page
+
+
+# Video pages of known providers inside script data (players and app shells list them in JSON,
+# not in <a> tags). Absolute URLs anywhere; YouTube's relative /watch?v= only on YouTube itself.
+PROVIDER_IN_TEXT = re.compile(
+    r"https?:(?:\\?/){2}(?:(?:www|m)\.)?(?:youtube\.com/(?:watch\?v=|shorts/|embed/)[\w-]{11}"
+    r"|youtu\.be/[\w-]{11}|(?:player\.)?vimeo\.com/(?:video/)?\d{5,}"
+    r"|dailymotion\.com/video/[a-z0-9]{5,})",
+    re.I,
+)
+YOUTUBE_RELATIVE = re.compile(r"(?<![\w/])/(?:watch\?v=|shorts/)[\w-]{11}")
+MAX_PROVIDER_URLS = 200
+
+
+def provider_urls_in_text(text: str, page_url: str) -> list[str]:
+    if not text:
+        return []
+    text = text.replace("\\/", "/").replace("\\u0026", "&")
+    found = [m.group(0) for m in PROVIDER_IN_TEXT.finditer(text)]
+    host = (page_url.split("/")[2] if "://" in page_url else "").lower()
+    if host.endswith("youtube.com"):
+        found += ["https://www.youtube.com" + m.group(0) for m in YOUTUBE_RELATIVE.finditer(text)]
+    return list(dict.fromkeys(found))[:MAX_PROVIDER_URLS]
 
 
 def media_urls_in_text(text: str) -> list[str]:

@@ -177,7 +177,7 @@ New settings group **Video extraction** (seeded; edit in *Studio → Settings*):
 | `extraction.max_pages` | 200 | Most pages one crawl fetches (staff may choose fewer) |
 | `extraction.max_depth` | 2 | Clicks away from the start page |
 | `extraction.max_links` | 5000 | Most links one crawl records |
-| `extraction.max_probes` | 300 | HEAD requests to classify links that weren't crawled |
+| `extraction.max_probes` | 100 | HEAD requests to classify links that weren't crawled |
 | `extraction.timeout_seconds` | 15 | Per-request timeout (total per request: twice this) |
 | `extraction.delay_ms` | 500 | Pause between requests to one site (robots.txt Crawl-delay wins, ≤ 10 s) |
 | `extraction.user_agent` | `NetflyBot/1.0 (+{site_url})` | Crawler User-Agent; `{site_url}` = `seo.site_url` |
