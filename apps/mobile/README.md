@@ -16,8 +16,8 @@ player settings, payment switches) comes from `GET /api/public/config` at runtim
 
 | `--dart-define` | Default | What |
 |---|---|---|
-| `NETFLY_API_URL` | `http://10.0.2.2:8000` | API origin (the Android emulator's view of the host) |
-| `NETFLY_WEB_URL` | `NETFLY_API_URL` | Public site, for share links |
+| `NETFLY_API_URL` | `https://netflyapi.schoolsoft.online` | API origin (production; `http://10.0.2.2:8000` is the local stack from the Android emulator) |
+| `NETFLY_WEB_URL` | `https://netflyclient.schoolsoft.online` | Public site, for share links |
 
 App Links host (Android): `-Pnetfly.host=<your-domain>` on the Gradle command line, or
 `netfly.host=<your-domain>` in `android/gradle.properties` (default `netfly.example`).

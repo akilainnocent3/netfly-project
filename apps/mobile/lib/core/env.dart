@@ -3,8 +3,11 @@
 ///
 ///   flutter run --dart-define=NETFLY_API_URL=https://netfly.example
 abstract final class Env {
-  static const apiUrl = String.fromEnvironment('NETFLY_API_URL', defaultValue: 'http://10.0.2.2:8000');
+  static const apiUrl = String.fromEnvironment('NETFLY_API_URL', defaultValue: 'https://netflyapi.schoolsoft.online');
 
-  /// The public web origin for share links and App Links (defaults to the API's origin).
-  static const webUrl = String.fromEnvironment('NETFLY_WEB_URL', defaultValue: apiUrl);
+  /// The public web origin for share links and App Links.
+  static const webUrl = String.fromEnvironment(
+    'NETFLY_WEB_URL',
+    defaultValue: 'https://netflyclient.schoolsoft.online',
+  );
 }
