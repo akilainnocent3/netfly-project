@@ -11,6 +11,7 @@ import '../api/generated/models/title_type_enum.dart';
 import '../core/theme.dart';
 import 'badge.dart';
 import 'netfly_image.dart';
+import 'pressable.dart';
 
 /// Hero tag shared by a card's artwork and the title sheet's header (the shared-element
 /// transition from card to title).
@@ -117,7 +118,7 @@ class TitleCardView extends ConsumerWidget {
       button: true,
       label: label,
       excludeSemantics: true,
-      child: GestureDetector(
+      child: Pressable(
         onTap: () => openTitle(context, title, row: row),
         onLongPress: onMenu,
         child: SizedBox(
@@ -241,7 +242,7 @@ class Top10CardView extends StatelessWidget {
       button: true,
       label: 'Number $rank, ${title.title}',
       excludeSemantics: true,
-      child: GestureDetector(
+      child: Pressable(
         onTap: () => openTitle(context, title, row: row),
         child: SizedBox(
           height: height,

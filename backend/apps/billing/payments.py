@@ -353,6 +353,19 @@ def process_event(event_pk: int) -> str:
 
 
 # -- reconcile ----------------------------------------------------------------------------
+def refresh(payment: Payment) -> Payment:
+    """Ask Snippe for one pending payment's status now and settle it if it moved."""
+    try:
+        remote = snippe.get_payment(payment.reference)
+    except snippe.SnippeError as exc:
+        log.warning("refresh %s: %s", payment.pk, exc.code)
+        return payment
+    if remote and remote.status != payment.status and remote.status in P.values:
+        settle(payment.pk, remote.status, remote.raw)
+        return Payment.objects.select_related("plan").get(pk=payment.pk)
+    return payment
+
+
 def reconcile(now: dt.datetime | None = None, limit: int = 200) -> int:
     """Poll Snippe for pending payments (a lost webhook), and expire ones past their deadline."""
     now = now or timezone.now()

@@ -15,6 +15,7 @@ import '../../widgets/buttons.dart';
 import '../../widgets/netfly_image.dart';
 import '../../widgets/state_message.dart';
 import '../../widgets/title_card.dart';
+import '../../widgets/usage_ring.dart';
 import '../notifications/notifications_screen.dart';
 import '../shell/shell.dart';
 
@@ -51,7 +52,7 @@ class _NewHotScreenState extends ConsumerState<NewHotScreen> {
       appBar: AppBar(
         title: Text('New & Hot', style: NetflyType.h2.copyWith(fontSize: 22, fontWeight: FontWeight.w800)),
         centerTitle: false,
-        actions: const [NotificationsBell(), SizedBox(width: 8)],
+        actions: const [UsageRing(), NotificationsBell(), SizedBox(width: 8)],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(52),
           child: SizedBox(

@@ -29,8 +29,10 @@ enum NetflyButtonSize {
   final double font;
 }
 
-/// The web's `Button`: disables at once when pressed and, if [onPressed] returns a future,
-/// shows the `sm` logo loader (after its delay) until it completes. Key actions tap a haptic.
+/// The web's `Button`: disables at once when pressed and, if [onPressed] returns a future (or
+/// [loading] is set), stays muted with the `sm` logo loader over its label until it completes —
+/// the label keeps the width and fades out only when the loader appears, so a fast save never
+/// flickers. Then it returns to its normal state. Key actions tap a haptic.
 class NetflyButton extends StatefulWidget {
   const NetflyButton({
     super.key,
@@ -88,34 +90,43 @@ class _NetflyButtonState extends State<NetflyButton> {
     final busy = _busy || widget.loading;
     final disabled = widget.onPressed == null;
     final s = widget.size;
-    final content = Row(
-      mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
+    final content = _Veil(
+      veiled: busy,
+      child: Row(
+        mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (widget.icon != null) ...[Icon(widget.icon, size: s.font * 1.2, color: fg), SizedBox(width: s.font * 0.5)],
+          Flexible(
+            child: Text(
+              widget.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: s.font, fontWeight: FontWeight.w700, color: fg, height: 1.2),
+            ),
+          ),
+        ],
+      ),
+    );
+    final body = Stack(
+      alignment: Alignment.center,
       children: [
+        content,
         if (busy)
           SizedBox.square(
             dimension: s.font * 1.25,
             child: NetflyLoader(size: LoaderSize.sm, decorative: true, color: fg),
-          )
-        else if (widget.icon != null)
-          Icon(widget.icon, size: s.font * 1.2, color: fg),
-        if (widget.icon != null || busy) SizedBox(width: s.font * 0.5),
-        Flexible(
-          child: Text(
-            widget.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: s.font, fontWeight: FontWeight.w700, color: fg, height: 1.2),
           ),
-        ),
       ],
     );
     return Semantics(
       button: true,
       enabled: !disabled && !busy,
       label: widget.semanticLabel,
-      child: Opacity(
-        opacity: disabled ? 0.5 : 1,
+      // Busy looks like disabled (the web's `disabled:opacity-50`): clearly already pressed.
+      child: AnimatedOpacity(
+        opacity: disabled || busy ? 0.5 : 1,
+        duration: const Duration(milliseconds: 150),
         child: Material(
           color: bg,
           borderRadius: BorderRadius.circular(NetflySpace.radiusCard),
@@ -126,7 +137,9 @@ class _NetflyButtonState extends State<NetflyButton> {
               constraints: BoxConstraints(minHeight: s.height < NetflySpace.touch ? NetflySpace.touch : s.height),
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: s.padding),
-                child: Center(widthFactor: widget.expand ? null : 1, child: content),
+                // heightFactor 1: in a Scaffold's bottom bar the height is loose up to the whole
+                // screen, and a bare Center would fill it (hiding the form above).
+                child: Center(widthFactor: widget.expand ? null : 1, heightFactor: 1, child: body),
               ),
             ),
           ),
@@ -134,6 +147,59 @@ class _NetflyButtonState extends State<NetflyButton> {
       ),
     );
   }
+}
+
+/// The label under the loader: kept in place for the width, faded out after the loader's delay.
+class _Veil extends StatefulWidget {
+  const _Veil({required this.veiled, required this.child});
+
+  final bool veiled;
+  final Widget child;
+
+  @override
+  State<_Veil> createState() => _VeilState();
+}
+
+class _VeilState extends State<_Veil> {
+  bool _hidden = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.veiled) _schedule();
+  }
+
+  @override
+  void didUpdateWidget(_Veil old) {
+    super.didUpdateWidget(old);
+    if (widget.veiled && !old.veiled) _schedule();
+    if (!widget.veiled && old.veiled) {
+      _timer?.cancel();
+      setState(() => _hidden = false);
+    }
+  }
+
+  void _schedule() {
+    _timer?.cancel();
+    _timer = Timer(const Duration(milliseconds: 200), () {
+      if (mounted) setState(() => _hidden = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedOpacity(
+    opacity: _hidden ? 0 : 1,
+    duration: const Duration(milliseconds: 120),
+    curve: Curves.easeOut,
+    child: widget.child,
+  );
 }
 
 /// A round icon button (the web's `icon-circle`): rate, My List in the title view.

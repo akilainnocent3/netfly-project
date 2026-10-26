@@ -371,9 +371,22 @@ def test_upgrade_starts_on_payment_and_downgrade_waits(auth_api, verified, snipp
     assert len(snippe.calls) == 1
 
 
+def test_polling_a_pending_payment_asks_snippe_without_waiting_for_the_webhook(
+    auth_api, verified, snippe
+):
+    snippe.post(API, json=created("ref_F"), status=201)
+    pid = checkout(auth_api).json()["payment"]["id"]
+    snippe.get(f"{API}/ref_F", json={"data": {"reference": "ref_F", "status": "completed"}})
+    assert auth_api.get(f"/api/v1/billing/payments/{pid}").json()["status"] == "completed"
+    assert ensure_subscription(verified).plan.slug == "pendwa"
+    assert auth_api.get(f"/api/v1/billing/payments/{pid}").json()["status"] == "completed"
+    assert len([c for c in snippe.calls if c.request.method == "GET"]) == 1  # final: no more asks
+
+
 def test_payment_status_and_history_are_private(auth_api, verified, snippe, staff_api):
     snippe.post(API, json=created("ref_P"), status=201)
     pid = checkout(auth_api).json()["payment"]["id"]
+    snippe.get(f"{API}/ref_P", json={"data": {"reference": "ref_P", "status": "pending"}})
     assert auth_api.get(f"/api/v1/billing/payments/{pid}").json()["status"] == "pending"
     assert auth_api.get("/api/v1/billing/payments").json()[0]["id"] == pid
     assert APIClient().get(f"/api/v1/billing/payments/{pid}").status_code in (401, 403)

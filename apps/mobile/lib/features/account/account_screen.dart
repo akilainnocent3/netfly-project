@@ -7,16 +7,18 @@ import '../../core/public_config.dart';
 import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../core/viewer_prefs.dart';
+import '../../data/usage.dart';
 import '../../widgets/avatar.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/skeleton.dart';
+import '../../widgets/usage_ring.dart';
 import '../profiles/profile_gate.dart';
 import '../shell/shell.dart';
 import 'membership_screen.dart';
 
 /// The Profile tab (Netflix's "My Netflix" / the web's Account overview at phone width): who is
-/// watching (with Switch profile when profiles are on), the membership at a glance, then the
-/// account sections and Sign out.
+/// watching (with Switch profile when profiles are on), the membership at a glance, viewing
+/// time, then the account sections and Sign out.
 class AccountScreen extends ConsumerStatefulWidget {
   const AccountScreen({super.key});
 
@@ -57,6 +59,8 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
         ? profiles!.results.where((p) => p.id == profileId).firstOrNull ?? profiles.results.firstOrNull
         : null;
     final membership = ref.watch(membershipProvider);
+    final usage = ref.watch(usageProvider).value;
+    final usageView = usage?.view;
 
     return Scaffold(
       appBar: AppBar(title: const Text('My account'), centerTitle: false),
@@ -112,6 +116,14 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             hint: 'Plan, payments and auto-renew',
             onTap: () => context.push('/account/membership'),
           ),
+          if (usage != null)
+            _Row(
+              icon: Icons.all_inclusive_rounded,
+              leading: usageView == null ? null : const UsageRing(size: 24, interactive: false),
+              label: 'Viewing time',
+              hint: usageView == null ? 'Unlimited on ${usage.snapshot.plan.name}' : usageSummary(usageView),
+              onTap: () => showUsageSheet(context),
+            ),
           _Row(
             icon: Icons.smart_display_outlined,
             label: 'Playback settings',
@@ -208,9 +220,12 @@ class _MembershipSummary extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
-  const _Row({required this.icon, required this.label, required this.onTap, this.hint});
+  const _Row({required this.icon, required this.label, required this.onTap, this.hint, this.leading});
 
   final IconData icon;
+
+  /// In place of [icon], for a live indicator.
+  final Widget? leading;
   final String label;
   final String? hint;
   final VoidCallback onTap;
@@ -221,7 +236,7 @@ class _Row extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: NetflySpace.gutter),
       minTileHeight: 56,
-      leading: Icon(icon, color: t.text),
+      leading: leading ?? Icon(icon, color: t.text),
       title: Text(
         label,
         style: NetflyType.body.copyWith(color: t.text, fontWeight: FontWeight.w600),

@@ -20,6 +20,7 @@ import '../../core/http.dart';
 import '../../core/public_config.dart';
 import '../../core/session.dart';
 import '../../core/theme.dart';
+import '../../data/usage.dart';
 import '../../widgets/buttons.dart';
 import 'episode_drawer.dart';
 import 'pip.dart';
@@ -267,6 +268,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> with WidgetsBinding
         clock: clock,
         every: Duration(seconds: _config.integer('usage.heartbeat_seconds', 30)),
         onSnapshot: (s) {
+          if (mounted) ref.read(usageProvider.notifier).push(s);
           if (!s.allowed && mounted) {
             unawaited(video.pause());
             setState(() => _phase = _Phase.limit);
@@ -454,6 +456,13 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> with WidgetsBinding
       if (!PictureInPicture.active) unawaited(video.pause());
       unawaited(_tracker?.saveProgress());
     }
+  }
+
+  @override
+  void deactivate() {
+    // Leaving the player: the header ring catches up with the time just watched.
+    unawaited(ref.read(usageProvider.notifier).refresh());
+    super.deactivate();
   }
 
   @override

@@ -49,3 +49,26 @@ String clock(Duration d) {
   final mm = h > 0 ? m.toString().padLeft(2, '0') : '$m';
   return '${h > 0 ? '$h:' : ''}$mm:${s.toString().padLeft(2, '0')}';
 }
+
+/// A stretch of viewing time: "2 h 5 min", "42 min", "under a minute"; days once it's that long.
+String spanPhrase(Duration d) {
+  if (d.inMinutes < 1) return 'under a minute';
+  if (d.inHours >= 48) return '${d.inDays} days';
+  final h = d.inHours, m = d.inMinutes % 60;
+  if (h == 0) return '$m min';
+  return m == 0 ? '$h h' : '$h h $m min';
+}
+
+/// When a window resets, from the viewer's side: "at 12:00 AM", "tomorrow at 12:00 AM", "on Mon, Nov 2".
+String resetPhrase(DateTime at, {DateTime? now}) {
+  final local = at.toLocal(), today = (now ?? DateTime.now()).toLocal();
+  final days = DateTime(
+    local.year,
+    local.month,
+    local.day,
+  ).difference(DateTime(today.year, today.month, today.day)).inDays;
+  final time = DateFormat.jm().format(local);
+  if (days <= 0) return 'at $time';
+  if (days == 1) return 'tomorrow at $time';
+  return 'on ${DateFormat.MMMEd().format(local)}';
+}

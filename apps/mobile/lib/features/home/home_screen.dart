@@ -57,7 +57,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final notifier = ref.read(homeFeedProvider(widget.kind).notifier);
     final rows = [for (final page in feed.value ?? const <HomePage>[]) ...page.rows];
     final header = HomeHeader(solid: (_offset / 120).clamp(0.0, 1.0), kind: widget.kind);
-    final heroHeight = MediaQuery.sizeOf(context).width * 1.5 * 0.92 + MediaQuery.paddingOf(context).top + 120;
+    // The billboard is full-bleed from the very top: about a 2:3 poster tall, never more than
+    // 82% of the screen (short or wide screens crop the poster's sides instead).
+    final screen = MediaQuery.sizeOf(context);
+    final heroHeight = (screen.width * 1.5 + MediaQuery.paddingOf(context).top).clamp(0.0, screen.height * 0.82);
 
     return Scaffold(
       extendBodyBehindAppBar: true,

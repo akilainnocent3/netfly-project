@@ -17,9 +17,11 @@ import '../../core/format.dart';
 import '../../core/http.dart';
 import '../../core/public_config.dart';
 import '../../core/theme.dart';
+import '../../data/usage.dart';
 import '../../widgets/buttons.dart';
 import '../../widgets/form.dart';
 import '../../widgets/state_message.dart';
+import '../account/membership_screen.dart';
 import '../auth/verify_screen.dart';
 import 'plans_screen.dart';
 
@@ -102,6 +104,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             body: CheckoutStartRequest(plan: checkout.plan.slug, trial: widget.trial, phone: phone),
           );
       if (result.kind == CheckoutStartResultKindEnum.trial) {
+        ref.invalidate(membershipProvider);
         setState(
           () => _stage = _Trial(
             result.subscription.trialEnd ?? DateTime.now().add(Duration(days: checkout.trialDays)),
@@ -139,6 +142,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           _poll?.cancel();
           _tick?.cancel();
           unawaited(HapticFeedback.heavyImpact());
+          // Account and the plan picker read the membership: show the new plan there at once.
+          ref.invalidate(membershipProvider);
+          unawaited(ref.read(usageProvider.notifier).refresh());
           DateTime? periodEnd;
           try {
             periodEnd = (await ref.read(apiProvider).billing.billingMembership()).subscription.currentPeriodEnd;
@@ -305,6 +311,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       subtitle: failed
           ? (p.failureReason.isNotEmpty ? p.failureReason : 'It was declined or timed out. Nothing was charged.')
           : 'We sent a payment request for ${formatTzs(p.amount)} to ${p.phoneMasked}. Approve it with your mobile-money PIN.',
+      // While the push is out, Pay stays where it was, muted with the loader: it was pressed, and
+      // can't be pressed again (a second request) until this one is settled or runs out.
+      bottom: failed || left <= 0
+          ? null
+          : NetflyButton(
+              label: 'Pay ${formatTzs(p.amount)}',
+              size: NetflyButtonSize.lg,
+              expand: true,
+              loading: true,
+              semanticLabel: 'Waiting for your approval',
+              onPressed: () {},
+            ),
       children: [
         if (!failed) ...[
           const SizedBox(height: 12),

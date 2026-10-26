@@ -8,9 +8,10 @@ import '../../brand/logo_mark.dart';
 import '../../core/public_config.dart';
 import '../../core/theme.dart';
 import '../../core/viewer_prefs.dart';
+import '../../widgets/usage_ring.dart';
 import '../notifications/notifications_screen.dart';
 
-/// The phone header: mark, the translation switcher top-centre, the bell; below it the
+/// The phone header: mark, the translation switcher top-centre, the viewing-time ring and the bell; below it the
 /// Series / Films / Categories chips. Transparent over the hero, solid with blur once scrolled.
 class HomeHeader extends ConsumerWidget implements PreferredSizeWidget {
   const HomeHeader({super.key, required this.solid, this.kind, this.showChips = true});
@@ -63,9 +64,12 @@ class HomeHeader extends ConsumerWidget implements PreferredSizeWidget {
                           child: const SizedBox.square(dimension: 44, child: Center(child: LogoMark(size: 32))),
                         ),
                       ),
-                      const Spacer(),
-                      const TranslationSwitcher(),
-                      const Spacer(),
+                      const Expanded(
+                        child: Center(
+                          child: FittedBox(fit: BoxFit.scaleDown, child: TranslationSwitcher()),
+                        ),
+                      ),
+                      const UsageRing(),
                       const NotificationsBell(),
                     ],
                   ),

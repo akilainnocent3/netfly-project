@@ -409,14 +409,23 @@ def _own_payment(request, payment_id) -> Payment:
 
 
 class PaymentStatusView(APIView):
-    """Polled every few seconds by "Check your phone" (reads our DB, kept fresh by the
-    webhook and the reconcile job)."""
+    """Polled every few seconds by "Check your phone". Reads our DB, kept fresh by the webhook
+    and the reconcile job; while the payment is still pending it also asks Snippe (at most
+    every few seconds per payment), so a late webhook doesn't keep the viewer waiting for the
+    next reconcile run."""
 
     permission_classes = [IsViewer]
 
     @extend_schema(responses=PaymentSerializer, operation_id="billing_payment")
     def get(self, request, payment_id):
-        return _no_store(Response(PaymentSerializer(_own_payment(request, payment_id)).data))
+        payment = _own_payment(request, payment_id)
+        if (
+            payment.reference
+            and payment.status in (Payment.Status.PENDING, Payment.Status.CREATED)
+            and cache.add(f"billing:payment-check:{payment.pk}", 1, timeout=4)
+        ):
+            payment = pay.refresh(payment)
+        return _no_store(Response(PaymentSerializer(payment).data))
 
 
 class PaymentResendView(APIView):
