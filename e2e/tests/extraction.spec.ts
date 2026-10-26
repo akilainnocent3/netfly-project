@@ -226,6 +226,13 @@ test("crawl a site, check links, approve an embed and revoke it", async ({ page 
   await page.getByRole("radio", { name: "Videos" }).click();
   await expect(grid.getByRole("row", { name: `Stream: ${origin}/hls/master.m3u8` })).toBeVisible();
   await page.getByRole("radio", { name: "All" }).click();
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Export CSV" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toMatch(/^netfly-links-.+\.csv$/);
+  const csv = await (await download.createReadStream()).toArray();
+  expect(Buffer.concat(csv).toString("utf8")).toContain(`${origin}/media/clip.mp4,video_file,`);
   await audit(page);
 
   // The MP4: plays in NETFLY, and the preview plays.

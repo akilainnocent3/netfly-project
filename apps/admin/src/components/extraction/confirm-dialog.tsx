@@ -170,7 +170,7 @@ function Form({
                 <dd className="text-fg tabular">{clock(video.duration)}</dd>
               </>
             ) : null}
-            {video?.height ? (
+            {video?.height && video.kind !== "provider_embed" ? (
               <>
                 <dt>Size</dt>
                 <dd className="text-fg">{video.height}p</dd>

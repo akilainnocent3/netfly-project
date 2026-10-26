@@ -125,9 +125,7 @@ function Overview({ link }: { link: ExtractionLink }) {
     <>
       <div className="border-line flex items-start gap-3 border-b px-4 py-3">
         <div className="min-w-0 flex-1">
-          <Dialog.Title className="truncate font-semibold">
-            {result?.title || link.title || hostOf(link.url)}
-          </Dialog.Title>
+          <Dialog.Title className="truncate font-semibold">{heading(link, result)}</Dialog.Title>
           <p className="text-muted flex items-center gap-1.5 text-[12.5px]">
             <Badge tone={KIND_TONE[link.kind]}>{KIND_LABEL[link.kind]}</Badge>
             <a
@@ -194,7 +192,10 @@ function Overview({ link }: { link: ExtractionLink }) {
         <Button variant="secondary" disabled={checking} onClick={() => startCheck(true)}>
           <RotateCcw className="size-3.5" aria-hidden /> Recheck
         </Button>
-        <p id="confirm-help" className="text-muted min-w-0 flex-1 text-[12px]">
+        <p
+          id="confirm-help"
+          className="text-muted min-w-0 basis-full text-[12px] sm:flex-1 sm:basis-0"
+        >
           {checking
             ? ""
             : chosenVerdict === "yes"
@@ -256,6 +257,22 @@ function Results({
         chooseLabel="Embed the page itself"
       />
 
+      {choice !== null && (
+        <section aria-labelledby={`preview-${linkId}`}>
+          <h3 id={`preview-${linkId}`} className="mb-2 font-semibold">
+            Live preview
+          </h3>
+          <PreviewFrame
+            target={{ link: linkId, choice, version: result.checked_at }}
+            title={
+              choice === "page"
+                ? result.title || result.final_url
+                : result.videos[choice]?.title || "Video"
+            }
+          />
+        </section>
+      )}
+
       <section aria-labelledby={`videos-${linkId}`}>
         <h3 id={`videos-${linkId}`} className="mb-2 flex items-center gap-2 font-semibold">
           <Film className="text-subtle size-4" aria-hidden />
@@ -282,22 +299,6 @@ function Results({
           </p>
         )}
       </section>
-
-      {choice !== null && (
-        <section aria-labelledby={`preview-${linkId}`}>
-          <h3 id={`preview-${linkId}`} className="mb-2 font-semibold">
-            Live preview
-          </h3>
-          <PreviewFrame
-            target={{ link: linkId, choice, version: result.checked_at }}
-            title={
-              choice === "page"
-                ? result.title || result.final_url
-                : result.videos[choice]?.title || "Video"
-            }
-          />
-        </section>
-      )}
     </>
   );
 }
@@ -385,7 +386,8 @@ function VideoCard({
   const facts = [
     VIDEO_KIND_LABEL[video.kind] ?? video.kind,
     video.provider,
-    video.height ? `${video.height}p` : video.width ? `${video.width}px wide` : "",
+    // A provider's oEmbed size is its player's default box, not the video's resolution.
+    video.kind !== "provider_embed" && video.height ? `${video.height}p` : "",
     clock(video.duration),
     video.size ? formatBytes(video.size) : "",
   ].filter(Boolean);
@@ -396,7 +398,7 @@ function VideoCard({
         chosen ? "border-accent ring-accent/30 ring-2" : "border-line",
       )}
     >
-      <div className="bg-raised relative aspect-video w-28 shrink-0 overflow-hidden rounded">
+      <div className="bg-raised relative aspect-video w-20 shrink-0 overflow-hidden rounded sm:w-28">
         {video.thumbnail_data ? (
           // eslint-disable-next-line @next/next/no-img-element -- a server-made data: URI
           <img src={video.thumbnail_data} alt="" className="size-full object-cover" />
@@ -417,7 +419,9 @@ function VideoCard({
             )}
             aria-hidden
           />
-          <p className="min-w-0 flex-1 truncate font-medium">{video.title || video.url}</p>
+          <p className="min-w-0 flex-1 basis-full truncate font-medium sm:basis-0">
+            {video.title || video.url}
+          </p>
           <Badge tone={VERDICT_TONE[verdict]}>Plays in NETFLY: {VERDICT_LABEL[verdict]}</Badge>
         </div>
         <p className="text-muted truncate text-[12px]">{facts.join(" · ")}</p>
@@ -440,4 +444,14 @@ function VideoCard({
       </div>
     </div>
   );
+}
+
+/** The panel's title: the page's own, unless it's a bare site name (YouTube serves "- YouTube"
+ * before its scripts run); then the recommended video's title. */
+function heading(link: ExtractionLink, result: CheckResult | null): string {
+  const page = (result?.title ?? "").replace(/^[\s\-–|·]+/, "").trim();
+  const rec = result?.recommended;
+  const video = typeof rec === "number" ? result?.videos[rec]?.title : "";
+  const bare = !page || /^(youtube|vimeo|dailymotion|tiktok|facebook|instagram)$/i.test(page);
+  return (bare ? video || page : page) || link.title || hostOf(link.url);
 }

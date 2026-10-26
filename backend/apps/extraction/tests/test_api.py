@@ -493,10 +493,49 @@ def test_retention_deletes_old_jobs_but_keeps_approved_embeds(
     ).json()["id"]
     fresh = ExtractionJob.objects.create(start_url=f"{SITE}/fresh", status="done")
     running = ExtractionJob.objects.create(start_url=f"{SITE}/running", status="crawling")
-    ExtractionJob.objects.exclude(pk=fresh.pk).update(
+    abandoned = ExtractionJob.objects.create(start_url=f"{SITE}/abandoned", status="crawling")
+    ExtractionJob.objects.exclude(pk__in=[fresh.pk, running.pk]).update(
         created_at=timezone.now() - dt.timedelta(days=31)
     )
     purge_old_jobs()
+    # A month-old "crawling" job is a dead worker's: failed, then purged with the others.
     assert set(ExtractionJob.objects.values_list("pk", flat=True)) == {fresh.pk, running.pk}
+    assert not ExtractionJob.objects.filter(pk=abandoned.pk).exists()
     embed = ApprovedEmbed.objects.get(pk=embed_id)
     assert embed.link is None and embed.original_url == f"{SITE}/media/film.mp4"
+
+
+def test_stale_jobs_stop_holding_a_slot(content_manager_api, web):
+    import datetime as dt
+
+    from django.utils import timezone
+
+    config.set("extraction.max_concurrent_jobs", 1)
+    stuck = ExtractionJob.objects.create(
+        start_url=f"{SITE}/", status="crawling", created_by=content_manager_api.user
+    )
+    assert start(content_manager_api).status_code == 429  # a live crawl holds the slot
+    ExtractionJob.objects.filter(pk=stuck.pk).update(
+        created_at=timezone.now() - dt.timedelta(hours=1)
+    )
+    assert start(content_manager_api).status_code == 201
+    stuck.refresh_from_db()
+    assert stuck.status == "failed" and "worker restarted" in stuck.error
+
+
+def test_render_js_unavailable_is_noted(
+    content_manager_api, site, django_capture_on_commit_callbacks, monkeypatch
+):
+    from apps.extraction import render
+
+    render.availability.cache_clear()
+    monkeypatch.setattr(render, "availability", lambda: (False, "No Chromium here."))
+    res = start(
+        content_manager_api, capture=django_capture_on_commit_callbacks, render_js=True, max_depth=0
+    )
+    job = content_manager_api.get(f"{API}/jobs/{res.json()['id']}").json()
+    assert job["status"] == "done"
+    assert any(
+        "JavaScript rendering wasn't available" in n and "No Chromium here." in n
+        for n in job["notes"]
+    )

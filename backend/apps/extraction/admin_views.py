@@ -32,7 +32,7 @@ from .crawler import effective_options
 from .models import ApprovedEmbed, DiscoveredLink, ExtractionJob
 from .safety import BlockedURL, check_url
 from .sanitize import build_iframe, sanitize_embed_html
-from .tasks import check_link, run_job
+from .tasks import check_link, fail_stale_jobs, run_job
 from .urls_norm import host_of, origin_of
 
 R = User.Role
@@ -132,6 +132,7 @@ class JobViewSet(
             target = check_url(data.validated_data["url"])
         except BlockedURL as exc:
             raise APIError(exc.message, exc.code, 400, fields={"url": exc.message}) from None
+        fail_stale_jobs()  # a dead worker's job must not hold a slot forever
         limit = config.get_int("extraction.max_concurrent_jobs", 2)
         with transaction.atomic():
             # Lock this person's row so two quick clicks can't both pass the limit.

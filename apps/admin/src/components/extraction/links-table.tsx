@@ -304,7 +304,7 @@ export function LinksTable({
             <span role="columnheader" className="w-14 text-right">
               HTTP
             </span>
-            <span role="columnheader" className="w-24">
+            <span role="columnheader" className="w-28">
               Check
             </span>
           </div>
@@ -334,7 +334,7 @@ export function LinksTable({
                   >
                     <div
                       role="gridcell"
-                      className="flex min-w-0 flex-1 basis-full items-center gap-1 md:basis-auto"
+                      className="flex min-w-0 flex-1 basis-full items-center gap-1 md:basis-0"
                     >
                       <span className="min-w-0 flex-1 truncate" title={link.url}>
                         {link.url}
@@ -381,8 +381,8 @@ export function LinksTable({
                     >
                       {link.http_status ?? (link.error ? "error" : "—")}
                     </div>
-                    <div role="gridcell" className="md:w-24">
-                      <Badge tone={CHECK_TONE[link.check_status]}>
+                    <div role="gridcell" className="md:w-28">
+                      <Badge tone={CHECK_TONE[link.check_status]} className="whitespace-nowrap">
                         {link.check_status === "unchecked" ? "not checked" : link.check_status}
                       </Badge>
                     </div>

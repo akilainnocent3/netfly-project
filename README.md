@@ -128,4 +128,6 @@ See `docs/DEPLOY.md` for production, `docs/SEO.md` for getting indexed by search
 Captured by Playwright against the seeded demo catalog (`docs/screenshots/`):
 landing page and public title page (what search engines see), `/browse`, hover card, title modal
 with episodes and More Like This, New & Popular, search, mobile home, the Studio priority control and
-titles list, and the profile gate.
+titles list, and the profile gate. Studio → Video extraction (`extraction-*.png`, against real
+public sites): the start form, a crawl's results, the Overview of an embeddable YouTube video and
+of a page that forbids framing, Approved embeds, and the results and Overview at 390 px.

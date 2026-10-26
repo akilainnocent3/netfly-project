@@ -179,6 +179,8 @@ function Progress({ job }: { job: ExtractionJobDetail }) {
   );
 }
 
+const COLLAPSED_VIDEOS = 6;
+
 function Stat({ label, value }: { label: string; value: number | string }) {
   return (
     <div>
@@ -196,7 +198,10 @@ function VideosFound({
   job: ExtractionJobDetail;
   onOpen: (link: ExtractionLink) => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
   if (!job.video_links.length && ACTIVE_JOB.includes(job.status)) return null;
+  const total = job.kind_counts.video_file + job.kind_counts.stream + job.kind_counts.embed;
+  const shown = expanded ? job.video_links : job.video_links.slice(0, COLLAPSED_VIDEOS);
   return (
     <Card className="mb-4 overflow-hidden">
       <div className="border-line flex items-center gap-2 border-b px-4 py-3">
@@ -210,7 +215,7 @@ function VideosFound({
       </div>
       {job.video_links.length > 0 && (
         <ul className="divide-line grid divide-y md:grid-cols-2 md:divide-y-0">
-          {job.video_links.map((link) => (
+          {shown.map((link) => (
             <li key={link.id} className="md:border-line md:border-b md:odd:border-r">
               <button
                 type="button"
@@ -227,6 +232,24 @@ function VideosFound({
             </li>
           ))}
         </ul>
+      )}
+      {job.video_links.length > COLLAPSED_VIDEOS && (
+        <div className="border-line text-muted flex flex-wrap items-center gap-2 border-t px-4 py-2 text-[12.5px]">
+          <Button
+            size="sm"
+            variant="ghost"
+            aria-expanded={expanded}
+            onClick={() => setExpanded((v) => !v)}
+          >
+            {expanded ? "Show fewer" : `Show ${job.video_links.length}`}
+          </Button>
+          {total > job.video_links.length && (
+            <span>
+              {total} in all: choose <strong className="text-fg font-medium">Videos</strong> or{" "}
+              <strong className="text-fg font-medium">Embeds</strong> below to list every one.
+            </span>
+          )}
+        </div>
       )}
     </Card>
   );
