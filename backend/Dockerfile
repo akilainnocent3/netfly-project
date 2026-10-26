@@ -27,3 +27,17 @@ RUN DJANGO_SECRET_KEY=build CONFIG_ENCRYPTION_KEY=MDAwMDAwMDAwMDAwMDAwMDAwMDAwMD
 USER netfly
 EXPOSE 8000
 CMD ["gunicorn", "netfly.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--threads", "4", "--worker-class", "gthread", "--timeout", "60", "--access-logfile", "-"]
+
+# Extraction workers only (worker-extraction): Chromium for "Render JavaScript" (decision 67).
+# The API and the other workers keep the slim `prod` image; without this stage the option is
+# simply unavailable in Studio.
+FROM prod AS extraction
+USER root
+COPY requirements-extraction.txt .
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN if ls /tmp/wheels/*.whl >/dev/null 2>&1; then pip install --no-index --find-links /tmp/wheels -r requirements-extraction.txt; \
+    else pip install --default-timeout=120 -r requirements-extraction.txt; fi \
+    && python -m playwright install --with-deps chromium \
+    && chmod -R a+rX /ms-playwright && rm -rf /var/lib/apt/lists/*
+USER netfly
+CMD ["celery", "-A", "netfly", "worker", "-Q", "extraction", "-c", "2", "-l", "info", "--max-tasks-per-child", "50"]

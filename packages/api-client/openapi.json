@@ -1084,6 +1084,741 @@
                 }
             }
         },
+        "/api/v1/admin/extraction/capabilities": {
+            "get": {
+                "operationId": "admin_extraction_capabilities",
+                "description": "Defaults for the start form, and whether an extraction worker can render JavaScript.",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExtractionCapabilities"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/extraction/embeds": {
+            "get": {
+                "operationId": "admin_extraction_embeds_list",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "search",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "status",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "approved",
+                                "revoked"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedApprovedEmbedList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/extraction/embeds/{id}": {
+            "patch": {
+                "operationId": "admin_extraction_embeds_partial_update",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this approved embed.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedEmbedUpdateRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedEmbedUpdateRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApprovedEmbed"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/extraction/embeds/{id}/preview-token": {
+            "get": {
+                "operationId": "admin_extraction_embeds_preview_token_retrieve",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this approved embed.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExtractionPreviewToken"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/extraction/embeds/{id}/revoke": {
+            "post": {
+                "operationId": "admin_extraction_embeds_revoke_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this approved embed.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApprovedEmbed"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/extraction/jobs": {
+            "get": {
+                "operationId": "admin_extraction_jobs_list",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedExtractionJobList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "admin_extraction_jobs_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ExtractionJobCreateRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ExtractionJobCreateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExtractionJob"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/extraction/jobs/{id}": {
+            "get": {
+                "operationId": "admin_extraction_jobs_retrieve",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this extraction job.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExtractionJobDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/extraction/jobs/{id}/cancel": {
+            "post": {
+                "operationId": "admin_extraction_jobs_cancel_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this extraction job.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExtractionJob"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/extraction/jobs/{id}/links": {
+            "get": {
+                "operationId": "admin_extraction_jobs_links_list",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "check_status",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "checked",
+                                "checking",
+                                "failed",
+                                "unchecked"
+                            ]
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "format",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "csv",
+                                "json"
+                            ]
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "has_video",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "description": "A UUID string identifying this extraction job.",
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "internal",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "kind",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Comma list of kinds, or pages|videos|embeds|other"
+                    },
+                    {
+                        "in": "query",
+                        "name": "ordering",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "-check_status",
+                                "-depth",
+                                "-found_on",
+                                "-http_status",
+                                "-id",
+                                "-kind",
+                                "-url",
+                                "check_status",
+                                "depth",
+                                "found_on",
+                                "http_status",
+                                "id",
+                                "kind",
+                                "url"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "search",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedExtractionLinkList"
+                                }
+                            },
+                            "text/csv": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedExtractionLinkList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/extraction/links/{id}": {
+            "get": {
+                "operationId": "admin_extraction_links_retrieve",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this discovered link.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExtractionLinkDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/extraction/links/{id}/approve": {
+            "post": {
+                "operationId": "admin_extraction_links_approve_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this discovered link.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmbedApproveRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmbedApproveRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApprovedEmbed"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/extraction/links/{id}/check": {
+            "post": {
+                "operationId": "admin_extraction_links_check_create",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this discovered link.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LinkCheckRequestRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LinkCheckRequestRequest"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExtractionLinkDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/extraction/links/{id}/preview-token": {
+            "get": {
+                "operationId": "admin_extraction_links_preview_token_retrieve",
+                "description": "Every admin write lands in the audit log with a field-level diff.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this discovered link.",
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "video",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Video index, or \"page\""
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExtractionPreviewToken"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/extraction/preview": {
+            "get": {
+                "operationId": "admin_extraction_preview",
+                "description": "What `/extraction/preview/…` in Studio renders, and the only origins its CSP may add.\n\nAuthenticated by a short-lived signed token that an authorised staff member obtained for\none link (or embed); the origins come from the stored check, never from the request.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "token",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExtractionPreview"
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "404": {
+                        "description": "Invalid or expired token"
+                    }
+                }
+            }
+        },
         "/api/v1/admin/genres": {
             "get": {
                 "operationId": "admin_genres_list",
@@ -5765,7 +6500,7 @@
         "/api/v1/billing/payments/{payment_id}": {
             "get": {
                 "operationId": "billing_payment",
-                "description": "Polled every few seconds by \"Check your phone\" (reads our DB, kept fresh by the\nwebhook and the reconcile job).",
+                "description": "Polled every few seconds by \"Check your phone\". Reads our DB, kept fresh by the webhook\nand the reconcile job; while the payment is still pending it also asks Snippe (at most\nevery few seconds per payment), so a late webhook doesn't keep the viewer waiting for the\nnext reconcile run.",
                 "parameters": [
                     {
                         "in": "path",
@@ -7853,6 +8588,168 @@
                     }
                 }
             },
+            "ApprovedEmbed": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "link": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "job_id": {
+                        "type": "string",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "original_url": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "page_url": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "embed_type": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/EmbedTypeEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "embed_url": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "embed_html": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "provider": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "thumbnail_url": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "thumbnail_data": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "duration": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "width": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "height": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "netfly_title": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/EmbedTitleRef"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ApprovedEmbedStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "rights_confirmed": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "rights_note": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "approved_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "approved_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "revoked_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "revoked_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "approved_at",
+                    "approved_by_name",
+                    "description",
+                    "duration",
+                    "embed_html",
+                    "embed_type",
+                    "embed_url",
+                    "height",
+                    "id",
+                    "job_id",
+                    "link",
+                    "netfly_title",
+                    "original_url",
+                    "page_url",
+                    "provider",
+                    "revoked_at",
+                    "revoked_by_name",
+                    "rights_confirmed",
+                    "rights_note",
+                    "status",
+                    "thumbnail_data",
+                    "thumbnail_url",
+                    "title",
+                    "updated_at",
+                    "width"
+                ]
+            },
+            "ApprovedEmbedStatusEnum": {
+                "enum": [
+                    "approved",
+                    "revoked"
+                ],
+                "type": "string",
+                "description": "* `approved` - Approved\n* `revoked` - Revoked"
+            },
             "AudioTrack": {
                 "type": "object",
                 "properties": {
@@ -8338,6 +9235,218 @@
                 ],
                 "type": "string",
                 "description": "* `email` - email\n* `phone` - phone"
+            },
+            "CheckRedirect": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "status",
+                    "url"
+                ]
+            },
+            "CheckResult": {
+                "type": "object",
+                "properties": {
+                    "reachable": {
+                        "type": "boolean"
+                    },
+                    "final_url": {
+                        "type": "string"
+                    },
+                    "http_status": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "content_type": {
+                        "type": "string"
+                    },
+                    "redirects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CheckRedirect"
+                        }
+                    },
+                    "link_kind": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "thumbnail": {
+                        "type": "string"
+                    },
+                    "thumbnail_data": {
+                        "type": "string"
+                    },
+                    "page_embeddable": {
+                        "$ref": "#/components/schemas/PageEmbedVerdict"
+                    },
+                    "videos": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CheckedVideo"
+                        }
+                    },
+                    "recommended": {
+                        "nullable": true,
+                        "description": "Index into `videos`, \"page\", or null when nothing plays."
+                    },
+                    "client_origins": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "checked_at": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "checked_at",
+                    "client_origins",
+                    "content_type",
+                    "description",
+                    "final_url",
+                    "http_status",
+                    "link_kind",
+                    "page_embeddable",
+                    "reachable",
+                    "recommended",
+                    "redirects",
+                    "thumbnail",
+                    "title",
+                    "videos"
+                ]
+            },
+            "CheckVerdict": {
+                "type": "object",
+                "properties": {
+                    "verdict": {
+                        "$ref": "#/components/schemas/VerdictEnum"
+                    },
+                    "reasons": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "reasons",
+                    "verdict"
+                ]
+            },
+            "CheckedVideo": {
+                "type": "object",
+                "properties": {
+                    "kind": {
+                        "$ref": "#/components/schemas/CheckedVideoKindEnum"
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "provider": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "thumbnail": {
+                        "type": "string"
+                    },
+                    "thumbnail_data": {
+                        "type": "string",
+                        "description": "Small JPEG data: URI of the thumbnail, fetched by the server."
+                    },
+                    "duration": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": true
+                    },
+                    "width": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "height": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "playable_in_netfly": {
+                        "$ref": "#/components/schemas/CheckVerdict"
+                    },
+                    "embed": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/EmbedCode"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "origins": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "renditions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StreamRendition"
+                        }
+                    },
+                    "cors": {
+                        "type": "boolean"
+                    },
+                    "accept_ranges": {
+                        "type": "boolean"
+                    },
+                    "drm": {
+                        "type": "boolean"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "duration",
+                    "embed",
+                    "height",
+                    "kind",
+                    "origins",
+                    "playable_in_netfly",
+                    "provider",
+                    "thumbnail",
+                    "title",
+                    "url",
+                    "width"
+                ]
+            },
+            "CheckedVideoKindEnum": {
+                "enum": [
+                    "file",
+                    "hls",
+                    "dash",
+                    "provider_embed"
+                ],
+                "type": "string",
+                "description": "* `file` - file\n* `hls` - hls\n* `dash` - dash\n* `provider_embed` - provider_embed"
             },
             "Checkout": {
                 "type": "object",
@@ -8942,6 +10051,121 @@
                     "to"
                 ]
             },
+            "EmbedApproveRequest": {
+                "type": "object",
+                "properties": {
+                    "video_index": {
+                        "oneOf": [
+                            {
+                                "type": "integer",
+                                "minimum": 0
+                            },
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "page"
+                                ]
+                            }
+                        ],
+                        "description": "Index into check_result.videos, or \"page\" to embed the page itself."
+                    },
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 300
+                    },
+                    "description": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 5000
+                    },
+                    "netfly_title_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "rights_confirmed": {
+                        "type": "boolean"
+                    },
+                    "note": {
+                        "type": "string",
+                        "default": "",
+                        "maxLength": 2000
+                    }
+                },
+                "required": [
+                    "description",
+                    "rights_confirmed",
+                    "title",
+                    "video_index"
+                ]
+            },
+            "EmbedCode": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "$ref": "#/components/schemas/EmbedTypeEnum"
+                    },
+                    "src": {
+                        "type": "string"
+                    },
+                    "html": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "src",
+                    "type"
+                ]
+            },
+            "EmbedTitleRef": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "slug": {
+                        "type": "string",
+                        "readOnly": true,
+                        "pattern": "^[-a-zA-Z0-9_]+$"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "type": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TitleTypeEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "id",
+                    "slug",
+                    "title",
+                    "type",
+                    "year"
+                ]
+            },
+            "EmbedTypeEnum": {
+                "enum": [
+                    "iframe",
+                    "oembed",
+                    "hls",
+                    "mp4",
+                    "dash"
+                ],
+                "type": "string",
+                "description": "* `iframe` - Iframe\n* `oembed` - Oembed\n* `hls` - Hls\n* `mp4` - Mp4\n* `dash` - Dash"
+            },
             "Episode": {
                 "type": "object",
                 "properties": {
@@ -9230,6 +10454,626 @@
                 "required": [
                     "kind",
                     "session_id"
+                ]
+            },
+            "ExtractionCapabilities": {
+                "type": "object",
+                "properties": {
+                    "worker": {
+                        "type": "boolean"
+                    },
+                    "render_js": {
+                        "type": "boolean"
+                    },
+                    "render_js_reason": {
+                        "type": "string"
+                    },
+                    "ffprobe": {
+                        "type": "boolean"
+                    },
+                    "max_pages": {
+                        "type": "integer"
+                    },
+                    "max_depth": {
+                        "type": "integer"
+                    },
+                    "max_links": {
+                        "type": "integer"
+                    },
+                    "respect_robots": {
+                        "type": "boolean"
+                    },
+                    "max_concurrent_jobs": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "ffprobe",
+                    "max_concurrent_jobs",
+                    "max_depth",
+                    "max_links",
+                    "max_pages",
+                    "render_js",
+                    "render_js_reason",
+                    "respect_robots",
+                    "worker"
+                ]
+            },
+            "ExtractionJob": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "start_url": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "normalized_origin": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ExtractionJobStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "progress": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true
+                    },
+                    "pages_crawled": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "links_found": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "current_url": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "options": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ExtractionJobOptions"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "notes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    },
+                    "error": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "started_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "finished_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "created_by_name",
+                    "current_url",
+                    "error",
+                    "finished_at",
+                    "id",
+                    "links_found",
+                    "normalized_origin",
+                    "notes",
+                    "options",
+                    "pages_crawled",
+                    "progress",
+                    "start_url",
+                    "started_at",
+                    "status"
+                ]
+            },
+            "ExtractionJobCreateRequest": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                    },
+                    "options": {
+                        "$ref": "#/components/schemas/ExtractionJobOptionsRequest"
+                    }
+                },
+                "required": [
+                    "url"
+                ]
+            },
+            "ExtractionJobDetail": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "start_url": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "normalized_origin": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ExtractionJobStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "progress": {
+                        "type": "number",
+                        "format": "double",
+                        "readOnly": true
+                    },
+                    "pages_crawled": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "links_found": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "current_url": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "options": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ExtractionJobOptions"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "notes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    },
+                    "error": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_by_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "started_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "finished_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "kind_counts": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/LinkKindCounts"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "video_links": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ExtractionLink"
+                        },
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "created_at",
+                    "created_by_name",
+                    "current_url",
+                    "error",
+                    "finished_at",
+                    "id",
+                    "kind_counts",
+                    "links_found",
+                    "normalized_origin",
+                    "notes",
+                    "options",
+                    "pages_crawled",
+                    "progress",
+                    "start_url",
+                    "started_at",
+                    "status",
+                    "video_links"
+                ]
+            },
+            "ExtractionJobOptions": {
+                "type": "object",
+                "properties": {
+                    "max_pages": {
+                        "type": "integer",
+                        "maximum": 50000,
+                        "minimum": 1
+                    },
+                    "max_depth": {
+                        "type": "integer",
+                        "maximum": 20,
+                        "minimum": 0
+                    },
+                    "same_domain_only": {
+                        "type": "boolean"
+                    },
+                    "same_host_only": {
+                        "type": "boolean"
+                    },
+                    "render_js": {
+                        "type": "boolean"
+                    },
+                    "respect_robots": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "ExtractionJobOptionsRequest": {
+                "type": "object",
+                "properties": {
+                    "max_pages": {
+                        "type": "integer",
+                        "maximum": 50000,
+                        "minimum": 1
+                    },
+                    "max_depth": {
+                        "type": "integer",
+                        "maximum": 20,
+                        "minimum": 0
+                    },
+                    "same_domain_only": {
+                        "type": "boolean"
+                    },
+                    "same_host_only": {
+                        "type": "boolean"
+                    },
+                    "render_js": {
+                        "type": "boolean"
+                    },
+                    "respect_robots": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "ExtractionJobStatusEnum": {
+                "enum": [
+                    "queued",
+                    "crawling",
+                    "done",
+                    "failed",
+                    "cancelled"
+                ],
+                "type": "string",
+                "description": "* `queued` - Queued\n* `crawling` - Crawling\n* `done` - Done\n* `failed` - Failed\n* `cancelled` - Cancelled"
+            },
+            "ExtractionLink": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "job": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "url": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "kind": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/LinkKindEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "source": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/LinkSourceEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "found_on": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "depth": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "http_status": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "content_type": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "is_internal": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "error": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "has_video": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "check_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/LinkCheckStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "checked_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "check_status",
+                    "checked_at",
+                    "content_type",
+                    "depth",
+                    "error",
+                    "found_on",
+                    "has_video",
+                    "http_status",
+                    "id",
+                    "is_internal",
+                    "job",
+                    "kind",
+                    "source",
+                    "title",
+                    "url"
+                ]
+            },
+            "ExtractionLinkDetail": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "job": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "url": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "kind": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/LinkKindEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "source": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/LinkSourceEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "found_on": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "depth": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "http_status": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "content_type": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "is_internal": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "error": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "has_video": {
+                        "type": "boolean",
+                        "readOnly": true
+                    },
+                    "check_status": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/LinkCheckStatusEnum"
+                            }
+                        ],
+                        "readOnly": true
+                    },
+                    "checked_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "check_result": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CheckResult"
+                            }
+                        ],
+                        "nullable": true,
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "check_result",
+                    "check_status",
+                    "checked_at",
+                    "content_type",
+                    "depth",
+                    "error",
+                    "found_on",
+                    "has_video",
+                    "http_status",
+                    "id",
+                    "is_internal",
+                    "job",
+                    "kind",
+                    "source",
+                    "title",
+                    "url"
+                ]
+            },
+            "ExtractionPreview": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string"
+                    },
+                    "embed": {
+                        "$ref": "#/components/schemas/EmbedCode"
+                    },
+                    "origins": {
+                        "$ref": "#/components/schemas/ExtractionPreviewOrigins"
+                    },
+                    "verdict": {
+                        "$ref": "#/components/schemas/VerdictEnum"
+                    },
+                    "reasons": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "embed",
+                    "origins",
+                    "reasons",
+                    "title",
+                    "verdict"
+                ]
+            },
+            "ExtractionPreviewOrigins": {
+                "type": "object",
+                "properties": {
+                    "frame": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "media": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "connect": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "connect",
+                    "frame",
+                    "media"
+                ]
+            },
+            "ExtractionPreviewToken": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string"
+                    },
+                    "expires_in": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "expires_in",
+                    "token"
                 ]
             },
             "Genre": {
@@ -9995,6 +11839,94 @@
                     "updated_at"
                 ]
             },
+            "LinkCheckRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "force": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                }
+            },
+            "LinkCheckStatusEnum": {
+                "enum": [
+                    "unchecked",
+                    "checking",
+                    "checked",
+                    "failed"
+                ],
+                "type": "string",
+                "description": "* `unchecked` - Unchecked\n* `checking` - Checking\n* `checked` - Checked\n* `failed` - Failed"
+            },
+            "LinkKindCounts": {
+                "type": "object",
+                "properties": {
+                    "page": {
+                        "type": "integer"
+                    },
+                    "video_file": {
+                        "type": "integer"
+                    },
+                    "stream": {
+                        "type": "integer"
+                    },
+                    "embed": {
+                        "type": "integer"
+                    },
+                    "image": {
+                        "type": "integer"
+                    },
+                    "document": {
+                        "type": "integer"
+                    },
+                    "other": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "document",
+                    "embed",
+                    "image",
+                    "other",
+                    "page",
+                    "stream",
+                    "video_file"
+                ]
+            },
+            "LinkKindEnum": {
+                "enum": [
+                    "page",
+                    "video_file",
+                    "stream",
+                    "embed",
+                    "image",
+                    "document",
+                    "other"
+                ],
+                "type": "string",
+                "description": "* `page` - Page\n* `video_file` - Video File\n* `stream` - Stream\n* `embed` - Embed\n* `image` - Image\n* `document` - Document\n* `other` - Other"
+            },
+            "LinkSourceEnum": {
+                "enum": [
+                    "start",
+                    "a_href",
+                    "link",
+                    "iframe",
+                    "video_src",
+                    "source_src",
+                    "img",
+                    "srcset",
+                    "og_video",
+                    "json_ld",
+                    "sitemap",
+                    "script",
+                    "oembed",
+                    "redirect",
+                    "rendered"
+                ],
+                "type": "string",
+                "description": "* `start` - Start\n* `a_href` - A Href\n* `link` - Link\n* `iframe` - Iframe\n* `video_src` - Video Src\n* `source_src` - Source Src\n* `img` - Img\n* `srcset` - Srcset\n* `og_video` - Og Video\n* `json_ld` - Json Ld\n* `sitemap` - Sitemap\n* `script` - Script\n* `oembed` - Oembed\n* `redirect` - Redirect\n* `rendered` - Rendered"
+            },
             "LoginRequest": {
                 "type": "object",
                 "properties": {
@@ -10307,6 +12239,30 @@
                 "type": "string",
                 "description": "* `completed` - completed\n* `failed` - failed\n* `expired` - expired"
             },
+            "PageEmbedVerdict": {
+                "type": "object",
+                "properties": {
+                    "verdict": {
+                        "$ref": "#/components/schemas/VerdictEnum"
+                    },
+                    "reasons": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "notes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "reasons",
+                    "verdict"
+                ]
+            },
             "PaginatedAdminUserList": {
                 "type": "object",
                 "required": [
@@ -10338,6 +12294,37 @@
                     }
                 }
             },
+            "PaginatedApprovedEmbedList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ApprovedEmbed"
+                        }
+                    }
+                }
+            },
             "PaginatedAuditLogList": {
                 "type": "object",
                 "required": [
@@ -10365,6 +12352,68 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/AuditLog"
+                        }
+                    }
+                }
+            },
+            "PaginatedExtractionJobList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ExtractionJob"
+                        }
+                    }
+                }
+            },
+            "PaginatedExtractionLinkList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ExtractionLink"
                         }
                     }
                 }
@@ -10678,6 +12727,29 @@
                 "properties": {
                     "value": {
                         "nullable": true
+                    }
+                }
+            },
+            "PatchedEmbedUpdateRequest": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 300
+                    },
+                    "description": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 5000
+                    },
+                    "netfly_title_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "rights_note": {
+                        "type": "string",
+                        "maxLength": 2000
                     }
                 }
             },
@@ -12702,6 +14774,31 @@
                 "required": [
                     "message",
                     "ok"
+                ]
+            },
+            "StreamRendition": {
+                "type": "object",
+                "properties": {
+                    "bandwidth": {
+                        "type": "integer"
+                    },
+                    "width": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "height": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "codecs": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "bandwidth",
+                    "codecs",
+                    "height",
+                    "width"
                 ]
             },
             "Subscriber": {
@@ -14833,6 +16930,15 @@
                 ],
                 "type": "string",
                 "description": "* `1080` - 1080\n* `720` - 720"
+            },
+            "VerdictEnum": {
+                "enum": [
+                    "yes",
+                    "no",
+                    "unknown"
+                ],
+                "type": "string",
+                "description": "* `yes` - yes\n* `no` - no\n* `unknown` - unknown"
             },
             "Verified": {
                 "type": "object",

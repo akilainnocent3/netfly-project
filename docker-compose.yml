@@ -58,6 +58,15 @@ services:
     depends_on:
       migrate: { condition: service_completed_successfully }
 
+  # Crawls and link checks for Studio → Video extraction: they fetch arbitrary sites, so they run
+  # on their own queue. Chromium ("Render JavaScript") is only in the `extraction` image stage;
+  # to try it locally set `build: { context: ./backend, target: extraction }` and an image name.
+  worker-extraction:
+    <<: *backend
+    command: celery -A netfly worker -Q extraction -c 2 -l info --max-tasks-per-child 50
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
   beat:
     <<: *backend
     command: celery -A netfly beat -l info --schedule /tmp/celerybeat-schedule

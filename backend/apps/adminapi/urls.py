@@ -2,6 +2,7 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from apps.billing import admin_views as bv
+from apps.extraction import admin_views as xv
 
 from . import catalog_views as cv
 from . import config_views as cfg
@@ -26,6 +27,9 @@ router.register("staff", pv.StaffViewSet, basename="admin-staff")
 router.register("audit", pv.AuditLogViewSet, basename="admin-audit")
 router.register("plans", bv.PlanViewSet, basename="admin-plans")
 router.register("subscribers", bv.SubscriberViewSet, basename="admin-subscribers")
+router.register("extraction/jobs", xv.JobViewSet, basename="admin-extraction-jobs")
+router.register("extraction/links", xv.LinkViewSet, basename="admin-extraction-links")
+router.register("extraction/embeds", xv.EmbedViewSet, basename="admin-extraction-embeds")
 
 urlpatterns = [
     path("title-picker", cv.TitlePickerView.as_view(), name="admin-title-picker"),
@@ -52,5 +56,11 @@ urlpatterns = [
     path("testing/outbox", cfg.OutboxView.as_view(), name="admin-outbox"),
     path("legal", cfg.LegalPagesView.as_view(), name="admin-legal"),
     path("legal/<slug:slug>", cfg.LegalPageView.as_view(), name="admin-legal-page"),
+    path("extraction/preview", xv.PreviewView.as_view(), name="admin-extraction-preview"),
+    path(
+        "extraction/capabilities",
+        xv.CapabilitiesView.as_view(),
+        name="admin-extraction-capabilities",
+    ),
     *router.urls,
 ]

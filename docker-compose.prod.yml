@@ -34,6 +34,16 @@ services:
     depends_on: { migrate: { condition: service_completed_successfully } }
     deploy: { replicas: 2 }
 
+  # Studio → Video extraction. Its own image stage (Chromium for "Render JavaScript") and queue;
+  # see docs/DEPLOY.md for network isolation.
+  worker-extraction:
+    <<: *backend
+    build: { context: ./backend, target: extraction }
+    image: netfly-backend:extraction
+    command: celery -A netfly worker -Q extraction -c 2 -l info --max-tasks-per-child 50
+    depends_on: { migrate: { condition: service_completed_successfully } }
+    shm_size: 512mb   # Chromium needs more than Docker's 64 MB /dev/shm
+
   beat:
     <<: *backend
     command: celery -A netfly beat -l info --schedule /tmp/celerybeat-schedule

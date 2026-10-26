@@ -15,3 +15,10 @@ filetype==1.2.*
 jsonschema==4.*
 requests==2.*
 phonenumbers==9.*
+# Studio → Video extraction (apps/extraction): HTTP/1.1+2 client, HTML parsing, public suffixes,
+# safe XML for sitemaps and DASH manifests.
+httpx[http2]==0.28.1
+h2==4.3.0
+selectolax==1.0.2
+tldextract==5.4.0
+defusedxml==0.7.1

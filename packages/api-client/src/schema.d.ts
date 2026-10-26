@@ -296,6 +296,250 @@ export interface paths {
         patch: operations["admin_episodes_partial_update"];
         trace?: never;
     };
+    "/api/v1/admin/extraction/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Defaults for the start form, and whether an extraction worker can render JavaScript. */
+        get: operations["admin_extraction_capabilities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/extraction/embeds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_extraction_embeds_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/extraction/embeds/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        patch: operations["admin_extraction_embeds_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/admin/extraction/embeds/{id}/preview-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_extraction_embeds_preview_token_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/extraction/embeds/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_extraction_embeds_revoke_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/extraction/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_extraction_jobs_list"];
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_extraction_jobs_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/extraction/jobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_extraction_jobs_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/extraction/jobs/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_extraction_jobs_cancel_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/extraction/jobs/{id}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_extraction_jobs_links_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/extraction/links/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_extraction_links_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/extraction/links/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_extraction_links_approve_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/extraction/links/{id}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        post: operations["admin_extraction_links_check_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/extraction/links/{id}/preview-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Every admin write lands in the audit log with a field-level diff. */
+        get: operations["admin_extraction_links_preview_token_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/extraction/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description What `/extraction/preview/…` in Studio renders, and the only origins its CSP may add.
+         *
+         *     Authenticated by a short-lived signed token that an authorised staff member obtained for
+         *     one link (or embed); the origins come from the stored check, never from the request.
+         */
+        get: operations["admin_extraction_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/genres": {
         parameters: {
             query?: never;
@@ -1820,8 +2064,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * @description Polled every few seconds by "Check your phone" (reads our DB, kept fresh by the
-         *     webhook and the reconcile job).
+         * @description Polled every few seconds by "Check your phone". Reads our DB, kept fresh by the webhook
+         *     and the reconcile job; while the payment is still pending it also asks Snippe (at most
+         *     every few seconds per payment), so a late webhook doesn't keep the viewer waiting for the
+         *     next reconcile run.
          */
         get: operations["billing_payment"];
         put?: never;
@@ -2575,6 +2821,43 @@ export interface components {
             /** @default client */
             app: components["schemas"]["AppEnum"];
         };
+        ApprovedEmbed: {
+            readonly id: number;
+            readonly link: number | null;
+            readonly job_id: string | null;
+            readonly original_url: string;
+            readonly page_url: string;
+            readonly embed_type: components["schemas"]["EmbedTypeEnum"];
+            readonly embed_url: string;
+            readonly embed_html: string;
+            readonly provider: string;
+            readonly title: string;
+            readonly description: string;
+            readonly thumbnail_url: string;
+            readonly thumbnail_data: string;
+            /** Format: double */
+            readonly duration: number | null;
+            readonly width: number | null;
+            readonly height: number | null;
+            readonly netfly_title: components["schemas"]["EmbedTitleRef"];
+            readonly status: components["schemas"]["ApprovedEmbedStatusEnum"];
+            readonly rights_confirmed: boolean;
+            readonly rights_note: string;
+            readonly approved_by_name: string;
+            /** Format: date-time */
+            readonly approved_at: string;
+            readonly revoked_by_name: string;
+            /** Format: date-time */
+            readonly revoked_at: string | null;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /**
+         * @description * `approved` - Approved
+         *     * `revoked` - Revoked
+         * @enum {string}
+         */
+        ApprovedEmbedStatusEnum: "approved" | "revoked";
         AudioTrack: {
             name: string;
             language: string;
@@ -2730,6 +3013,63 @@ export interface components {
          * @enum {string}
          */
         ChannelEnum: "email" | "phone";
+        CheckRedirect: {
+            url: string;
+            status: number;
+        };
+        CheckResult: {
+            reachable: boolean;
+            final_url: string;
+            http_status: number | null;
+            content_type: string;
+            redirects: components["schemas"]["CheckRedirect"][];
+            link_kind: string;
+            title: string;
+            description: string;
+            thumbnail: string;
+            thumbnail_data?: string;
+            page_embeddable: components["schemas"]["PageEmbedVerdict"];
+            videos: components["schemas"]["CheckedVideo"][];
+            /** @description Index into `videos`, "page", or null when nothing plays. */
+            recommended: unknown;
+            client_origins: string[];
+            checked_at: string;
+            error?: string;
+        };
+        CheckVerdict: {
+            verdict: components["schemas"]["VerdictEnum"];
+            reasons: string[];
+        };
+        CheckedVideo: {
+            kind: components["schemas"]["CheckedVideoKindEnum"];
+            url: string;
+            provider: string;
+            title: string;
+            description?: string;
+            thumbnail: string;
+            /** @description Small JPEG data: URI of the thumbnail, fetched by the server. */
+            thumbnail_data?: string;
+            /** Format: double */
+            duration: number | null;
+            width: number | null;
+            height: number | null;
+            playable_in_netfly: components["schemas"]["CheckVerdict"];
+            embed: components["schemas"]["EmbedCode"] | null;
+            origins: string[];
+            renditions?: components["schemas"]["StreamRendition"][];
+            cors?: boolean;
+            accept_ranges?: boolean;
+            drm?: boolean;
+            size?: number | null;
+        };
+        /**
+         * @description * `file` - file
+         *     * `hls` - hls
+         *     * `dash` - dash
+         *     * `provider_embed` - provider_embed
+         * @enum {string}
+         */
+        CheckedVideoKindEnum: "file" | "hls" | "dash" | "provider_embed";
         Checkout: {
             plan: components["schemas"]["Plan"];
             trial: boolean;
@@ -2891,6 +3231,37 @@ export interface components {
             /** Format: email */
             to: string;
         };
+        EmbedApproveRequest: {
+            /** @description Index into check_result.videos, or "page" to embed the page itself. */
+            video_index: number | "page";
+            title: string;
+            description: string;
+            netfly_title_id?: number | null;
+            rights_confirmed: boolean;
+            /** @default  */
+            note: string;
+        };
+        EmbedCode: {
+            type: components["schemas"]["EmbedTypeEnum"];
+            src: string;
+            html?: string;
+        };
+        EmbedTitleRef: {
+            readonly id: number;
+            readonly title: string;
+            readonly slug: string;
+            readonly year: number | null;
+            readonly type: components["schemas"]["TitleTypeEnum"];
+        };
+        /**
+         * @description * `iframe` - Iframe
+         *     * `oembed` - Oembed
+         *     * `hls` - Hls
+         *     * `mp4` - Mp4
+         *     * `dash` - Dash
+         * @enum {string}
+         */
+        EmbedTypeEnum: "iframe" | "oembed" | "hls" | "mp4" | "dash";
         Episode: {
             readonly id: number;
             number: number;
@@ -2979,6 +3350,147 @@ export interface components {
             };
             /** Format: date-time */
             ts?: string;
+        };
+        ExtractionCapabilities: {
+            worker: boolean;
+            render_js: boolean;
+            render_js_reason: string;
+            ffprobe: boolean;
+            max_pages: number;
+            max_depth: number;
+            max_links: number;
+            respect_robots: boolean;
+            max_concurrent_jobs: number;
+        };
+        ExtractionJob: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly start_url: string;
+            readonly normalized_origin: string;
+            readonly status: components["schemas"]["ExtractionJobStatusEnum"];
+            /** Format: double */
+            readonly progress: number;
+            readonly pages_crawled: number;
+            readonly links_found: number;
+            readonly current_url: string;
+            readonly options: components["schemas"]["ExtractionJobOptions"];
+            readonly notes: string[];
+            readonly error: string;
+            readonly created_by_name: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly started_at: string | null;
+            /** Format: date-time */
+            readonly finished_at: string | null;
+        };
+        ExtractionJobCreateRequest: {
+            url: string;
+            options?: components["schemas"]["ExtractionJobOptionsRequest"];
+        };
+        ExtractionJobDetail: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly start_url: string;
+            readonly normalized_origin: string;
+            readonly status: components["schemas"]["ExtractionJobStatusEnum"];
+            /** Format: double */
+            readonly progress: number;
+            readonly pages_crawled: number;
+            readonly links_found: number;
+            readonly current_url: string;
+            readonly options: components["schemas"]["ExtractionJobOptions"];
+            readonly notes: string[];
+            readonly error: string;
+            readonly created_by_name: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly started_at: string | null;
+            /** Format: date-time */
+            readonly finished_at: string | null;
+            readonly kind_counts: components["schemas"]["LinkKindCounts"];
+            readonly video_links: components["schemas"]["ExtractionLink"][];
+        };
+        ExtractionJobOptions: {
+            max_pages?: number;
+            max_depth?: number;
+            same_domain_only?: boolean;
+            same_host_only?: boolean;
+            render_js?: boolean;
+            respect_robots?: boolean;
+        };
+        ExtractionJobOptionsRequest: {
+            max_pages?: number;
+            max_depth?: number;
+            same_domain_only?: boolean;
+            same_host_only?: boolean;
+            render_js?: boolean;
+            respect_robots?: boolean;
+        };
+        /**
+         * @description * `queued` - Queued
+         *     * `crawling` - Crawling
+         *     * `done` - Done
+         *     * `failed` - Failed
+         *     * `cancelled` - Cancelled
+         * @enum {string}
+         */
+        ExtractionJobStatusEnum: "queued" | "crawling" | "done" | "failed" | "cancelled";
+        ExtractionLink: {
+            readonly id: number;
+            /** Format: uuid */
+            readonly job: string;
+            readonly url: string;
+            readonly kind: components["schemas"]["LinkKindEnum"];
+            readonly source: components["schemas"]["LinkSourceEnum"];
+            readonly found_on: string;
+            readonly depth: number;
+            readonly http_status: number | null;
+            readonly content_type: string;
+            readonly title: string;
+            readonly is_internal: boolean;
+            readonly error: string;
+            readonly has_video: boolean;
+            readonly check_status: components["schemas"]["LinkCheckStatusEnum"];
+            /** Format: date-time */
+            readonly checked_at: string | null;
+        };
+        ExtractionLinkDetail: {
+            readonly id: number;
+            /** Format: uuid */
+            readonly job: string;
+            readonly url: string;
+            readonly kind: components["schemas"]["LinkKindEnum"];
+            readonly source: components["schemas"]["LinkSourceEnum"];
+            readonly found_on: string;
+            readonly depth: number;
+            readonly http_status: number | null;
+            readonly content_type: string;
+            readonly title: string;
+            readonly is_internal: boolean;
+            readonly error: string;
+            readonly has_video: boolean;
+            readonly check_status: components["schemas"]["LinkCheckStatusEnum"];
+            /** Format: date-time */
+            readonly checked_at: string | null;
+            readonly check_result: components["schemas"]["CheckResult"] | null;
+        };
+        ExtractionPreview: {
+            title: string;
+            embed: components["schemas"]["EmbedCode"];
+            origins: components["schemas"]["ExtractionPreviewOrigins"];
+            verdict: components["schemas"]["VerdictEnum"];
+            reasons: string[];
+        };
+        ExtractionPreviewOrigins: {
+            frame: string[];
+            media: string[];
+            connect: string[];
+        };
+        ExtractionPreviewToken: {
+            token: string;
+            expires_in: number;
         };
         Genre: {
             readonly id: number;
@@ -3189,6 +3701,57 @@ export interface components {
             /** Format: date-time */
             readonly updated_at: string;
         };
+        LinkCheckRequestRequest: {
+            /** @default false */
+            force: boolean;
+        };
+        /**
+         * @description * `unchecked` - Unchecked
+         *     * `checking` - Checking
+         *     * `checked` - Checked
+         *     * `failed` - Failed
+         * @enum {string}
+         */
+        LinkCheckStatusEnum: "unchecked" | "checking" | "checked" | "failed";
+        LinkKindCounts: {
+            page: number;
+            video_file: number;
+            stream: number;
+            embed: number;
+            image: number;
+            document: number;
+            other: number;
+        };
+        /**
+         * @description * `page` - Page
+         *     * `video_file` - Video File
+         *     * `stream` - Stream
+         *     * `embed` - Embed
+         *     * `image` - Image
+         *     * `document` - Document
+         *     * `other` - Other
+         * @enum {string}
+         */
+        LinkKindEnum: "page" | "video_file" | "stream" | "embed" | "image" | "document" | "other";
+        /**
+         * @description * `start` - Start
+         *     * `a_href` - A Href
+         *     * `link` - Link
+         *     * `iframe` - Iframe
+         *     * `video_src` - Video Src
+         *     * `source_src` - Source Src
+         *     * `img` - Img
+         *     * `srcset` - Srcset
+         *     * `og_video` - Og Video
+         *     * `json_ld` - Json Ld
+         *     * `sitemap` - Sitemap
+         *     * `script` - Script
+         *     * `oembed` - Oembed
+         *     * `redirect` - Redirect
+         *     * `rendered` - Rendered
+         * @enum {string}
+         */
+        LinkSourceEnum: "start" | "a_href" | "link" | "iframe" | "video_src" | "source_src" | "img" | "srcset" | "og_video" | "json_ld" | "sitemap" | "script" | "oembed" | "redirect" | "rendered";
         LoginRequest: {
             username: string;
             password: string;
@@ -3275,6 +3838,11 @@ export interface components {
          * @enum {string}
          */
         OutcomeEnum: "completed" | "failed" | "expired";
+        PageEmbedVerdict: {
+            verdict: components["schemas"]["VerdictEnum"];
+            reasons: string[];
+            notes?: string[];
+        };
         PaginatedAdminUserList: {
             /** @example 123 */
             count: number;
@@ -3290,6 +3858,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["AdminUser"][];
         };
+        PaginatedApprovedEmbedList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["ApprovedEmbed"][];
+        };
         PaginatedAuditLogList: {
             /** @example 123 */
             count: number;
@@ -3304,6 +3887,36 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["AuditLog"][];
+        };
+        PaginatedExtractionJobList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["ExtractionJob"][];
+        };
+        PaginatedExtractionLinkList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["ExtractionLink"][];
         };
         PaginatedSubscriberList: {
             /** @example 123 */
@@ -3409,6 +4022,12 @@ export interface components {
         };
         PatchedConfigUpdateRequest: {
             value?: unknown;
+        };
+        PatchedEmbedUpdateRequest: {
+            title?: string;
+            description?: string;
+            netfly_title_id?: number | null;
+            rights_note?: string;
         };
         PatchedEpisodeAdminRequest: {
             number?: number;
@@ -3963,6 +4582,12 @@ export interface components {
             message: string;
             steps?: string[];
         };
+        StreamRendition: {
+            bandwidth: number;
+            width: number | null;
+            height: number | null;
+            codecs: string;
+        };
         Subscriber: {
             readonly id: number;
             username: string;
@@ -4501,6 +5126,13 @@ export interface components {
          * @enum {string}
          */
         VariantEnum: "1080" | "720";
+        /**
+         * @description * `yes` - yes
+         *     * `no` - no
+         *     * `unknown` - unknown
+         * @enum {string}
+         */
+        VerdictEnum: "yes" | "no" | "unknown";
         Verified: {
             channel: components["schemas"]["ChannelEnum"];
             user: components["schemas"]["User"];
@@ -5226,6 +5858,379 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["EpisodeAdmin"];
                 };
+            };
+        };
+    };
+    admin_extraction_capabilities: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtractionCapabilities"];
+                };
+            };
+        };
+    };
+    admin_extraction_embeds_list: {
+        parameters: {
+            query?: {
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                search?: string;
+                status?: "approved" | "revoked";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedApprovedEmbedList"];
+                };
+            };
+        };
+    };
+    admin_extraction_embeds_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this approved embed. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedEmbedUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedEmbedUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovedEmbed"];
+                };
+            };
+        };
+    };
+    admin_extraction_embeds_preview_token_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this approved embed. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtractionPreviewToken"];
+                };
+            };
+        };
+    };
+    admin_extraction_embeds_revoke_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this approved embed. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovedEmbed"];
+                };
+            };
+        };
+    };
+    admin_extraction_jobs_list: {
+        parameters: {
+            query?: {
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedExtractionJobList"];
+                };
+            };
+        };
+    };
+    admin_extraction_jobs_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtractionJobCreateRequest"];
+                "multipart/form-data": components["schemas"]["ExtractionJobCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtractionJob"];
+                };
+            };
+        };
+    };
+    admin_extraction_jobs_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this extraction job. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtractionJobDetail"];
+                };
+            };
+        };
+    };
+    admin_extraction_jobs_cancel_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this extraction job. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtractionJob"];
+                };
+            };
+        };
+    };
+    admin_extraction_jobs_links_list: {
+        parameters: {
+            query?: {
+                check_status?: "checked" | "checking" | "failed" | "unchecked";
+                format?: "csv" | "json";
+                has_video?: boolean;
+                internal?: boolean;
+                /** @description Comma list of kinds, or pages|videos|embeds|other */
+                kind?: string;
+                ordering?: "-check_status" | "-depth" | "-found_on" | "-http_status" | "-id" | "-kind" | "-url" | "check_status" | "depth" | "found_on" | "http_status" | "id" | "kind" | "url";
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                search?: string;
+            };
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this extraction job. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedExtractionLinkList"];
+                    "text/csv": components["schemas"]["PaginatedExtractionLinkList"];
+                };
+            };
+        };
+    };
+    admin_extraction_links_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this discovered link. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtractionLinkDetail"];
+                };
+            };
+        };
+    };
+    admin_extraction_links_approve_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this discovered link. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmbedApproveRequest"];
+                "multipart/form-data": components["schemas"]["EmbedApproveRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovedEmbed"];
+                };
+            };
+        };
+    };
+    admin_extraction_links_check_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this discovered link. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["LinkCheckRequestRequest"];
+                "multipart/form-data": components["schemas"]["LinkCheckRequestRequest"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtractionLinkDetail"];
+                };
+            };
+        };
+    };
+    admin_extraction_links_preview_token_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Video index, or "page" */
+                video?: string;
+            };
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this discovered link. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtractionPreviewToken"];
+                };
+            };
+        };
+    };
+    admin_extraction_preview: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtractionPreview"];
+                };
+            };
+            /** @description Invalid or expired token */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

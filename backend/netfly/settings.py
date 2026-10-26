@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "apps.recommendations",
     "apps.billing",
     "apps.messaging",
+    "apps.extraction",
     "apps.adminapi",
 ]
 
@@ -157,6 +158,12 @@ SPECTACULAR_SETTINGS = {
         "TranslationStatusEnum": "apps.catalog.models.TranslationStatus",
         "UsageScopeEnum": "apps.billing.models.UsageAdjustment.Scope",
         "SubscriptionStatusEnum": "apps.billing.models.Subscription.Status",
+        "ExtractionJobStatusEnum": "apps.extraction.models.ExtractionJob.Status",
+        "LinkKindEnum": "apps.extraction.models.DiscoveredLink.Kind",
+        "LinkSourceEnum": "apps.extraction.models.DiscoveredLink.Source",
+        "LinkCheckStatusEnum": "apps.extraction.models.DiscoveredLink.CheckStatus",
+        "EmbedTypeEnum": "apps.extraction.models.ApprovedEmbed.EmbedType",
+        "ApprovedEmbedStatusEnum": "apps.extraction.models.ApprovedEmbed.Status",
     },
     "SCHEMA_PATH_PREFIX": r"/api/(v1|public)",
 }
@@ -167,7 +174,12 @@ CELERY_TASK_IGNORE_RESULT = True
 CELERY_TASK_ACKS_LATE = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_TASK_DEFAULT_QUEUE = "default"
-CELERY_TASK_ROUTES = {"apps.media.tasks.transcode_asset": {"queue": "transcode"}}
+CELERY_TASK_ROUTES = {
+    "apps.media.tasks.transcode_asset": {"queue": "transcode"},
+    # Crawls and link checks fetch arbitrary sites: their own workers (decision 67).
+    "apps.extraction.tasks.run_job": {"queue": "extraction"},
+    "apps.extraction.tasks.check_link": {"queue": "extraction"},
+}
 CELERY_TASK_ALWAYS_EAGER = TESTING
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
