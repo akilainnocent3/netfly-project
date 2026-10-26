@@ -16,6 +16,36 @@ async function getMediaOrigins(): Promise<string> {
   return mediaOrigins.value;
 }
 
+// Studio → Video extraction → the live preview route (decision 69). Only this route's CSP gains
+// origins, and only those the API recorded for the one check its signed token names: never from
+// the query string, never a wildcard. Every other Studio page keeps the CSP below unchanged.
+const PREVIEW_PATH = /^\/extraction\/preview\/[\w-]+$/;
+const ORIGIN = /^https?:\/\/(\[[0-9a-f:.]+\]|[a-z0-9.-]+)(:\d{1,5})?$/i;
+type PreviewOrigins = { frame: string[]; media: string[]; connect: string[] };
+
+async function getPreviewOrigins(token: string): Promise<PreviewOrigins | null> {
+  if (!token) return null;
+  try {
+    const res = await fetch(
+      `${API}/api/v1/admin/extraction/preview?token=${encodeURIComponent(token)}`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return null;
+    const { origins } = (await res.json()) as { origins?: Partial<PreviewOrigins> };
+    const clean = (list: unknown) =>
+      (Array.isArray(list) ? list : []).filter(
+        (o): o is string => typeof o === "string" && ORIGIN.test(o),
+      );
+    return {
+      frame: clean(origins?.frame),
+      media: clean(origins?.media),
+      connect: clean(origins?.connect),
+    };
+  } catch {
+    return null;
+  }
+}
+
 // Next's middleware adapter rejects a relative Location and builds request.url from the standalone
 // server's bind address (localhost:PORT), so resolve redirects against the public host nginx
 // forwards instead. The server only listens on 127.0.0.1, so these headers come from nginx.
@@ -35,6 +65,10 @@ export async function middleware(request: NextRequest) {
   }
   const nonce = btoa(crypto.randomUUID());
   const media = await getMediaOrigins();
+  const preview = PREVIEW_PATH.test(pathname)
+    ? await getPreviewOrigins(request.nextUrl.searchParams.get("t") ?? "")
+    : null;
+  const extra = (list: string[] | undefined) => (list?.length ? ` ${list.join(" ")}` : "");
   const dev = process.env.NODE_ENV !== "production";
   // Uploads PUT straight to S3, so the bucket origin is allowed in connect-src.
   const s3 = "https://*.amazonaws.com";
@@ -43,11 +77,13 @@ export async function middleware(request: NextRequest) {
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: blob: ${media} ${s3}`,
-    `media-src 'self' blob: ${media} ${s3}`,
-    `connect-src 'self' ${media} ${s3}${dev ? " ws:" : ""}`,
+    `media-src 'self' blob: ${media} ${s3}${extra(preview?.media)}`,
+    `connect-src 'self' ${media} ${s3}${extra(preview?.connect)}${dev ? " ws:" : ""}`,
+    ...(preview ? [`frame-src 'self'${extra(preview.frame)}`] : []),
     "font-src 'self' data:",
     "worker-src 'self' blob:",
-    "frame-ancestors 'none'",
+    // The preview route is framed by Studio itself; nothing else may frame Studio.
+    PREVIEW_PATH.test(pathname) ? "frame-ancestors 'self'" : "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",

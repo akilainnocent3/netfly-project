@@ -64,7 +64,8 @@
   --a-raised: #f4f4f6;
   --a-fg: #18181b;
   --a-muted: #5f5f6b;
-  --a-subtle: #9a9aa5;
+  /* ≥ 4.5:1 on every surface (WCAG AA), like muted; it was 2.5–2.8:1. */
+  --a-subtle: #6c6c77;
   --a-line: #e7e7ec;
   --a-hover: #f1f1f4;
   color-scheme: light;
@@ -76,7 +77,7 @@
   --a-raised: #19191f;
   --a-fg: #ededf0;
   --a-muted: #a1a1ab;
-  --a-subtle: #6b6b76;
+  --a-subtle: #85858f;
   --a-line: #24242b;
   --a-hover: #1c1c22;
   color-scheme: dark;

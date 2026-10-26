@@ -6,6 +6,7 @@ import {
   FolderTree,
   Gauge,
   LayoutTemplate,
+  ScanSearch,
   ScrollText,
   Settings,
   ShieldCheck,
@@ -32,6 +33,12 @@ export const NAV: Array<{ section: string; items: NavItem[] }> = [
       { href: "/categories", label: "Categories", icon: FolderTree },
       { href: "/home-layout", label: "Home layout", icon: LayoutTemplate },
       { href: "/transcoding", label: "Transcoding", icon: Cpu },
+      {
+        href: "/extraction",
+        label: "Video extraction",
+        icon: ScanSearch,
+        roles: ["superadmin", "content_manager"],
+      },
     ],
   },
   {

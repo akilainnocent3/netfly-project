@@ -120,11 +120,13 @@ export function Switch({
   onCheckedChange,
   label,
   disabled,
+  "aria-describedby": describedBy,
 }: {
   checked: boolean;
   onCheckedChange: (v: boolean) => void;
   label: string;
   disabled?: boolean;
+  "aria-describedby"?: string;
 }) {
   return (
     <SwitchPrimitive.Root
@@ -132,6 +134,7 @@ export function Switch({
       onCheckedChange={onCheckedChange}
       disabled={disabled}
       aria-label={label}
+      aria-describedby={describedBy}
       className="bg-line data-[state=checked]:bg-accent relative h-[18px] w-8 shrink-0 rounded-full transition-colors disabled:opacity-50"
     >
       <SwitchPrimitive.Thumb className="block size-3.5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-4" />
@@ -139,13 +142,16 @@ export function Switch({
   );
 }
 
+// Text tones are WCAG AA (≥ 4.5:1) on their tint over panel and raised surfaces in both themes.
+// The accent is configurable, so its badge text is darkened in light mode.
 const BADGE_TONES = {
   neutral: "bg-raised text-muted border-line",
-  green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-  amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-  red: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
-  blue: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
-  accent: "bg-accent/10 text-accent border-accent/20",
+  green: "bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border-emerald-500/20",
+  amber: "bg-amber-500/10 text-amber-800 dark:text-amber-400 border-amber-500/20",
+  red: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
+  blue: "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/20",
+  accent:
+    "bg-accent/10 text-[color-mix(in_oklab,var(--accent)_78%,black)] dark:text-accent border-accent/20",
 } as const;
 
 export function Badge({

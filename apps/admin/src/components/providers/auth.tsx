@@ -19,7 +19,17 @@ interface AuthValue {
 
 const AuthContext = createContext<AuthValue | null>(null);
 
+/** Routes framed inside Studio that authenticate with their own signed token (the extraction
+ * preview): they never refresh the session, which would rotate it under the Studio page. */
+const STANDALONE = /^\/extraction\/preview\//;
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  if (STANDALONE.test(pathname)) return <>{children}</>;
+  return <SessionAuthProvider>{children}</SessionAuthProvider>;
+}
+
+function SessionAuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(api.session.currentUser);
