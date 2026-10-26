@@ -137,7 +137,7 @@ export function Row({
           onKeyDown={onKeyDown}
           className={cn(
             "no-scrollbar flex snap-x snap-mandatory gap-[0.45vw] overflow-x-auto scroll-smooth px-[max(4vw,16px)] pt-1 pb-6",
-            "scroll-px-[max(4vw,16px)] [--cols:2.3] sm:[--cols:3.3] md:[--cols:4.3] lg:[--cols:5.3] 2xl:[--cols:6.3]",
+            "scroll-px-[max(4vw,16px)] [--cols:1.7] sm:[--cols:3.3] md:[--cols:4.3] lg:[--cols:5.3] 2xl:[--cols:6.3]",
             top10 &&
               "[--cols:1.6] sm:[--cols:2.6] md:[--cols:3.4] lg:[--cols:4.4] 2xl:[--cols:5.4]",
           )}
@@ -214,7 +214,7 @@ export function RowSkeleton({
   return (
     <div aria-hidden className="mb-10">
       <div className="skeleton mx-[max(4vw,16px)] mb-3 h-5 rounded" style={{ width: titleWidth }} />
-      <div className="flex gap-[0.45vw] overflow-hidden px-[max(4vw,16px)] [--cols:2.3] sm:[--cols:3.3] md:[--cols:4.3] lg:[--cols:5.3] 2xl:[--cols:6.3]">
+      <div className="flex gap-[0.45vw] overflow-hidden px-[max(4vw,16px)] [--cols:1.7] sm:[--cols:3.3] md:[--cols:4.3] lg:[--cols:5.3] 2xl:[--cols:6.3]">
         {Array.from({ length: 7 }, (_, i) => (
           <div
             key={i}

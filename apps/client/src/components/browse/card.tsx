@@ -226,7 +226,7 @@ export function Card({
         ) : (
           <CardArt
             title={title}
-            sizes="(min-width:1536px) 17vw, (min-width:1024px) 20vw, (min-width:640px) 30vw, 45vw"
+            sizes="(min-width:1536px) 17vw, (min-width:1024px) 20vw, (min-width:640px) 30vw, 60vw"
             priority={priority}
             liftLogo={!!badge && badge !== "top10" && typeof progress !== "number"}
           />

@@ -9,8 +9,13 @@ import 'netfly_image.dart';
 import 'skeleton.dart';
 import 'title_card.dart';
 
-/// Card width at phone width: ≈45 % of the screen, so the next card peeks in (the web's 45vw).
-double cardWidth(BuildContext context) => (MediaQuery.sizeOf(context).width * 0.42).clamp(140.0, 260.0);
+/// Card width: the web row's --cols per breakpoint (1.7 cards on a phone, so a card is big enough
+/// to read and the next one peeks in), filling the screen minus the left gutter.
+double cardWidth(BuildContext context) {
+  final screen = MediaQuery.sizeOf(context).width;
+  final cols = screen < 640 ? 1.7 : (screen < 768 ? 3.3 : (screen < 1024 ? 4.3 : 5.3));
+  return (screen - NetflySpace.gutter - (cols - 1) * NetflySpace.rowGap) / cols;
+}
 
 /// Snaps a horizontal row to card boundaries after a fling, keeping momentum.
 class SnapToItemPhysics extends ScrollPhysics {
