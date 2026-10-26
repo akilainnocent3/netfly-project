@@ -193,6 +193,7 @@ def parse_html(html: str | bytes, page_url: str) -> ParsedPage:
         _add_video_object(props, add, page, base)
 
     # ---- scripts and data-* attributes (conservative: media extensions only) --------------------
+    scope: dict[str, str] = {}  # string variables, shared by the page's inline scripts in order
     for node in tree.css("script"):
         if (node.attributes.get("type") or "").lower() == "application/ld+json":
             continue
@@ -204,6 +205,8 @@ def parse_html(html: str | bytes, page_url: str) -> ParsedPage:
             add(url, S.SCRIPT, _media_kind(url))
         for url in provider_urls_in_text(text, page_url):
             add(url, S.SCRIPT, K.EMBED)
+        for url in assembled_media_urls(text, scope):
+            add(url, S.SCRIPT, _media_kind(url))
     for node in tree.css("*"):
         for name, value in (node.attributes or {}).items():
             if name.startswith("data-") and value and re.search(MEDIA_EXT, value, re.I):
@@ -236,6 +239,60 @@ def provider_urls_in_text(text: str, page_url: str) -> list[str]:
     if host.endswith("youtube.com"):
         found += ["https://www.youtube.com" + m.group(0) for m in YOUTUBE_RELATIVE.finditer(text)]
     return list(dict.fromkeys(found))[:MAX_PROVIDER_URLS]
+
+
+# Player sources assembled from string pieces: var d1 = "http://host/hls/"; var d3 = ".m3u8";
+# source: d1 + d2 + d3. Constant folding over string literals only — nothing is executed.
+_STR = r"\"(?:[^\"\\\n]|\\.)*\"|'(?:[^'\\\n]|\\.)*'"
+_IDENT = r"[A-Za-z_$][\w$]*"
+_TERM = rf"(?:{_STR}|{_IDENT})"
+_ASSIGN = re.compile(
+    rf"(?:\b(?:var|let|const)\s+)?({_IDENT})\s*=\s*({_TERM}(?:\s*\+\s*{_TERM})*)\s*(?=[;,\n\]}})])"
+)
+_CONCAT = re.compile(rf"{_TERM}(?:\s*\+\s*{_TERM})+")
+_TEMPLATE = re.compile(r"`([^`\\]{0,2048})`")
+_TERM_RE = re.compile(_TERM)
+MAX_SCOPE = 2000
+
+
+def _fold(expr: str, scope: dict[str, str]) -> str | None:
+    """The value of `"a" + b + 'c'` when every name is a known string, else None."""
+    out = []
+    for term in _TERM_RE.findall(expr):
+        if term[0] in "\"'":
+            out.append(term[1:-1].replace("\\/", "/").replace("\\" + term[0], term[0]))
+        elif term in scope:
+            out.append(scope[term])
+        else:
+            return None
+    value = "".join(out)
+    return value if len(value) <= 2048 else None
+
+
+def assembled_media_urls(text: str, scope: dict[str, str]) -> list[str]:
+    if not text:
+        return []
+    for _ in range(2):  # a second pass resolves names assigned from names defined later
+        for name, expr in _ASSIGN.findall(text):
+            if len(scope) >= MAX_SCOPE and name not in scope:
+                break
+            if (value := _fold(expr, scope)) is not None:
+                scope[name] = value
+    found = [v for v in (_fold(m.group(0), scope) for m in _CONCAT.finditer(text)) if v]
+    for m in _TEMPLATE.finditer(text):
+        body = m.group(1)
+        names = re.findall(r"\$\{\s*(" + _IDENT + r")\s*\}", body)
+        if names and all(n in scope for n in names):
+            found.append(
+                re.sub(r"\$\{\s*(" + _IDENT + r")\s*\}", lambda x: scope[x.group(1)], body)
+            )
+    found += [v for v in scope.values()]
+    urls: list[str] = []
+    for value in found:
+        bare = value.strip()
+        if MEDIA_VALUE.fullmatch(bare) and bare not in urls:
+            urls.append(bare)
+    return urls
 
 
 def media_urls_in_text(text: str) -> list[str]:

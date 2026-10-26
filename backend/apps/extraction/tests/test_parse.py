@@ -385,3 +385,30 @@ def test_provider_patterns_match_videos_not_listing_pages(url, provider):
     from apps.extraction.classify import provider_for
 
     assert provider_for(url) == provider
+
+
+def test_player_sources_assembled_from_string_pieces():
+    # The shape of fawanews.sc's Clappr pages: the URL only exists after concatenation.
+    html = """<script src="https://cdn.jsdelivr.net/clappr/latest/clappr.min.js"></script>
+    <script>
+      var d1 = "http://193.47.62.59/hls/";
+      var d2 = 'FAFAFAAAA';
+      var d3 = ".m3u8";
+      var VVVV = [d1 + d2 + d3];
+    </script>
+    <script>
+      var player = new Clappr.Player({source: VVVV[Math.floor(Math.random() * VVVV.length)]});
+      const base = "https://cdn.example.test/vod/";
+      let file = base + "movie" + ".mp4";
+      var t = `${base}trailer.webm`;
+      var unknown = cdnHost + "/x.m3u8";
+      var greeting = "hello " + "world";
+    </script>"""
+    page = parse_html(html, "http://www.fawanews.sc/match.html")
+    found = {f.url: f.kind for f in page.links if f.source == "script"}
+    assert found["http://193.47.62.59/hls/FAFAFAAAA.m3u8"] == "stream"
+    assert found["https://cdn.example.test/vod/movie.mp4"] == "video_file"
+    assert found["https://cdn.example.test/vod/trailer.webm"] == "video_file"
+    # A piece we can't know (a variable from elsewhere) is never guessed: only the quoted
+    # literal "/x.m3u8" itself is seen, resolved against the page like any relative path.
+    assert [u for u in found if u.endswith("x.m3u8")] == ["http://www.fawanews.sc/x.m3u8"]

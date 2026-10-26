@@ -95,8 +95,10 @@ def _run(url: str, fetcher: Fetcher) -> dict:
         or classify.by_extension(res.final_url)
         or K.OTHER
     )
-    if kind == K.OTHER and classify.by_extension(url) in (K.VIDEO_FILE, K.STREAM):
-        kind = classify.by_extension(url)
+    named = classify.by_extension(res.final_url) or classify.by_extension(url)
+    # An error page (a 403's HTML) says nothing about what the link is: trust its name then.
+    if named in (K.VIDEO_FILE, K.STREAM) and (kind == K.OTHER or res.status >= 400):
+        kind = named
     result["link_kind"] = kind
 
     if kind == K.PAGE:
@@ -543,14 +545,32 @@ def check_stream(
         return check_hls(res, text, fetcher, origins)
     if "<MPD" in text[:4096]:
         return check_dash(res, text)
-    entry = _entry("hls", url)
-    entry["playable_in_netfly"].update(
-        verdict=NO,
-        reasons=[
-            f"Not a playable stream manifest (HTTP {res.status}, {res.content_type or 'no type'})."
-        ],
-    )
+    entry = _entry("dash" if url.lower().split("?", 1)[0].endswith(".mpd") else "hls", url)
+    entry["playable_in_netfly"].update(verdict=NO, reasons=stream_refusal(res, origin))
     return entry
+
+
+def stream_refusal(res: FetchResult, origin: str) -> list[str]:
+    """Why a stream URL gave no manifest, in words staff can act on."""
+    if res.status in (401, 403):
+        reasons = [
+            f"The stream refuses NETFLY (HTTP {res.status}): it's limited to its own site or "
+            "network, needs a token its page adds, or isn't live right now."
+        ]
+    elif res.status in (404, 410):
+        reasons = [
+            f"The stream isn't there (HTTP {res.status}): it's offline or the event is over."
+        ]
+    else:
+        reasons = [
+            f"Not a playable stream manifest (HTTP {res.status}, {res.content_type or 'no type'})."
+        ]
+    allowed = (res.headers.get("access-control-allow-origin") or "").strip()
+    if allowed and allowed != "*" and allowed.rstrip("/") != origin:
+        reasons.append(
+            f"Its CORS header only allows {allowed}, so NETFLY's player couldn't load it."
+        )
+    return reasons
 
 
 def _attrs(line: str) -> dict[str, str]:

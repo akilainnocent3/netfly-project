@@ -450,3 +450,40 @@ def test_unlisted_vimeo_player_keeps_its_privacy_hash_for_oembed(web):
         canonical_page("Vimeo", "https://player.vimeo.com/video/76979871")
         == "https://vimeo.com/76979871"
     )
+
+
+def test_stream_refusals_are_explained(web):
+    page = "http://www.sports.example.test/match.html"
+    web.page(
+        page,
+        '<script>var a = "http://streams.example.test/hls/"; var b = "CH1"; var c = ".m3u8";'
+        "var list = [a + b + c];</script>",
+    )
+    web.add(
+        "http://streams.example.test/hls/CH1.m3u8",
+        "<h1>403 Forbidden</h1>",
+        status=403,
+        headers={"access-control-allow-origin": "http://www.sports.example.test"},
+    )
+    config.set("security.cors_allowed_origins", ["http://localhost:3000"])
+    config.set("seo.site_url", "")
+    [video] = run_check(page)["videos"]
+    assert video["url"] == "http://streams.example.test/hls/CH1.m3u8"
+    assert video["playable_in_netfly"]["verdict"] == "no"
+    reasons = video["playable_in_netfly"]["reasons"]
+    assert reasons[0].startswith("The stream refuses NETFLY (HTTP 403)")
+    assert reasons[1] == (
+        "Its CORS header only allows http://www.sports.example.test, so NETFLY's player couldn't load it."
+    )
+
+
+def test_a_refused_stream_link_is_checked_as_a_stream(web):
+    url = "http://streams.example.test/hls/CH2.m3u8"
+    web.add(url, "<h1>403 Forbidden</h1>", status=403, content_type="text/html")
+    result = run_check(url)
+    assert result["link_kind"] == "stream"
+    [video] = result["videos"]
+    assert video["playable_in_netfly"]["verdict"] == "no"
+    assert video["playable_in_netfly"]["reasons"][0].startswith(
+        "The stream refuses NETFLY (HTTP 403)"
+    )
