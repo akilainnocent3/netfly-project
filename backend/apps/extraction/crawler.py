@@ -124,6 +124,8 @@ class Crawler:
         self.max_links = config.get_int("extraction.max_links", 5000)
         self.max_probes = config.get_int("extraction.max_probes", 100)
         self.delay = config.get_int("extraction.delay_ms", 500) / 1000
+        self.gate = HostGate(self.delay)  # its delay grows if robots.txt asks for more
+        self.probe_progress = 0.0
         self.links: dict[str, LinkRec] = {}
         self.queue: deque[tuple[str, int]] = deque()
         self.queued: set[str] = set()
@@ -194,7 +196,7 @@ class Crawler:
                 self.notes.append(
                     f"robots.txt asks for {delay:g} s between requests; used {MAX_CRAWL_DELAY:g} s."
                 )
-        self.gate = HostGate(self.delay)
+        self.gate.delay = self.delay
         self.current_url = start
         result = self._fetch_page(start)
         if result.status >= 400:
@@ -275,7 +277,7 @@ class Crawler:
         return result, parsed, ""
 
     def _fetch_page(self, url: str) -> FetchResult:
-        with self.gate(host_of(url)) if hasattr(self, "gate") else _nullcontext():
+        with self.gate(host_of(url)):
             return self.fetcher.fetch(url)
 
     def _parse(self, result: FetchResult) -> ParsedPage:
@@ -529,7 +531,7 @@ class Crawler:
             total_pages = self.pages_crawled + len(self.queue)
             limit = self.opts["max_pages"]
             crawl = self.pages_crawled / max(1, min(limit, total_pages)) if total_pages else 1
-            progress = min(99.0, 90 * min(1.0, crawl) + 10 * getattr(self, "probe_progress", 0))
+            progress = min(99.0, 90 * min(1.0, crawl) + 10 * self.probe_progress)
             status = (
                 ExtractionJob.objects.filter(pk=self.job.pk)
                 .values_list("status", flat=True)
@@ -573,11 +575,3 @@ def _is_html(result: FetchResult) -> bool:
     if ct in classify.PAGE_TYPES:
         return True
     return not ct and classify.sniff(result.body[:2048]) == K.PAGE
-
-
-class _nullcontext:
-    def __enter__(self):
-        return None
-
-    def __exit__(self, *exc):
-        return None
